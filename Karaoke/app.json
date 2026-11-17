@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/record/record",
+    "pages/result/result",
+    "pages/leaderboard/leaderboard",
+    "pages/match/match",
+    "pages/battle/battle",
+    "pages/profile/profile"
+  ],
+  "permissions": [
+    "RECORD_AUDIO"
+  ]
+}
