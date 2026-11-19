@@ -1,0 +1,17 @@
+{
+  "name": "K 歌",
+  "description": "在 Rokid 眼镜上选择练习歌曲，跟伴奏演唱，查看实时音准和唱完后的评分。",
+  "engine": ">=0.19.0",
+  "pages": [
+    "pages/home/home",
+    "pages/record/record",
+    "pages/result/result",
+    "pages/leaderboard/leaderboard",
+    "pages/battle/battle",
+    "pages/download/download"
+  ],
+  "permissions": [
+    "RECORD_AUDIO",
+    "INTERNET"
+  ]
+}

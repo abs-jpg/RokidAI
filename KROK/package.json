@@ -1,0 +1,8 @@
+{
+  "name": "rokidai-dev-tools",
+  "version": "1.0.0",
+  "private": true,
+  "devDependencies": {
+    "@yodaos-pkg/aix-cli": "0.13.0"
+  }
+}
