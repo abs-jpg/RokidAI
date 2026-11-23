@@ -36,6 +36,7 @@ async function main() {
   const api = vm.runInNewContext(source + '\n({ connectBattle, sendBattle, onBattleMessage, isBattleOpen, closeBattle, localBattleStart })', {
     console: { error() {} },
     LEADERBOARD_API_URL: 'https://example.invalid',
+    LEADERBOARD_API_URLS: ['https://example.invalid'],
     getPlayerToken: async () => 'test-token', invalidatePlayerToken() {},
     WebSocket: FakeSocket,
     Date: class extends Date { static now() { return now } },

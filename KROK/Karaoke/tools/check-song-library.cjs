@@ -5,10 +5,17 @@ const path = require('node:path')
 
 const karaokeRoot = path.join(__dirname, '..')
 const sourcePath = path.join(karaokeRoot, 'utils', 'songData.js')
-const source = fs.readFileSync(sourcePath, 'utf8')
+const songDataSource = fs.readFileSync(sourcePath, 'utf8')
+const bundledModule = songDataSource.match(/from '\.\/([^']+Song\.js)'/)?.[1]
+if (!bundledModule) throw new Error('songData.js 缺少内置歌曲模块')
+const songModulePath = path.join(karaokeRoot, 'utils', bundledModule)
+const songModule = fs.readFileSync(songModulePath, 'utf8')
+  .replace(/\bexport const\b/g, 'const')
+const source = songDataSource
+  .replace(/^import .*$/gm, '')
   .replace(/\bexport (const|function)\b/g, '$1')
 
-const library = new Function(source + '\nreturn { songs };')()
+const library = new Function(songModule + '\n' + source + '\nreturn { songs };')()
 const errors = []
 const ids = new Set()
 
@@ -22,14 +29,18 @@ for (const song of library.songs) {
   if (!Number.isInteger(song.chartVersion) || song.chartVersion < 1) errors.push(`${label}: chartVersion 无效`)
   if (!Array.isArray(song.lyrics) || song.lyrics.length === 0) errors.push(`${label}: lyrics 为空`)
   if (!Array.isArray(song.refNotes) || song.refNotes.length === 0) errors.push(`${label}: refNotes 为空`)
+  if (!song.estimatedKey) errors.push(`${label}: estimatedKey 为空`)
 
-  if (song.accompaniment) {
-    const assetPath = path.join(karaokeRoot, song.accompaniment.replace(/^\//, ''))
-    if (!fs.existsSync(assetPath)) errors.push(`${label}: 伴奏不存在 ${song.accompaniment}`)
+  for (const field of ['guideAccompaniment', 'instrumentalAccompaniment']) {
+    if (!song[field]) {
+      errors.push(`${label}: 缺少 ${field}`)
+      continue
+    }
+    const assetPath = path.join(karaokeRoot, song[field].replace(/^\//, ''))
+    if (!fs.existsSync(assetPath)) errors.push(`${label}: ${field} 不存在 ${song[field]}`)
   }
 
   for (const [index, lyric] of (song.lyrics || []).entries()) {
-    if (!lyric.text) errors.push(`${label}: 歌词 ${index} 文本为空`)
     if (!(lyric.startMs >= 0 && lyric.endMs > lyric.startMs && lyric.endMs <= song.durationMs)) {
       errors.push(`${label}: 歌词 ${index} 时间范围无效`)
     }

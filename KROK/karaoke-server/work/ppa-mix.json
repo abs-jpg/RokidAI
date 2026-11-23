@@ -1,0 +1,395 @@
+{
+  "songId": "ppa-ppa-ppa",
+  "chartVersion": 1,
+  "source": {
+    "kind": "automatic-vocal-transcription",
+    "title": "红色高跟鞋",
+    "artist": "크레용팝 (CRAYON POP)",
+    "audio": "source/ppa-ppa-ppa.ogg",
+    "method": "Demucs vocal isolation + librosa pYIN + octave/semitone cleanup",
+    "notice": "算法提取的近似旋律，不是唱片公司或曲谱作者发布的官方谱。",
+    "generatedAt": "2026-11-21T22:27:00.407142+00:00"
+  },
+  "estimatedKey": "A 小调",
+  "lyricLines": 93,
+  "noteCount": 75,
+  "noteDurationMs": 23180,
+  "lyricCoverage": 0.144,
+  "notes": [
+    {
+      "midi": 71,
+      "startMs": 14160,
+      "endMs": 14420
+    },
+    {
+      "midi": 81,
+      "startMs": 15860,
+      "endMs": 16460
+    },
+    {
+      "midi": 81,
+      "startMs": 19450,
+      "endMs": 20070
+    },
+    {
+      "midi": 43,
+      "startMs": 22220,
+      "endMs": 22420
+    },
+    {
+      "midi": 43,
+      "startMs": 22500,
+      "endMs": 23190
+    },
+    {
+      "midi": 43,
+      "startMs": 23190,
+      "endMs": 23430
+    },
+    {
+      "midi": 43,
+      "startMs": 24300,
+      "endMs": 24710
+    },
+    {
+      "midi": 43,
+      "startMs": 25810,
+      "endMs": 26690
+    },
+    {
+      "midi": 43,
+      "startMs": 27490,
+      "endMs": 28090
+    },
+    {
+      "midi": 47,
+      "startMs": 28210,
+      "endMs": 28310
+    },
+    {
+      "midi": 46,
+      "startMs": 28310,
+      "endMs": 28430
+    },
+    {
+      "midi": 45,
+      "startMs": 28430,
+      "endMs": 28580
+    },
+    {
+      "midi": 44,
+      "startMs": 28580,
+      "endMs": 28760
+    },
+    {
+      "midi": 81,
+      "startMs": 33730,
+      "endMs": 33960
+    },
+    {
+      "midi": 81,
+      "startMs": 34140,
+      "endMs": 34380
+    },
+    {
+      "midi": 43,
+      "startMs": 36230,
+      "endMs": 36770
+    },
+    {
+      "midi": 44,
+      "startMs": 36770,
+      "endMs": 36830
+    },
+    {
+      "midi": 43,
+      "startMs": 36830,
+      "endMs": 37200
+    },
+    {
+      "midi": 43,
+      "startMs": 37220,
+      "endMs": 37750
+    },
+    {
+      "midi": 45,
+      "startMs": 38330,
+      "endMs": 38990
+    },
+    {
+      "midi": 72,
+      "startMs": 53410,
+      "endMs": 53880
+    },
+    {
+      "midi": 72,
+      "startMs": 60560,
+      "endMs": 61030
+    },
+    {
+      "midi": 44,
+      "startMs": 61220,
+      "endMs": 61340
+    },
+    {
+      "midi": 44,
+      "startMs": 61340,
+      "endMs": 61400
+    },
+    {
+      "midi": 72,
+      "startMs": 67740,
+      "endMs": 68290
+    },
+    {
+      "midi": 70,
+      "startMs": 68290,
+      "endMs": 68410
+    },
+    {
+      "midi": 45,
+      "startMs": 74480,
+      "endMs": 74650
+    },
+    {
+      "midi": 72,
+      "startMs": 74860,
+      "endMs": 75360
+    },
+    {
+      "midi": 45,
+      "startMs": 82970,
+      "endMs": 83450
+    },
+    {
+      "midi": 57,
+      "startMs": 83450,
+      "endMs": 83850
+    },
+    {
+      "midi": 58,
+      "startMs": 84040,
+      "endMs": 84750
+    },
+    {
+      "midi": 59,
+      "startMs": 84750,
+      "endMs": 85360
+    },
+    {
+      "midi": 43,
+      "startMs": 93860,
+      "endMs": 94730
+    },
+    {
+      "midi": 43,
+      "startMs": 94730,
+      "endMs": 94940
+    },
+    {
+      "midi": 44,
+      "startMs": 94940,
+      "endMs": 95030
+    },
+    {
+      "midi": 43,
+      "startMs": 95030,
+      "endMs": 95100
+    },
+    {
+      "midi": 45,
+      "startMs": 95600,
+      "endMs": 96370
+    },
+    {
+      "midi": 45,
+      "startMs": 106710,
+      "endMs": 106870
+    },
+    {
+      "midi": 72,
+      "startMs": 107030,
+      "endMs": 107590
+    },
+    {
+      "midi": 70,
+      "startMs": 107660,
+      "endMs": 107800
+    },
+    {
+      "midi": 44,
+      "startMs": 113940,
+      "endMs": 114030
+    },
+    {
+      "midi": 72,
+      "startMs": 114230,
+      "endMs": 114760
+    },
+    {
+      "midi": 44,
+      "startMs": 115010,
+      "endMs": 115120
+    },
+    {
+      "midi": 43,
+      "startMs": 115120,
+      "endMs": 115190
+    },
+    {
+      "midi": 43,
+      "startMs": 132870,
+      "endMs": 132990
+    },
+    {
+      "midi": 44,
+      "startMs": 133010,
+      "endMs": 133090
+    },
+    {
+      "midi": 43,
+      "startMs": 133090,
+      "endMs": 133350
+    },
+    {
+      "midi": 45,
+      "startMs": 133350,
+      "endMs": 133440
+    },
+    {
+      "midi": 44,
+      "startMs": 133440,
+      "endMs": 133590
+    },
+    {
+      "midi": 43,
+      "startMs": 133590,
+      "endMs": 133740
+    },
+    {
+      "midi": 45,
+      "startMs": 142590,
+      "endMs": 142740
+    },
+    {
+      "midi": 72,
+      "startMs": 142920,
+      "endMs": 143460
+    },
+    {
+      "midi": 44,
+      "startMs": 143730,
+      "endMs": 143830
+    },
+    {
+      "midi": 46,
+      "startMs": 145170,
+      "endMs": 145260
+    },
+    {
+      "midi": 45,
+      "startMs": 145260,
+      "endMs": 145360
+    },
+    {
+      "midi": 47,
+      "startMs": 145360,
+      "endMs": 145420
+    },
+    {
+      "midi": 46,
+      "startMs": 145420,
+      "endMs": 145550
+    },
+    {
+      "midi": 45,
+      "startMs": 145550,
+      "endMs": 145630
+    },
+    {
+      "midi": 45,
+      "startMs": 146110,
+      "endMs": 146320
+    },
+    {
+      "midi": 43,
+      "startMs": 146320,
+      "endMs": 146530
+    },
+    {
+      "midi": 45,
+      "startMs": 149050,
+      "endMs": 149280
+    },
+    {
+      "midi": 45,
+      "startMs": 149280,
+      "endMs": 149810
+    },
+    {
+      "midi": 72,
+      "startMs": 150120,
+      "endMs": 150600
+    },
+    {
+      "midi": 44,
+      "startMs": 150820,
+      "endMs": 151010
+    },
+    {
+      "midi": 46,
+      "startMs": 155960,
+      "endMs": 156200
+    },
+    {
+      "midi": 45,
+      "startMs": 156200,
+      "endMs": 156460
+    },
+    {
+      "midi": 45,
+      "startMs": 156600,
+      "endMs": 157040
+    },
+    {
+      "midi": 43,
+      "startMs": 157040,
+      "endMs": 157130
+    },
+    {
+      "midi": 72,
+      "startMs": 157300,
+      "endMs": 157780
+    },
+    {
+      "midi": 44,
+      "startMs": 163110,
+      "endMs": 163190
+    },
+    {
+      "midi": 46,
+      "startMs": 163190,
+      "endMs": 163330
+    },
+    {
+      "midi": 45,
+      "startMs": 163330,
+      "endMs": 163540
+    },
+    {
+      "midi": 45,
+      "startMs": 163540,
+      "endMs": 164160
+    },
+    {
+      "midi": 72,
+      "startMs": 164410,
+      "endMs": 164930
+    },
+    {
+      "midi": 43,
+      "startMs": 165150,
+      "endMs": 165290
+    }
+  ]
+}

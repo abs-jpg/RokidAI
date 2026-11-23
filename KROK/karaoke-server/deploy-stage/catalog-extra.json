@@ -1,0 +1,752 @@
+{
+  "songs": [
+    {
+      "id": "morning-breeze",
+      "name": "Morning Breeze",
+      "artist": "Rokid Original",
+      "category": "English",
+      "tag": "练习",
+      "difficulty": 1,
+      "durationMs": 30000,
+      "chartVersion": 1,
+      "scoringVersion": 2,
+      "audioSource": "/source/morning-breeze.ogg",
+      "instrumentalSource": "/source/morning-breeze-instrumental.ogg",
+      "lyrics": [
+        {
+          "text": "Morning breeze is on the road",
+          "startMs": 2400,
+          "endMs": 7800
+        },
+        {
+          "text": "Softly singing as we go",
+          "startMs": 8400,
+          "endMs": 13800
+        },
+        {
+          "text": "Follow every little note",
+          "startMs": 14400,
+          "endMs": 19800
+        },
+        {
+          "text": "Let the happy rhythm flow",
+          "startMs": 20400,
+          "endMs": 25800
+        }
+      ],
+      "refNotes": [
+        {
+          "midi": 60,
+          "startMs": 2400,
+          "endMs": 3000
+        },
+        {
+          "midi": 62,
+          "startMs": 3000,
+          "endMs": 3600
+        },
+        {
+          "midi": 64,
+          "startMs": 3600,
+          "endMs": 4200
+        },
+        {
+          "midi": 65,
+          "startMs": 4200,
+          "endMs": 4800
+        },
+        {
+          "midi": 64,
+          "startMs": 4800,
+          "endMs": 5400
+        },
+        {
+          "midi": 62,
+          "startMs": 5400,
+          "endMs": 6000
+        },
+        {
+          "midi": 60,
+          "startMs": 6000,
+          "endMs": 6600
+        },
+        {
+          "midi": 59,
+          "startMs": 6600,
+          "endMs": 7800
+        },
+        {
+          "midi": 59,
+          "startMs": 8400,
+          "endMs": 9000
+        },
+        {
+          "midi": 60,
+          "startMs": 9000,
+          "endMs": 9600
+        },
+        {
+          "midi": 62,
+          "startMs": 9600,
+          "endMs": 10200
+        },
+        {
+          "midi": 64,
+          "startMs": 10200,
+          "endMs": 10800
+        },
+        {
+          "midi": 65,
+          "startMs": 10800,
+          "endMs": 11400
+        },
+        {
+          "midi": 64,
+          "startMs": 11400,
+          "endMs": 12000
+        },
+        {
+          "midi": 62,
+          "startMs": 12000,
+          "endMs": 12600
+        },
+        {
+          "midi": 60,
+          "startMs": 12600,
+          "endMs": 13800
+        },
+        {
+          "midi": 60,
+          "startMs": 14400,
+          "endMs": 15000
+        },
+        {
+          "midi": 64,
+          "startMs": 15000,
+          "endMs": 15600
+        },
+        {
+          "midi": 65,
+          "startMs": 15600,
+          "endMs": 16200
+        },
+        {
+          "midi": 67,
+          "startMs": 16200,
+          "endMs": 16800
+        },
+        {
+          "midi": 65,
+          "startMs": 16800,
+          "endMs": 17400
+        },
+        {
+          "midi": 64,
+          "startMs": 17400,
+          "endMs": 18000
+        },
+        {
+          "midi": 62,
+          "startMs": 18000,
+          "endMs": 18600
+        },
+        {
+          "midi": 60,
+          "startMs": 18600,
+          "endMs": 19800
+        },
+        {
+          "midi": 59,
+          "startMs": 20400,
+          "endMs": 21000
+        },
+        {
+          "midi": 60,
+          "startMs": 21000,
+          "endMs": 21600
+        },
+        {
+          "midi": 62,
+          "startMs": 21600,
+          "endMs": 22200
+        },
+        {
+          "midi": 64,
+          "startMs": 22200,
+          "endMs": 22800
+        },
+        {
+          "midi": 62,
+          "startMs": 22800,
+          "endMs": 23400
+        },
+        {
+          "midi": 60,
+          "startMs": 23400,
+          "endMs": 24000
+        },
+        {
+          "midi": 59,
+          "startMs": 24000,
+          "endMs": 24600
+        },
+        {
+          "midi": 57,
+          "startMs": 24600,
+          "endMs": 25800
+        }
+      ]
+    },
+    {
+      "id": "hikari-no-michi",
+      "name": "光の小道",
+      "artist": "Rokid Original",
+      "category": "日本語",
+      "tag": "练习",
+      "difficulty": 1,
+      "durationMs": 30000,
+      "chartVersion": 1,
+      "scoringVersion": 2,
+      "audioSource": "/source/hikari-no-michi.ogg",
+      "instrumentalSource": "/source/hikari-no-michi-instrumental.ogg",
+      "lyrics": [
+        {
+          "text": "朝の光が道を照らす",
+          "startMs": 2400,
+          "endMs": 7800
+        },
+        {
+          "text": "風がそっと歌っている",
+          "startMs": 8400,
+          "endMs": 13800
+        },
+        {
+          "text": "小さな声で歩いてく",
+          "startMs": 14400,
+          "endMs": 19800
+        },
+        {
+          "text": "明日の空を見上げよう",
+          "startMs": 20400,
+          "endMs": 25800
+        }
+      ],
+      "refNotes": [
+        {
+          "midi": 64,
+          "startMs": 2400,
+          "endMs": 3000
+        },
+        {
+          "midi": 66,
+          "startMs": 3000,
+          "endMs": 3600
+        },
+        {
+          "midi": 67,
+          "startMs": 3600,
+          "endMs": 4200
+        },
+        {
+          "midi": 69,
+          "startMs": 4200,
+          "endMs": 4800
+        },
+        {
+          "midi": 67,
+          "startMs": 4800,
+          "endMs": 5400
+        },
+        {
+          "midi": 66,
+          "startMs": 5400,
+          "endMs": 6000
+        },
+        {
+          "midi": 64,
+          "startMs": 6000,
+          "endMs": 6600
+        },
+        {
+          "midi": 62,
+          "startMs": 6600,
+          "endMs": 7800
+        },
+        {
+          "midi": 62,
+          "startMs": 8400,
+          "endMs": 9000
+        },
+        {
+          "midi": 64,
+          "startMs": 9000,
+          "endMs": 9600
+        },
+        {
+          "midi": 66,
+          "startMs": 9600,
+          "endMs": 10200
+        },
+        {
+          "midi": 67,
+          "startMs": 10200,
+          "endMs": 10800
+        },
+        {
+          "midi": 66,
+          "startMs": 10800,
+          "endMs": 11400
+        },
+        {
+          "midi": 64,
+          "startMs": 11400,
+          "endMs": 12000
+        },
+        {
+          "midi": 62,
+          "startMs": 12000,
+          "endMs": 12600
+        },
+        {
+          "midi": 61,
+          "startMs": 12600,
+          "endMs": 13800
+        },
+        {
+          "midi": 64,
+          "startMs": 14400,
+          "endMs": 15000
+        },
+        {
+          "midi": 67,
+          "startMs": 15000,
+          "endMs": 15600
+        },
+        {
+          "midi": 69,
+          "startMs": 15600,
+          "endMs": 16200
+        },
+        {
+          "midi": 71,
+          "startMs": 16200,
+          "endMs": 16800
+        },
+        {
+          "midi": 69,
+          "startMs": 16800,
+          "endMs": 17400
+        },
+        {
+          "midi": 67,
+          "startMs": 17400,
+          "endMs": 18000
+        },
+        {
+          "midi": 66,
+          "startMs": 18000,
+          "endMs": 18600
+        },
+        {
+          "midi": 64,
+          "startMs": 18600,
+          "endMs": 19800
+        },
+        {
+          "midi": 62,
+          "startMs": 20400,
+          "endMs": 21000
+        },
+        {
+          "midi": 64,
+          "startMs": 21000,
+          "endMs": 21600
+        },
+        {
+          "midi": 66,
+          "startMs": 21600,
+          "endMs": 22200
+        },
+        {
+          "midi": 67,
+          "startMs": 22200,
+          "endMs": 22800
+        },
+        {
+          "midi": 66,
+          "startMs": 22800,
+          "endMs": 23400
+        },
+        {
+          "midi": 64,
+          "startMs": 23400,
+          "endMs": 24000
+        },
+        {
+          "midi": 62,
+          "startMs": 24000,
+          "endMs": 24600
+        },
+        {
+          "midi": 61,
+          "startMs": 24600,
+          "endMs": 25800
+        }
+      ]
+    },
+    {
+      "id": "achim-sanchack",
+      "name": "아침 산책",
+      "artist": "Rokid Original",
+      "category": "한국어",
+      "tag": "练习",
+      "difficulty": 1,
+      "durationMs": 30000,
+      "chartVersion": 1,
+      "scoringVersion": 2,
+      "audioSource": "/source/achim-sanchack.ogg",
+      "instrumentalSource": "/source/achim-sanchack-instrumental.ogg",
+      "lyrics": [
+        {
+          "text": "아침 햇살 길을 비추네",
+          "startMs": 2400,
+          "endMs": 7800
+        },
+        {
+          "text": "바람 따라 노래하네",
+          "startMs": 8400,
+          "endMs": 13800
+        },
+        {
+          "text": "가벼운 발걸음으로",
+          "startMs": 14400,
+          "endMs": 19800
+        },
+        {
+          "text": "오늘도 함께 걸어가",
+          "startMs": 20400,
+          "endMs": 25800
+        }
+      ],
+      "refNotes": [
+        {
+          "midi": 58,
+          "startMs": 2400,
+          "endMs": 3000
+        },
+        {
+          "midi": 60,
+          "startMs": 3000,
+          "endMs": 3600
+        },
+        {
+          "midi": 62,
+          "startMs": 3600,
+          "endMs": 4200
+        },
+        {
+          "midi": 63,
+          "startMs": 4200,
+          "endMs": 4800
+        },
+        {
+          "midi": 62,
+          "startMs": 4800,
+          "endMs": 5400
+        },
+        {
+          "midi": 60,
+          "startMs": 5400,
+          "endMs": 6000
+        },
+        {
+          "midi": 58,
+          "startMs": 6000,
+          "endMs": 6600
+        },
+        {
+          "midi": 57,
+          "startMs": 6600,
+          "endMs": 7800
+        },
+        {
+          "midi": 57,
+          "startMs": 8400,
+          "endMs": 9000
+        },
+        {
+          "midi": 58,
+          "startMs": 9000,
+          "endMs": 9600
+        },
+        {
+          "midi": 60,
+          "startMs": 9600,
+          "endMs": 10200
+        },
+        {
+          "midi": 62,
+          "startMs": 10200,
+          "endMs": 10800
+        },
+        {
+          "midi": 63,
+          "startMs": 10800,
+          "endMs": 11400
+        },
+        {
+          "midi": 62,
+          "startMs": 11400,
+          "endMs": 12000
+        },
+        {
+          "midi": 60,
+          "startMs": 12000,
+          "endMs": 12600
+        },
+        {
+          "midi": 58,
+          "startMs": 12600,
+          "endMs": 13800
+        },
+        {
+          "midi": 58,
+          "startMs": 14400,
+          "endMs": 15000
+        },
+        {
+          "midi": 62,
+          "startMs": 15000,
+          "endMs": 15600
+        },
+        {
+          "midi": 63,
+          "startMs": 15600,
+          "endMs": 16200
+        },
+        {
+          "midi": 65,
+          "startMs": 16200,
+          "endMs": 16800
+        },
+        {
+          "midi": 63,
+          "startMs": 16800,
+          "endMs": 17400
+        },
+        {
+          "midi": 62,
+          "startMs": 17400,
+          "endMs": 18000
+        },
+        {
+          "midi": 60,
+          "startMs": 18000,
+          "endMs": 18600
+        },
+        {
+          "midi": 58,
+          "startMs": 18600,
+          "endMs": 19800
+        },
+        {
+          "midi": 57,
+          "startMs": 20400,
+          "endMs": 21000
+        },
+        {
+          "midi": 58,
+          "startMs": 21000,
+          "endMs": 21600
+        },
+        {
+          "midi": 60,
+          "startMs": 21600,
+          "endMs": 22200
+        },
+        {
+          "midi": 62,
+          "startMs": 22200,
+          "endMs": 22800
+        },
+        {
+          "midi": 60,
+          "startMs": 22800,
+          "endMs": 23400
+        },
+        {
+          "midi": 58,
+          "startMs": 23400,
+          "endMs": 24000
+        },
+        {
+          "midi": 57,
+          "startMs": 24000,
+          "endMs": 24600
+        },
+        {
+          "midi": 55,
+          "startMs": 24600,
+          "endMs": 25800
+        }
+      ]
+    },
+    {
+      "id": "red-high-heels",
+      "name": "红色高跟鞋",
+      "artist": "蔡健雅",
+      "album": "红色高跟鞋",
+      "category": "中文",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 206590,
+      "chartVersion": 1,
+      "scoringVersion": 2,
+      "audioSource": "/source/red-high-heels.ogg",
+      "instrumentalSource": "/source/red-high-heels-instrumental.ogg",
+      "lyrics": [
+        {
+          "text": "該怎麼去形容你最貼切",
+          "startMs": 22260,
+          "endMs": 27470
+        },
+        {
+          "text": "拿什麼跟你作比較才算特別",
+          "startMs": 27470,
+          "endMs": 33050
+        },
+        {
+          "text": "對你的感覺 強烈",
+          "startMs": 33050,
+          "endMs": 35960
+        },
+        {
+          "text": "卻又不太瞭解 只憑直覺",
+          "startMs": 35960,
+          "endMs": 42000
+        },
+        {
+          "text": "你像窩在被子裡的舒服",
+          "startMs": 42000,
+          "endMs": 47370
+        },
+        {
+          "text": "卻又像風 琢磨不住",
+          "startMs": 47370,
+          "endMs": 52630
+        },
+        {
+          "text": "像手腕上散發的香水味",
+          "startMs": 52630,
+          "endMs": 58200
+        },
+        {
+          "text": "像愛不釋手的 紅色高跟鞋",
+          "startMs": 58200,
+          "endMs": 67240
+        },
+        {
+          "text": "",
+          "startMs": 67240,
+          "endMs": 76970
+        },
+        {
+          "text": "該怎麼去形容你最貼切",
+          "startMs": 76970,
+          "endMs": 82150
+        },
+        {
+          "text": "拿什麼跟你作比較才算特別",
+          "startMs": 82150,
+          "endMs": 87620
+        },
+        {
+          "text": "對你的感覺 強烈",
+          "startMs": 87620,
+          "endMs": 90400
+        },
+        {
+          "text": "卻又不太瞭解 只憑直覺",
+          "startMs": 90400,
+          "endMs": 96850
+        },
+        {
+          "text": "你像窩在被子裡的舒服",
+          "startMs": 96850,
+          "endMs": 102010
+        },
+        {
+          "text": "卻又像風 琢磨不住",
+          "startMs": 102010,
+          "endMs": 107270
+        },
+        {
+          "text": "像手腕上散發的香水味",
+          "startMs": 107270,
+          "endMs": 112910
+        },
+        {
+          "text": "像愛不釋手的 紅色高跟鞋",
+          "startMs": 112910,
+          "endMs": 124560
+        },
+        {
+          "text": "哦 啊",
+          "startMs": 124560,
+          "endMs": 130080
+        },
+        {
+          "text": "哦 耶",
+          "startMs": 130080,
+          "endMs": 134990
+        },
+        {
+          "text": "你像窩在被子裡的舒服",
+          "startMs": 134990,
+          "endMs": 140170
+        },
+        {
+          "text": "卻又像風 琢磨不住",
+          "startMs": 140170,
+          "endMs": 145500
+        },
+        {
+          "text": "像手腕上散發的香水味",
+          "startMs": 145500,
+          "endMs": 150940
+        },
+        {
+          "text": "像愛不釋手的",
+          "startMs": 150940,
+          "endMs": 156310
+        },
+        {
+          "text": "我愛你有種左燈右行的衝突",
+          "startMs": 156310,
+          "endMs": 161910
+        },
+        {
+          "text": "瘋狂卻怕沒有退路",
+          "startMs": 161910,
+          "endMs": 167180
+        },
+        {
+          "text": "你能否讓我停止這種追逐",
+          "startMs": 167180,
+          "endMs": 173300
+        },
+        {
+          "text": "就這麼雙 最後唯一的 紅色高跟鞋",
+          "startMs": 173300,
+          "endMs": 179850
+        },
+        {
+          "text": "",
+          "startMs": 179850,
+          "endMs": 206590
+        }
+      ],
+      "refNotes": []
+    }
+  ]
+}

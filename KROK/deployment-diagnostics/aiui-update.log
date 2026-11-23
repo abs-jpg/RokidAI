@@ -1,0 +1,57 @@
+11-20 19:10:15.920 D/AssistServer_Log( 1978): AIUI_JsaiAiuiHostProvider -> requestInfo flight begin generation=1 reason=phone_request_info
+11-20 19:10:20.634 D/AssistServer_Log( 1978): AIUI_JsaiAiuiHostProvider -> fetchAndSyncNativeAgentList parsed size=1
+11-20 19:10:20.642 D/AssistServer_Log( 1978): AIUI_AgentAppManager -> syncAgentList start incomingSize=1
+11-20 19:10:20.642 D/AssistServer_Log( 1978): AIUI_JsaiAiuiHostProvider -> requestInfo flight complete generation=1 reason=http_response
+11-20 19:10:20.690 D/AssistServer_Log( 1978): AIUI_AgentAppManager -> syncAgentList agentId=35b0d08f87814a668bb406a6eebe6e50 shouldDownload=false urlBlank=false artifact_revision=1
+11-20 19:10:20.690 D/AssistServer_Log( 1978): AIUI_AgentAppManager -> syncAgentList complete incomingSize=1
+11-20 19:10:28.275 D/AssistServer_Log( 3270): AIUI_JsaiAgentDownload -> resumeDownloads
+11-20 19:10:28.827 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight begin generation=1 reason=phone_request_info
+11-20 19:10:30.163 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> fetchAndSyncNativeAgentList parsed size=1
+11-20 19:10:30.220 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList start incomingSize=1
+11-20 19:10:30.220 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight complete generation=1 reason=http_response
+11-20 19:10:30.251 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList agentId=35b0d08f87814a668bb406a6eebe6e50 shouldDownload=false urlBlank=false artifact_revision=1
+11-20 19:10:30.251 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList complete incomingSize=1
+11-20 19:10:41.395 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight begin generation=2 reason=cached_agent_list
+11-20 19:10:42.814 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> fetchAndSyncNativeAgentList parsed size=1
+11-20 19:10:42.814 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight complete generation=2 reason=http_response
+11-20 19:10:42.815 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList start incomingSize=1
+11-20 19:10:42.837 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList agentId=35b0d08f87814a668bb406a6eebe6e50 shouldDownload=false urlBlank=false artifact_revision=2
+11-20 19:10:42.837 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList complete incomingSize=1
+11-20 19:23:51.110 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight begin generation=3 reason=cached_agent_list
+11-20 19:23:52.176 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> fetchAndSyncNativeAgentList parsed size=1
+11-20 19:23:52.176 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight complete generation=3 reason=http_response
+11-20 19:23:52.178 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList start incomingSize=1
+11-20 19:23:52.198 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList agentId=35b0d08f87814a668bb406a6eebe6e50 shouldDownload=false urlBlank=false artifact_revision=3
+11-20 19:23:52.198 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList complete incomingSize=1
+11-20 19:24:14.364 D/AssistServer_Log( 3270): AIUI_JsaiAgentDownload -> pauseAllDownloads
+11-20 19:24:15.905 D/AssistServer_Log( 3270): AIUI_JsaiAgentDownload -> resumeDownloads
+11-20 19:34:36.164 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight begin generation=4 reason=cached_agent_list
+11-20 19:34:38.279 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> fetchAndSyncNativeAgentList parsed size=1
+11-20 19:34:38.280 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList start incomingSize=1
+11-20 19:34:38.284 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight complete generation=4 reason=http_response
+11-20 19:34:38.308 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList agentId=35b0d08f87814a668bb406a6eebe6e50 shouldDownload=false urlBlank=false artifact_revision=4
+11-20 19:34:38.308 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList complete incomingSize=1
+11-20 19:34:39.453 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight begin generation=5 reason=cached_agent_list
+11-20 19:34:40.013 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> fetchAndSyncNativeAgentList parsed size=1
+11-20 19:34:40.014 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight complete generation=5 reason=http_response
+11-20 19:34:40.014 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList start incomingSize=1
+11-20 19:34:40.033 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList agentId=35b0d08f87814a668bb406a6eebe6e50 shouldDownload=false urlBlank=false artifact_revision=5
+11-20 19:34:40.033 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList complete incomingSize=1
+11-20 19:35:06.002 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight begin generation=6 reason=cached_agent_list
+11-20 19:35:06.997 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> fetchAndSyncNativeAgentList parsed size=1
+11-20 19:35:06.997 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight complete generation=6 reason=http_response
+11-20 19:35:06.997 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList start incomingSize=1
+11-20 19:35:07.011 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList agentId=35b0d08f87814a668bb406a6eebe6e50 shouldDownload=false urlBlank=false artifact_revision=6
+11-20 19:35:07.011 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList complete incomingSize=1
+11-20 19:35:11.864 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight begin generation=7 reason=cached_agent_list
+11-20 19:35:12.321 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> fetchAndSyncNativeAgentList parsed size=1
+11-20 19:35:12.321 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight complete generation=7 reason=http_response
+11-20 19:35:12.322 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList start incomingSize=1
+11-20 19:35:12.340 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList agentId=35b0d08f87814a668bb406a6eebe6e50 shouldDownload=false urlBlank=false artifact_revision=7
+11-20 19:35:12.340 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList complete incomingSize=1
+11-20 19:35:25.683 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight begin generation=8 reason=cached_agent_list
+11-20 19:35:26.601 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> fetchAndSyncNativeAgentList parsed size=1
+11-20 19:35:26.602 D/AssistServer_Log( 3270): AIUI_JsaiAiuiHostProvider -> requestInfo flight complete generation=8 reason=http_response
+11-20 19:35:26.602 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList start incomingSize=1
+11-20 19:35:26.621 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList agentId=35b0d08f87814a668bb406a6eebe6e50 shouldDownload=false urlBlank=false artifact_revision=8
+11-20 19:35:26.621 D/AssistServer_Log( 3270): AIUI_AgentAppManager -> syncAgentList complete incomingSize=1

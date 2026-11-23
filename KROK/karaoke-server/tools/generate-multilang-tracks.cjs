@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // 生成英语、日语、韩语三首原创练习伴奏，供多语言曲库分类和下载测试。
+const { spawnSync } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
 
@@ -60,7 +61,19 @@ function midiToHz(midi) {
   return 440 * Math.pow(2, (midi - 69) / 12)
 }
 
-function renderTrack(track) {
+function encodeOgg(wavPath, oggPath) {
+  const ffmpeg = process.env.FFMPEG || 'ffmpeg'
+  const result = spawnSync(ffmpeg, [
+    '-y', '-loglevel', 'error',
+    '-i', wavPath,
+    '-c:a', 'libopus', '-b:a', '96k', '-ar', '48000', '-ac', '1',
+    oggPath
+  ], { stdio: 'inherit' })
+  if (result.error) throw result.error
+  if (result.status !== 0) throw new Error('ffmpeg 编码失败: ' + oggPath)
+}
+
+function renderTrack(track, includeGuide = true) {
   const samples = new Float32Array(SAMPLE_RATE * DURATION_SECONDS)
   const addTone = (startMs, endMs, midi, amplitude, waveform = 'sine') => {
     const start = Math.floor(startMs * SAMPLE_RATE / 1000)
@@ -94,15 +107,17 @@ function renderTrack(track) {
     for (const note of chord.notes) addTone(startMs, startMs + 4 * BEAT_MS, note + track.transpose, 0.016)
     addClick(startMs, 0.015)
   }
-  for (let p = 0; p < track.phrases.length; p++) {
-    const phraseStart = (4 + p * 10) * BEAT_MS
-    const melody = track.phrases[p].melody
-    melody.forEach((midi, index) => {
-      const startMs = phraseStart + index * BEAT_MS
-      const lengthMs = index === melody.length - 1 ? BEAT_MS * 2 : BEAT_MS
-      addTone(startMs, startMs + lengthMs, midi + track.transpose, 0.11, 'triangle')
-      addTone(startMs, startMs + lengthMs, midi + 12 + track.transpose, 0.02)
-    })
+  if (includeGuide) {
+    for (let p = 0; p < track.phrases.length; p++) {
+      const phraseStart = (4 + p * 10) * BEAT_MS
+      const melody = track.phrases[p].melody
+      melody.forEach((midi, index) => {
+        const startMs = phraseStart + index * BEAT_MS
+        const lengthMs = index === melody.length - 1 ? BEAT_MS * 2 : BEAT_MS
+        addTone(startMs, startMs + lengthMs, midi + track.transpose, 0.11, 'triangle')
+        addTone(startMs, startMs + lengthMs, midi + 12 + track.transpose, 0.02)
+      })
+    }
   }
 
   let peak = 0
@@ -127,24 +142,34 @@ function renderTrack(track) {
   header.writeUInt16LE(16, 34)
   header.write('data', 36)
   header.writeUInt32LE(pcm.length, 40)
-  fs.writeFileSync(path.join(__dirname, '..', 'source', track.file), Buffer.concat([header, pcm]))
+  return Buffer.concat([header, pcm])
 }
 
 fs.mkdirSync(path.join(__dirname, '..', 'source'), { recursive: true })
 const catalogSongs = []
 for (const track of tracks) {
-  renderTrack(track)
-  console.log('Generated', track.file)
+  const guideFile = track.file
+  const instrumentalFile = track.file.replace(/\.wav$/i, '-instrumental.wav')
+  const guideOgg = guideFile.replace(/\.wav$/i, '.ogg')
+  const instrumentalOgg = instrumentalFile.replace(/\.wav$/i, '.ogg')
+  const sourceDir = path.join(__dirname, '..', 'source')
+  fs.writeFileSync(path.join(sourceDir, guideFile), renderTrack(track, true))
+  fs.writeFileSync(path.join(sourceDir, instrumentalFile), renderTrack(track, false))
+  encodeOgg(path.join(sourceDir, guideFile), path.join(sourceDir, guideOgg))
+  encodeOgg(path.join(sourceDir, instrumentalFile), path.join(sourceDir, instrumentalOgg))
+  console.log('Generated', path.join(sourceDir, guideOgg), 'and', path.join(sourceDir, instrumentalOgg))
   catalogSongs.push({
     id: track.id,
     name: track.name,
     artist: 'Rokid Original',
     category: track.category,
+    tag: '练习',
     difficulty: 1,
     durationMs: DURATION_SECONDS * 1000,
     chartVersion: 1,
-    scoringVersion: 2,
-    audioSource: `http://127.0.0.1:3100/source/${track.file}`,
+        scoringVersion: 5,
+    audioSource: `/source/${guideOgg}`,
+    instrumentalSource: `/source/${instrumentalOgg}`,
     lyrics: track.phrases.map((phrase, index) => {
       const startMs = (4 + index * 10) * BEAT_MS
       return { text: phrase.text, startMs, endMs: startMs + 9 * BEAT_MS }

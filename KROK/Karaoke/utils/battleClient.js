@@ -1,8 +1,7 @@
-import { LEADERBOARD_API_URL } from './leaderboardConfig.js'
+import { LEADERBOARD_API_URLS } from './leaderboardConfig.js'
 import { getPlayerToken, invalidatePlayerToken } from './leaderboard.js'
 
-const SERVER_URL = LEADERBOARD_API_URL.trim().replace(/\/+$/, '')
-const WS_URL = SERVER_URL.replace(/^http/, 'ws')
+const WS_URLS = (LEADERBOARD_API_URLS || []).map(url => url.replace(/^http/, 'ws'))
 const listeners = new Set()
 const HEARTBEAT_INTERVAL_MS = 10000
 const HEARTBEAT_TIMEOUT_MS = 30000
@@ -47,7 +46,7 @@ export function onBattleMessage(listener) {
 }
 
 export async function connectBattle() {
-  if (!WS_URL) throw new Error('联机服务器未配置')
+  if (!WS_URLS.length) throw new Error('联机服务器未配置')
   if (connecting) return connecting
   if (socket && socket.readyState === 1) return socket
 
@@ -55,66 +54,95 @@ export async function connectBattle() {
   const pending = (async () => {
     const token = await getPlayerToken()
     if (requestedGeneration !== generation) throw new Error('联机连接已取消')
-    const ws = new WebSocket(WS_URL + '/ws')
-    socket = ws
-    clockSamples = []
-    await new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        reject(new Error('联机服务器连接超时'))
-        ws.close()
-      }, 8000)
-      ws.addEventListener('open', () => {
-        if (socket === ws) ws.send(JSON.stringify({ type: 'auth', token }))
-      }, { once: true })
-      ws.addEventListener('message', event => {
-        if (socket !== ws) return
-        try {
-          const message = JSON.parse(event.data)
-          if (message.type === 'welcome') {
-            clearTimeout(timer)
-            lastPongAt = Date.now()
-            measureBattleClock()
-            resolve()
-          }
-          if (message.type === 'pong') {
-            const receivedAt = Date.now()
-            const delay = receivedAt - message.t0
-            if (Number.isFinite(message.t0) && Number.isFinite(message.t1) && delay >= 0) {
-              lastPongAt = receivedAt
-              if (delay <= 2000) {
-                clockSamples.push({ delay, offset: message.t1 - (receivedAt + message.t0) / 2 })
-                if (clockSamples.length > 8) clockSamples.shift()
-              }
-            }
-          }
-          emit(message)
-        } catch (error) {
-          console.error('battle message parse failed', error)
-        }
-      })
-      ws.addEventListener('close', event => {
-        clearTimeout(timer)
-        reject(new Error('联机服务器连接失败'))
-        if (socket !== ws) return
-        if (event.code === 4001) invalidatePlayerToken(token)
-        socket = null
-        clearInterval(pingTimer)
-        emit({ type: 'socket.close', code: event.code })
-      }, { once: true })
-      ws.addEventListener('error', () => {
-        clearTimeout(timer)
-        reject(new Error('联机服务器连接失败'))
-        if (socket === ws) emit({ type: 'socket.error' })
-        ws.close()
-      }, { once: true })
-    })
-    if (socket === ws) pingTimer = setInterval(heartbeat, HEARTBEAT_INTERVAL_MS)
-    return ws
+
+    let lastError = new Error('联机服务器连接失败')
+    for (const wsUrl of WS_URLS) {
+      if (requestedGeneration !== generation) throw new Error('联机连接已取消')
+      try {
+        const ws = await openBattleSocket(wsUrl, token, requestedGeneration)
+        if (socket === ws) pingTimer = setInterval(heartbeat, HEARTBEAT_INTERVAL_MS)
+        return ws
+      } catch (error) {
+        lastError = error
+      }
+    }
+    throw lastError
   })().finally(() => {
     if (connecting === pending) connecting = null
   })
   connecting = pending
   return connecting
+}
+
+function openBattleSocket(wsUrl, token, requestedGeneration) {
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(wsUrl + '/ws')
+    socket = ws
+    clockSamples = []
+    let welcomed = false
+    let settled = false
+    const fail = error => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      if (socket === ws) socket = null
+      try { ws.close() } catch {}
+      reject(error)
+    }
+    const timer = setTimeout(() => fail(new Error('联机服务器连接超时')), 8000)
+    ws.addEventListener('open', () => {
+      if (socket === ws && requestedGeneration === generation) {
+        ws.send(JSON.stringify({ type: 'auth', token }))
+      }
+    }, { once: true })
+    ws.addEventListener('message', event => {
+      if (socket !== ws) return
+      try {
+        const message = JSON.parse(event.data)
+        if (message.type === 'welcome') {
+          settled = true
+          clearTimeout(timer)
+          welcomed = true
+          lastPongAt = Date.now()
+          measureBattleClock()
+          resolve(ws)
+        }
+        if (message.type === 'pong') {
+          const receivedAt = Date.now()
+          const delay = receivedAt - message.t0
+          if (Number.isFinite(message.t0) && Number.isFinite(message.t1) && delay >= 0) {
+            lastPongAt = receivedAt
+            if (delay <= 2000) {
+              clockSamples.push({ delay, offset: message.t1 - (receivedAt + message.t0) / 2 })
+              if (clockSamples.length > 8) clockSamples.shift()
+            }
+          }
+        }
+        emit(message)
+      } catch (error) {
+        console.error('battle message parse failed', error)
+      }
+    })
+    ws.addEventListener('close', event => {
+      if (!welcomed) {
+        fail(new Error('联机服务器连接失败'))
+        return
+      }
+      if (socket !== ws) return
+      if (event.code === 4001) invalidatePlayerToken(token)
+      socket = null
+      clearInterval(pingTimer)
+      emit({ type: 'socket.close', code: event.code })
+    }, { once: true })
+    ws.addEventListener('error', () => {
+      if (!welcomed) {
+        fail(new Error('联机服务器连接失败'))
+        return
+      }
+      if (socket === ws) emit({ type: 'socket.error' })
+      ws.close()
+    }, { once: true })
+  })
 }
 
 export function sendBattle(type, payload = {}) {

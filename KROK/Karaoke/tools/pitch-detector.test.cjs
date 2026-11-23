@@ -11,7 +11,7 @@ const source = fs.readFileSync(sourcePath, 'utf8')
   )
   .replace(/\bexport (function|const)\b/g, '$1')
 
-const engine = new Function(source + '\nreturn { createPitchDetector, hzToMidi, calcAccuracyScore, PITCH_STEP_MS };')()
+const engine = new Function(source + '\nreturn { createPitchDetector, createVoiceActivityDetector, hzToMidi, calcAccuracyScore, calcLiveScoreIncrement, calcVocalCompleteness, countExpectedFrames, PITCH_STEP_MS };')()
 
 const SAMPLE_RATE = 48000
 const FFT_SIZE = 4096
@@ -69,10 +69,42 @@ const silenceOk = silence === null
 if (!silenceOk) failed++
 console.log(`${silenceOk ? 'PASS' : 'FAIL'}  静音                 expected=null measured=${silence}`)
 
+{
+  const frequencies = [55, 65.41, 73.42, 98]
+  const measured = frequencies.map(freq => {
+    const signal = index => {
+      const angle = 2 * Math.PI * freq * index / SAMPLE_RATE
+      return 0.12 * Math.sin(angle) + 0.10 * Math.sin(2 * angle)
+    }
+    return engine.createPitchDetector(makeAnalyser(signal), 55)()
+  })
+  const standard = detect(index => 0.2 * Math.sin(2 * Math.PI * 65.41 * index / SAMPLE_RATE))
+  const ok = standard === null && measured.every((hz, index) =>
+    hz != null && Math.abs(hz - frequencies[index]) / frequencies[index] < 0.02)
+  if (!ok) failed++
+  console.log(`${ok ? 'PASS' : 'FAIL'}  单人低音 55–98 Hz      measured=${measured.map(hz => hz?.toFixed(2) ?? 'null').join(', ')}`)
+}
+
 const noise = detect(() => 0.05 * (Math.random() * 2 - 1))
 const noiseOk = noise === null
 if (!noiseOk) failed++
 console.log(`${noiseOk ? 'PASS' : 'FAIL'}  白噪声               expected=null measured=${noise}`)
+
+{
+  const levels = [0.1, 0, -0.1, 0]
+  const active = engine.createVoiceActivityDetector({
+    fftSize: 4,
+    getFloatTimeDomainData(buffer) { buffer.set(levels) }
+  })
+  levels.fill(0)
+  const silent = active()
+  levels[0] = 0.1
+  levels[2] = -0.1
+  const voiced = active()
+  const ok = silent === false && voiced === true
+  if (!ok) failed++
+  console.log(`${ok ? 'PASS' : 'FAIL'}  人声活动检测         silent=${silent} voiced=${voiced}`)
+}
 
 {
   const g440 = sine(440)
@@ -112,15 +144,43 @@ console.log(`${noiseOk ? 'PASS' : 'FAIL'}  白噪声               expected=null
   const perfect = engine.calcAccuracyScore(samples, refNotes)
   const shifted = engine.calcAccuracyScore(samples.map(s => ({ ...s, midi: s.midi + 1 })), refNotes)
   const empty = engine.calcAccuracyScore([], refNotes)
-  const skipped = engine.calcAccuracyScore(samples.filter((_, i) => i % 5), refNotes)
+  const skipped = engine.calcAccuracyScore(samples.filter((_, i) => i % 5 !== 4), refNotes)
+  const halfSong = engine.calcAccuracyScore(samples.slice(0, samples.length / 2), refNotes)
   const silence = engine.calcAccuracyScore(samples.map(sample => ({ ...sample, midi: null })), refNotes)
+  const voiceWithoutPitch = engine.calcAccuracyScore(
+    samples.map(sample => ({ ...sample, midi: null, voiceActive: true })),
+    refNotes
+  )
+  const lyricCompleteness = engine.calcVocalCompleteness(samples, [
+    { text: '任意标准歌词', startMs: 0, endMs: 2000 }
+  ])
+  const silentLyricCompleteness = engine.calcVocalCompleteness(
+    samples.map(sample => ({ ...sample, midi: null })),
+    [{ text: '任意标准歌词', startMs: 0, endMs: 2000 }]
+  )
+  const expectedFrames = engine.countExpectedFrames(refNotes)
+  const livePerfect = samples.reduce((sum, sample) => {
+    const ref = refNotes.find(note => note.startMs <= sample.timeMs && sample.timeMs < note.endMs)
+    return sum + engine.calcLiveScoreIncrement(sample.midi, ref.midi, expectedFrames)
+  }, 0)
+  const liveShifted = samples.reduce((sum, sample) => {
+    const ref = refNotes.find(note => note.startMs <= sample.timeMs && sample.timeMs < note.endMs)
+    return sum + engine.calcLiveScoreIncrement(sample.midi + 1, ref.midi, expectedFrames)
+  }, 0)
   const ok = perfect.score === 100 && perfect.accuracy === 100 && perfect.coverage === 100 &&
-    shifted.accuracy === 80 && shifted.coverage === 100 && empty.score === 0 && empty.coverage === 0 &&
-    skipped.score === 100 && skipped.sampleQuality === 80 && silence.score === 0 && silence.sampleQuality === 100
+    shifted.accuracy === 95 && shifted.coverage === 100 && shifted.score === 99 &&
+    empty.score === 0 && empty.coverage === 0 &&
+    skipped.score === 84 && skipped.sampleQuality === 80 &&
+    halfSong.score === 60 && halfSong.coverage === 50 &&
+    silence.score === 0 && silence.sampleQuality === 100 &&
+    voiceWithoutPitch.score === 80 && voiceWithoutPitch.coverage === 100 &&
+    lyricCompleteness === 100 && silentLyricCompleteness === 0 &&
+    Math.round(livePerfect + 80) === 100 && Math.round(liveShifted + 80) === 99
   if (!ok) failed++
   console.log(
-    `${ok ? 'PASS' : 'FAIL'}  评分：准音/偏半音/静音 ` +
-    `perfect=${perfect.score} shifted=${shifted.accuracy} empty=${empty.score}`
+    `${ok ? 'PASS' : 'FAIL'}  评分：完整度 80% + 音准 20% ` +
+    `perfect=${perfect.score} shifted=${shifted.score} half=${halfSong.score} ` +
+    `live=${Math.round(livePerfect + 80)}/${Math.round(liveShifted + 80)}`
   )
 }
 

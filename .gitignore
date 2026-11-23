@@ -1,2 +1,6 @@
 # Local agent skills
 .agents/
+
+# Local pitch extraction binaries
+/KROK/karaoke-server/.pitchdeps/torch/lib/torch_cpu.dll
+/KROK/karaoke-server/.pitchdeps/llvmlite/binding/llvmlite.dll

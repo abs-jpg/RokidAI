@@ -7,10 +7,13 @@
 <script setup>
 import wx from 'wx'
 import { getSongById } from '../../utils/songData.js'
-import { calcAccuracyScore, encodePitchTrack, MIN_SAMPLE_QUALITY, SCORING_VERSION } from '../../utils/pitchEngine.js'
-import { getGrade } from '../../utils/scoreEngine.js'
-import { isServerConnected, submitScore } from '../../utils/leaderboard.js'
+import { calcAccuracyScore, calcVocalCompleteness, encodePitchTrack } from '../../utils/pitchEngine.js'
+import { getGrade, buildPracticeFeedback, calcLyricLengthCompleteness } from '../../utils/scoreEngine.js'
+import { playFeedbackSpeech } from '../../utils/feedbackSpeech.js'
+import { submitScore } from '../../utils/leaderboard.js'
 import { getSongFromLibrary } from '../../utils/songLibrary.js'
+
+const UPLOAD_ACTION = '保存到服务器排行榜'
 
 export default {
   data: {
@@ -18,14 +21,17 @@ export default {
     songName: '',
     accuracyScore: 0,
     coverage: 0,
+    completenessScore: 0,
     totalScore: 0,
+    hasRefNotes: true,
+    feedback: [],
     grade: '',
     gradeLabel: '',
     submitStatus: 'idle',
     submitMsg: '',
     errorMsg: '',
     selectedIdx: 0,
-    actionLabels: ['保存本机成绩', '重唱', '返回首页'],
+    actionLabels: [UPLOAD_ACTION, '重唱', '返回首页'],
     hintText: '评分计算中'
   },
 
@@ -40,8 +46,19 @@ export default {
     if (this.song) this.calculateScore()
   },
 
+  onShow() {
+    this.hidden = false
+  },
+
+  onHide() {
+    this.hidden = true
+    this.stopFeedbackSpeech?.()
+    this.stopFeedbackSpeech = null
+  },
+
   onUnload() {
     this.unloaded = true
+    this.onHide()
   },
 
   async initializeSong() {
@@ -92,6 +109,7 @@ export default {
   },
 
   calculateScore() {
+    if (this.data.phase === 'display') return
     try {
       const recording = wx.getStorageSync('karaoke_last_recording')
       if (!this.song || !this.attemptId || !recording ||
@@ -101,25 +119,63 @@ export default {
         return
       }
       this.scoringVersion = recording.scoringVersion ?? 1
-      const { score, accuracy, coverage, sampleQuality } = calcAccuracyScore(recording.pitchTrack, this.song.refNotes, this.scoringVersion)
-      if (this.scoringVersion >= 2 && recording.completed && sampleQuality < MIN_SAMPLE_QUALITY) {
-        this.setData({ phase: 'error', errorMsg: '设备采样不稳定 · 请重唱', hintText: '返回重唱' })
-        return
+      this.chartVersion = recording.chartVersion ?? this.song.chartVersion
+      this.completed = recording.completed === true
+      this.recognizedText = recording.recognizedText || ''
+      const hasRefNotes = Array.isArray(this.song.refNotes) && this.song.refNotes.length > 0
+      const lyrics = this.song.lyrics || []
+      const lyricsText = lyrics.map(line => line.text || '').join('')
+
+      let score
+      let accuracy = 0
+      let coverage = 0
+      let completeness = 0
+      let pitchProfile
+      if (hasRefNotes) {
+        const result = calcAccuracyScore(recording.pitchTrack, this.song.refNotes, this.scoringVersion)
+        accuracy = result.accuracy
+        pitchProfile = result.pitchProfile
+        completeness = this.scoringVersion >= 4
+          ? calcLyricLengthCompleteness(this.recognizedText, lyricsText)
+          : (result.completeness ?? result.coverage)
+        coverage = completeness
+        score = this.scoringVersion >= 4
+          ? Math.round(completeness * 0.8 + accuracy * 0.2)
+          : result.score
+      } else {
+        completeness = this.scoringVersion >= 4
+          ? calcLyricLengthCompleteness(this.recognizedText, lyricsText)
+          : calcVocalCompleteness(recording.pitchTrack, lyrics)
+        coverage = completeness
+        score = completeness
       }
       const { grade, label } = getGrade(score)
-      this.completed = recording.completed === true
       this.samples = encodePitchTrack(recording.pitchTrack)
-      const canUpload = this.completed && coverage > 0 && isServerConnected() && this.scoringVersion === SCORING_VERSION
+      const feedback = buildPracticeFeedback({
+        lyrics,
+        recognizedText: this.recognizedText,
+        completed: this.completed,
+        sungUntilMs: recording.sungUntilMs ?? recording.pitchTrack[recording.pitchTrack.length - 1]?.timeMs,
+        hasRefNotes,
+        pitchProfile
+      })
       this.setData({
         phase: 'display',
         totalScore: score,
         accuracyScore: accuracy,
         coverage,
+        completenessScore: completeness,
+        hasRefNotes,
+        feedback,
         grade,
         gradeLabel: label,
-        actionLabels: [canUpload ? '提交成绩' : '保存本机成绩', '重唱', '返回首页'],
         hintText: '上下选择 · 确认 · 返回'
+      }, () => {
+        if (this.unloaded || this.hidden || this.feedbackSpoken) return
+        this.feedbackSpoken = true
+        this.stopFeedbackSpeech = playFeedbackSpeech(feedback)
       })
+      if (this.completed) this.doSubmit()
     } catch (error) {
       console.error('读取演唱成绩失败', error)
       this.setData({ phase: 'error', errorMsg: '读取成绩失败', hintText: '确认重试 · 返回' })
@@ -128,27 +184,29 @@ export default {
 
   async doSubmit() {
     if (this.data.submitStatus === 'submitting' || this.data.submitStatus === 'done') return
-    this.setData({ submitStatus: 'submitting', submitMsg: '正在保存' })
+    this.setData({ submitStatus: 'submitting', submitMsg: '正在上传排行榜' })
     try {
       const result = await submitScore({
         attemptId: this.attemptId,
         songId: this.song.id,
         songName: this.song.name,
-        chartVersion: this.song.chartVersion,
+        chartVersion: this.chartVersion ?? this.song.chartVersion,
         scoringVersion: this.scoringVersion,
         completed: this.completed,
         score: this.data.totalScore,
         accuracy: this.data.accuracyScore,
-        coverage: this.data.coverage
+        coverage: this.data.coverage,
+        recognizedText: this.recognizedText
       }, this.samples)
       if (this.unloaded) return
       this.setData({
-        submitStatus: result.success && !result.retryable ? 'done' : 'error',
-        submitMsg: result.message
+        submitStatus: result.uploaded ? 'done' : 'error',
+        submitMsg: result.message,
+        actionLabels: [result.uploaded ? '已上传' : result.retryable ? '重试上传' : UPLOAD_ACTION, '重唱', '返回首页']
       })
     } catch (error) {
-      console.error('保存成绩失败', error)
-      if (!this.unloaded) this.setData({ submitStatus: 'error', submitMsg: '保存失败 · 确认重试' })
+      console.error('上传成绩失败', error)
+      if (!this.unloaded) this.setData({ submitStatus: 'error', submitMsg: '上传未完成 · 确认重试' })
     }
   }
 }
@@ -178,34 +236,19 @@ export default {
         <text class="score-unit">演唱得分</text>
       </view>
 
-      <view class="sub-scores">
-        <view class="sub-row">
-          <text class="sub-name">音准</text>
-          <view class="bar-track">
-            <view class="bar-fill" style="width: {{accuracyScore}}%;"></view>
-          </view>
-          <text class="sub-num">{{accuracyScore}}</text>
-        </view>
-        <view class="sub-row">
-          <text class="sub-name">覆盖率</text>
-          <view class="bar-track">
-            <view class="bar-fill" style="width: {{coverage}}%;"></view>
-          </view>
-          <text class="sub-num">{{coverage}}%</text>
-        </view>
+      <view class="summary-box">
+        <text class="summary-title">用户点评</text>
+        <text class="summary-text" ink:for="{{feedback}}" ink:key="*this">{{item}}</text>
       </view>
 
       <view class="submit-line" ink:if="{{submitStatus !== 'idle'}}">
         <text class="submit-msg">{{submitMsg}}</text>
       </view>
+    </view>
 
-      <view class="action-row">
-        <view class="action-btn" ink:for="{{actionLabels}}" ink:key="*this" bindtap="onTapAction" data-idx="{{index}}">
-          <text class="action-label">{{item}}</text>
-          <view class="action-marker">
-            <view class="action-dot" ink:if="{{selectedIdx === index}}"></view>
-          </view>
-        </view>
+    <view class="action-row" ink:if="{{phase === 'display'}}">
+      <view class="action-btn {{selectedIdx === index ? 'action-btn-active' : ''}}" ink:for="{{actionLabels}}" ink:key="*this" bindtap="onTapAction" data-idx="{{index}}">
+        <text class="action-label">{{item}}</text>
       </view>
     </view>
 
@@ -217,11 +260,11 @@ export default {
 
 <style>
 :root {
-  --green-100: #40ff5e;
-  --green-72: rgba(64,255,94,0.72);
-  --green-48: rgba(64,255,94,0.48);
-  --green-24: rgba(64,255,94,0.24);
-  --green-12: rgba(64,255,94,0.12);
+  --green-100: #4cc773;
+  --green-72: rgba(76,199,115,0.72);
+  --green-48: rgba(76,199,115,0.48);
+  --green-24: rgba(76,199,115,0.24);
+  --green-12: rgba(76,199,115,0.12);
 }
 
 .page-root {
@@ -271,7 +314,7 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 110px;
+  height: 88px;
   flex-shrink: 0;
 }
 
@@ -282,7 +325,8 @@ export default {
 }
 
 .grade-letter {
-  font-size: 28px;
+  font-size: 24px;
+  line-height: 26px;
   font-weight: bold;
   color: var(--green-100);
 }
@@ -294,7 +338,8 @@ export default {
 }
 
 .score-num {
-  font-size: 48px;
+  font-size: 42px;
+  line-height: 44px;
   font-weight: bold;
   color: var(--green-100);
   margin-top: 2px;
@@ -302,51 +347,36 @@ export default {
 
 .score-unit {
   font-size: 11px;
-  color: var(--green-24);
+  line-height: 14px;
+  color: var(--green-48);
 }
 
-.sub-scores {
+.summary-box {
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
   width: 100%;
   flex-shrink: 0;
   margin-top: 6px;
-}
-
-.sub-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  height: 28px;
-}
-
-.sub-name {
-  font-size: 11px;
-  color: var(--green-48);
-  width: 56px;
-  flex-shrink: 0;
-}
-
-.bar-track {
-  position: relative;
-  flex: 1 1 auto;
-  height: 10px;
-  background-color: var(--green-12);
+  padding: 5px 10px;
   border: 1px solid var(--green-24);
 }
 
-.bar-fill {
-  height: 100%;
-  background-color: var(--green-72);
-}
-
-.sub-num {
-  font-size: 14px;
+.summary-title {
+  flex-shrink: 0;
+  font-size: 13px;
+  line-height: 16px;
   font-weight: bold;
   color: var(--green-100);
-  width: 44px;
-  text-align: right;
+}
+
+.summary-text {
   flex-shrink: 0;
+  width: 100%;
+  font-size: 13px;
+  color: var(--green-72);
+  line-height: 16px;
+  margin-top: 2px;
 }
 
 .submit-line {
@@ -367,7 +397,9 @@ export default {
   flex-direction: row;
   align-items: center;
   justify-content: space-around;
-  height: 40px;
+  width: 416px;
+  align-self: center;
+  height: 32px;
   flex-shrink: 0;
   margin-top: 6px;
 }
@@ -377,29 +409,21 @@ export default {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  flex: 1 1 auto;
-  height: 100%;
-  margin: 0 4px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 128px;
+  height: 28px;
+  border: 1px solid rgba(76,199,115,0.24);
+}
+
+.action-btn-active {
+  border-color: #4cc773;
+  background-color: rgba(76,199,115,0.12);
 }
 
 .action-label {
   font-size: 13px;
-  color: var(--green-72);
-}
-
-.action-marker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 8px;
-  margin-left: 4px;
-}
-
-.action-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--green-100);
+  color: rgba(76,199,115,0.84);
 }
 
 .hintbar {

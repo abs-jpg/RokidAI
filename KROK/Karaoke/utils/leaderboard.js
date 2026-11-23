@@ -1,15 +1,18 @@
 import wx from 'wx';
 import { createOpenAPI } from 'open';
-import { LEADERBOARD_API_URL } from './leaderboardConfig.js';
+import { LEADERBOARD_API_URL, LEADERBOARD_API_URLS } from './leaderboardConfig.js';
 import { SCORING_VERSION } from './pitchEngine.js';
 
 const STORAGE_KEY = 'karaoke_leaderboard';
 const SERVER_URL = LEADERBOARD_API_URL.trim().replace(/\/+$/, '');
+const SERVER_URLS = (typeof LEADERBOARD_API_URLS !== 'undefined' && LEADERBOARD_API_URLS) ||
+  (SERVER_URL ? [SERVER_URL] : []);
 const TOKEN_KEY = 'karaoke_server_token:' + SERVER_URL;
 const TOKEN_BIND_KEY = TOKEN_KEY + ':rokid:verified';
 const PENDING_KEY = TOKEN_KEY + ':pending';
 const MAX_PENDING_SCORES = 20;
 const REQUEST_TIMEOUT_MS = 5000;
+const NATIVE_REQUEST_TIMEOUT_MS = 12000;
 const PROFILE_TIMEOUT_MS = 4000;
 let registration;
 let profilePromise;
@@ -61,16 +64,48 @@ function getUserId() {
   }
 }
 
+function requestWithWx(url, options) {
+  return new Promise((resolve, reject) => {
+    wx.request({
+      url,
+      method: options?.method || 'GET',
+      header: options?.headers || {},
+      data: options?.body,
+      dataType: 'text',
+      timeout: NATIVE_REQUEST_TIMEOUT_MS,
+      success(result) {
+        const status = result.statusCode;
+        let body = result.data;
+        if (typeof body === 'string') {
+          try { body = JSON.parse(body); } catch { body = null; }
+        }
+        resolve({ ok: status >= 200 && status < 300, status, body });
+      },
+      fail(error) { reject(new Error(error?.errMsg || '无法连接排行榜服务器')); }
+    });
+  });
+}
+
 async function request(path, options) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  try {
-    const response = await fetch(SERVER_URL + path, { ...options, signal: controller.signal });
-    const body = await response.json().catch(() => null);
-    return { ok: response.ok, status: response.status, body };
-  } finally {
-    clearTimeout(timer);
+  let lastError = new Error('服务器地址未配置');
+  for (const baseUrl of SERVER_URLS) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const response = await fetch(baseUrl + path, { ...options, signal: controller.signal });
+      const body = await response.json().catch(() => null);
+      return { ok: response.ok, status: response.status, body };
+    } catch (error) {
+      lastError = error;
+    } finally {
+      clearTimeout(timer);
+    }
+    if (typeof wx.request === 'function') {
+      try { return await requestWithWx(baseUrl + path, options); }
+      catch (error) { lastError = error; }
+    }
   }
+  throw lastError;
 }
 
 function readToken() {
@@ -159,13 +194,19 @@ function readBinding() {
 }
 
 async function uploadScore(entry, samples, owner) {
+  // 第 3 版起覆盖率的分母是谱面帧数，静音帧可省略；音高值保留原始精度。
+  const uploadSamples = entry.scoringVersion >= 3
+    ? samples.filter(([, midi, voice]) => midi !== null || voice === 1)
+      .map(sample => sample[2] === Number(sample[1] !== null) ? sample.slice(0, 2) : sample)
+    : samples;
   const body = JSON.stringify({
     attemptId: entry.attemptId,
     songId: entry.songId,
     chartVersion: entry.chartVersion,
     scoringVersion: entry.scoringVersion,
     completed: entry.completed,
-    samples
+    recognizedText: entry.recognizedText || '',
+    samples: uploadSamples
   });
   const send = token => request('/api/scores', {
     method: 'POST',
@@ -182,9 +223,29 @@ async function uploadScore(entry, samples, owner) {
   return send(renewed);
 }
 
+function scoreUploadMessage(errorCode) {
+  switch (errorCode) {
+    case 'VERSION_MISMATCH': return '曲谱或计分版本不一致';
+    case 'BODY_TOO_LARGE': return '服务器限制了成绩数据大小';
+    case 'NOT_ELIGIBLE': return '服务器未识别到有效唱词';
+    case 'INVALID_RECOGNITION': return '识别唱词格式无效';
+    case 'INVALID_PITCH_TRACK': return '音高记录格式无效';
+    case 'ATTEMPT_CONFLICT': return '服务器已有不同的同编号成绩';
+    case 'SONG_NOT_FOUND': return '服务器曲库中找不到这首歌';
+    default: return '服务器未接收成绩';
+  }
+}
+
 function readPending() {
   const list = wx.getStorageSync(PENDING_KEY);
   return Array.isArray(list) ? list : [];
+}
+
+function getScoreUploadBlock(entry) {
+  if (entry.completed !== true) return '唱完最后一句后才能上榜';
+  if (entry.scoringVersion !== SCORING_VERSION) return '评分版本不一致';
+  if (!isServerConnected()) return '当前版本未配置排行榜服务器';
+  return '';
 }
 
 export function flushPendingScores() {
@@ -202,13 +263,22 @@ export function flushPendingScores() {
       try {
         const response = await uploadScore(item.entry, item.samples, item.owner);
         const uploaded = response.ok && response.body?.ok === true;
-        const permanent = response.status >= 400 && response.status < 500 && ![401, 429].includes(response.status);
-        if (!uploaded && !permanent) return results;
+        const permanent = response.status >= 400 && response.status < 500 && ![401, 413, 429].includes(response.status);
+        const message = scoreUploadMessage(response.status === 413 ? 'BODY_TOO_LARGE' : response.body?.error);
+        if (response.status === 413) {
+          results.set(id, { uploaded: false, retryable: true, message });
+          continue;
+        }
+        if (!uploaded && !permanent) {
+          results.set(id, {
+            uploaded: false,
+            retryable: true,
+            message: response.status === 429 ? '服务器限流 · 稍后补传' : '服务器暂未确认 · 待补传'
+          });
+          return results;
+        }
         wx.setStorageSync(PENDING_KEY, readPending().filter(value => value.entry.attemptId !== id));
-        results.set(id, {
-          uploaded,
-          message: response.body?.error === 'VERSION_MISMATCH' ? '评分版本不一致 · 已存本机' : '服务器未接收成绩 · 已存本机'
-        });
+        results.set(id, { uploaded, message });
       } catch (error) {
         console.error('pending score upload failed', error);
         return results;
@@ -224,13 +294,10 @@ export async function submitScore(entry, samples) {
     userId: getUserId(),
     date: new Date().toLocaleDateString('zh-CN')
   };
-  const localSaved = saveScoreLocal(record);
-  if (!isServerConnected() || entry.completed !== true || !(entry.coverage > 0) || entry.scoringVersion !== SCORING_VERSION) {
-    return {
-      success: localSaved,
-      retryable: !localSaved,
-      message: localSaved ? '成绩已保存到本机' : '保存失败 · 确认重试'
-    };
+  saveScoreLocal(record);
+  const blocked = getScoreUploadBlock(entry);
+  if (blocked) {
+    return { uploaded: false, retryable: false, message: blocked };
   }
 
   let queued = false;
@@ -238,7 +305,7 @@ export async function submitScore(entry, samples) {
     const pending = readPending();
     if (!pending.some(item => item.entry.attemptId === entry.attemptId)) {
       if (pending.length >= MAX_PENDING_SCORES) {
-        return { success: localSaved, retryable: true, message: '待上传空间已满 · 联网后确认重试' };
+        return { uploaded: false, retryable: true, message: '待上传空间已满 · 联网后确认重试' };
       }
       pending.push({ entry, samples, owner: readBinding() });
       wx.setStorageSync(PENDING_KEY, pending);
@@ -247,18 +314,18 @@ export async function submitScore(entry, samples) {
     const results = await flushPendingScores();
     const result = results.get(entry.attemptId);
     if (result?.uploaded) {
-      return { success: true, message: accountNotice ? '已上传 · ' + accountNotice : '成绩已上传排行榜' };
+      return { uploaded: true, message: '已保存到服务器排行榜' };
     }
     if (result) {
-      return { success: localSaved, retryable: !localSaved, message: result.message };
+      return result;
     }
   } catch (error) {
     console.error('leaderboard upload failed', error);
   }
   return {
-    success: localSaved,
+    uploaded: false,
     retryable: true,
-    message: localSaved ? (queued ? '已存本机 · 联网后补传' : '已存本机 · 确认重试') : '保存失败 · 确认重试'
+    message: queued ? '未能连接服务器 · 待补传' : '上传未完成 · 确认重试'
   };
 }
 
@@ -327,11 +394,30 @@ export async function getLeaderboard(songId) {
  * @returns {boolean}
  */
 export function isServerConnected() {
-  return /^https?:\/\/[^/?#]+$/.test(SERVER_URL);
+  return SERVER_URLS.length > 0 && SERVER_URLS.every(url => /^https?:\/\/[^/?#]+$/.test(url));
 }
 
 export async function getPlayerToken() {
   return getToken();
+}
+
+export async function submitSongRequest(id, text) {
+  const body = JSON.stringify({ id, text });
+  const send = token => request('/api/song-requests', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+    body
+  });
+  const token = await getPlayerToken();
+  let response = await send(token);
+  if (response.status === 401) {
+    invalidatePlayerToken(token);
+    response = await send(await getPlayerToken());
+  }
+  if (response.ok && response.body?.ok === true) return;
+  if (response.status === 404) throw new Error('服务器尚未开通留言');
+  if (response.status === 429) throw new Error('发送太频繁，请稍后再试');
+  throw new Error('留言未送达，请重试');
 }
 
 export function getAccountNotice() {

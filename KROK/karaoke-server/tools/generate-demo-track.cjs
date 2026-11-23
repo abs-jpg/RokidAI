@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // 生成一首 30 秒原创练习伴奏（WAV），用于验证在线曲库下载和缓存流程。
+const { spawnSync } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
 
@@ -103,4 +104,14 @@ header.writeUInt32LE(pcm.length, 40)
 
 fs.mkdirSync(path.dirname(outputPath), { recursive: true })
 fs.writeFileSync(outputPath, Buffer.concat([header, pcm]))
-console.log('Generated', outputPath, (pcm.length + 44) + ' bytes')
+const oggPath = outputPath.replace(/\.wav$/i, '.ogg')
+const ffmpeg = process.env.FFMPEG || 'ffmpeg'
+const encoded = spawnSync(ffmpeg, [
+  '-y', '-loglevel', 'error',
+  '-i', outputPath,
+  '-c:a', 'libopus', '-b:a', '96k', '-ar', '48000', '-ac', '1',
+  oggPath
+], { stdio: 'inherit' })
+if (encoded.error) throw encoded.error
+if (encoded.status !== 0) throw new Error('ffmpeg 编码失败: ' + oggPath)
+console.log('Generated', oggPath, (pcm.length + 44) + ' bytes WAV source')

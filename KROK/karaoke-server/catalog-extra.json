@@ -1,587 +1,4419 @@
 {
   "songs": [
     {
-      "id": "morning-breeze",
-      "name": "Morning Breeze",
-      "artist": "Rokid Original",
-      "category": "English",
-      "difficulty": 1,
-      "durationMs": 30000,
-      "chartVersion": 1,
-      "scoringVersion": 2,
-      "audioSource": "/source/morning-breeze.ogg",
+      "id": "red-high-heels",
+      "name": "红色高跟鞋",
+      "artist": "蔡健雅",
+      "album": "红色高跟鞋",
+      "category": "中文",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 206590,
+      "chartVersion": 2,
+      "scoringVersion": 5,
+      "audioSource": "/source/red-high-heels.ogg",
+      "instrumentalSource": "/source/red-high-heels-instrumental.ogg",
       "lyrics": [
         {
-          "text": "Morning breeze is on the road",
-          "startMs": 2400,
-          "endMs": 7800
+          "text": "該怎麼去形容你最貼切",
+          "startMs": 22260,
+          "endMs": 27470
         },
         {
-          "text": "Softly singing as we go",
-          "startMs": 8400,
-          "endMs": 13800
+          "text": "拿什麼跟你作比較才算特別",
+          "startMs": 27470,
+          "endMs": 33050
         },
         {
-          "text": "Follow every little note",
-          "startMs": 14400,
-          "endMs": 19800
+          "text": "對你的感覺 強烈",
+          "startMs": 33050,
+          "endMs": 35960
         },
         {
-          "text": "Let the happy rhythm flow",
-          "startMs": 20400,
-          "endMs": 25800
+          "text": "卻又不太瞭解 只憑直覺",
+          "startMs": 35960,
+          "endMs": 42000
+        },
+        {
+          "text": "你像窩在被子裡的舒服",
+          "startMs": 42000,
+          "endMs": 47370
+        },
+        {
+          "text": "卻又像風 琢磨不住",
+          "startMs": 47370,
+          "endMs": 52630
+        },
+        {
+          "text": "像手腕上散發的香水味",
+          "startMs": 52630,
+          "endMs": 58200
+        },
+        {
+          "text": "像愛不釋手的 紅色高跟鞋",
+          "startMs": 58200,
+          "endMs": 67240
+        },
+        {
+          "text": "",
+          "startMs": 67240,
+          "endMs": 76970
+        },
+        {
+          "text": "該怎麼去形容你最貼切",
+          "startMs": 76970,
+          "endMs": 82150
+        },
+        {
+          "text": "拿什麼跟你作比較才算特別",
+          "startMs": 82150,
+          "endMs": 87620
+        },
+        {
+          "text": "對你的感覺 強烈",
+          "startMs": 87620,
+          "endMs": 90400
+        },
+        {
+          "text": "卻又不太瞭解 只憑直覺",
+          "startMs": 90400,
+          "endMs": 96850
+        },
+        {
+          "text": "你像窩在被子裡的舒服",
+          "startMs": 96850,
+          "endMs": 102010
+        },
+        {
+          "text": "卻又像風 琢磨不住",
+          "startMs": 102010,
+          "endMs": 107270
+        },
+        {
+          "text": "像手腕上散發的香水味",
+          "startMs": 107270,
+          "endMs": 112910
+        },
+        {
+          "text": "像愛不釋手的 紅色高跟鞋",
+          "startMs": 112910,
+          "endMs": 124560
+        },
+        {
+          "text": "哦 啊",
+          "startMs": 124560,
+          "endMs": 130080
+        },
+        {
+          "text": "哦 耶",
+          "startMs": 130080,
+          "endMs": 134990
+        },
+        {
+          "text": "你像窩在被子裡的舒服",
+          "startMs": 134990,
+          "endMs": 140170
+        },
+        {
+          "text": "卻又像風 琢磨不住",
+          "startMs": 140170,
+          "endMs": 145500
+        },
+        {
+          "text": "像手腕上散發的香水味",
+          "startMs": 145500,
+          "endMs": 150940
+        },
+        {
+          "text": "像愛不釋手的",
+          "startMs": 150940,
+          "endMs": 156310
+        },
+        {
+          "text": "我愛你有種左燈右行的衝突",
+          "startMs": 156310,
+          "endMs": 161910
+        },
+        {
+          "text": "瘋狂卻怕沒有退路",
+          "startMs": 161910,
+          "endMs": 167180
+        },
+        {
+          "text": "你能否讓我停止這種追逐",
+          "startMs": 167180,
+          "endMs": 173300
+        },
+        {
+          "text": "就這麼雙 最後唯一的 紅色高跟鞋",
+          "startMs": 173300,
+          "endMs": 179850
+        },
+        {
+          "text": "",
+          "startMs": 179850,
+          "endMs": 206590
         }
       ],
-      "refNotes": [
+      "melodyFile": "melodies/red-high-heels.json"
+    },
+    {
+      "id": "father",
+      "name": "父亲",
+      "artist": "筷子兄弟",
+      "album": "父亲",
+      "category": "中文",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 280335,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/father.ogg",
+      "instrumentalSource": "/source/father-instrumental.ogg",
+      "melodyFile": "melodies/father.json",
+      "lyrics": [
         {
-          "midi": 60,
-          "startMs": 2400,
-          "endMs": 3000
+          "text": "總是向你索取 卻不曾說謝謝你",
+          "startMs": 26250,
+          "endMs": 32840
         },
         {
-          "midi": 62,
-          "startMs": 3000,
-          "endMs": 3600
+          "text": "直到長大以後才懂 得你不容易",
+          "startMs": 32840,
+          "endMs": 39710
         },
         {
-          "midi": 64,
-          "startMs": 3600,
-          "endMs": 4200
+          "text": "每次離開總是裝作 輕鬆的樣子",
+          "startMs": 39710,
+          "endMs": 46250
         },
         {
-          "midi": 65,
-          "startMs": 4200,
-          "endMs": 4800
+          "text": "微笑著說回去吧 轉身淚溼眼底",
+          "startMs": 46250,
+          "endMs": 52500
         },
         {
-          "midi": 64,
-          "startMs": 4800,
-          "endMs": 5400
+          "text": "多想和從前一樣 牽你溫暖手掌",
+          "startMs": 52500,
+          "endMs": 58680
         },
         {
-          "midi": 62,
-          "startMs": 5400,
-          "endMs": 6000
+          "text": "可是你不在我身旁 託清風捎去安康",
+          "startMs": 58680,
+          "endMs": 68560
         },
         {
-          "midi": 60,
-          "startMs": 6000,
-          "endMs": 6600
+          "text": "時光時光慢些吧 不要再讓你變老了",
+          "startMs": 68560,
+          "endMs": 75490
         },
         {
-          "midi": 59,
-          "startMs": 6600,
-          "endMs": 7800
+          "text": "我願用我一切換你歲月長留",
+          "startMs": 75490,
+          "endMs": 81840
         },
         {
-          "midi": 59,
-          "startMs": 8400,
-          "endMs": 9000
+          "text": "一生要強的爸爸 我能為你做些什麼",
+          "startMs": 81840,
+          "endMs": 88580
         },
         {
-          "midi": 60,
-          "startMs": 9000,
-          "endMs": 9600
+          "text": "微不足道的關心 收下吧",
+          "startMs": 88580,
+          "endMs": 95020
         },
         {
-          "midi": 62,
-          "startMs": 9600,
-          "endMs": 10200
+          "text": "謝謝你做的一切 雙手撐起我們的家",
+          "startMs": 95020,
+          "endMs": 101550
         },
         {
-          "midi": 64,
-          "startMs": 10200,
-          "endMs": 10800
+          "text": "總是竭盡所有把最好的給我",
+          "startMs": 101550,
+          "endMs": 108160
         },
         {
-          "midi": 65,
-          "startMs": 10800,
-          "endMs": 11400
+          "text": "我是你的驕傲嗎 還在為我而擔心嗎",
+          "startMs": 108160,
+          "endMs": 115010
         },
         {
-          "midi": 64,
-          "startMs": 11400,
-          "endMs": 12000
+          "text": "你牽掛的孩子啊 長大了",
+          "startMs": 115010,
+          "endMs": 120840
         },
         {
-          "midi": 62,
-          "startMs": 12000,
-          "endMs": 12600
+          "text": "",
+          "startMs": 120840,
+          "endMs": 128550
         },
         {
-          "midi": 60,
-          "startMs": 12600,
-          "endMs": 13800
+          "text": "(Hmm-hmm-hmm-hmm)",
+          "startMs": 128550,
+          "endMs": 134860
         },
         {
-          "midi": 60,
-          "startMs": 14400,
-          "endMs": 15000
+          "text": "(Hmm-hmm-hmm-hmm)",
+          "startMs": 134860,
+          "endMs": 141540
         },
         {
-          "midi": 64,
-          "startMs": 15000,
-          "endMs": 15600
+          "text": "(Hmm-hmm-hmm-hmm)",
+          "startMs": 141540,
+          "endMs": 148190
         },
         {
-          "midi": 65,
-          "startMs": 15600,
-          "endMs": 16200
+          "text": "(Hmm-hmm-hmm-hmm)",
+          "startMs": 148190,
+          "endMs": 154140
         },
         {
-          "midi": 67,
-          "startMs": 16200,
-          "endMs": 16800
+          "text": "多想和從前一樣 牽你溫暖手掌",
+          "startMs": 154140,
+          "endMs": 160690
         },
         {
-          "midi": 65,
-          "startMs": 16800,
-          "endMs": 17400
+          "text": "可是你不在我身旁 託清風捎去安康",
+          "startMs": 160690,
+          "endMs": 170720
         },
         {
-          "midi": 64,
-          "startMs": 17400,
-          "endMs": 18000
+          "text": "時光時光慢些吧 不要再讓你變老了",
+          "startMs": 170720,
+          "endMs": 177340
         },
         {
-          "midi": 62,
-          "startMs": 18000,
-          "endMs": 18600
+          "text": "我願用我一切換你歲月長留",
+          "startMs": 177340,
+          "endMs": 183780
         },
         {
-          "midi": 60,
-          "startMs": 18600,
-          "endMs": 19800
+          "text": "一生要強的爸爸 我能為你做些什麼",
+          "startMs": 183780,
+          "endMs": 190350
         },
         {
-          "midi": 59,
-          "startMs": 20400,
-          "endMs": 21000
+          "text": "微不足道的關心 收下吧",
+          "startMs": 190350,
+          "endMs": 197030
         },
         {
-          "midi": 60,
-          "startMs": 21000,
-          "endMs": 21600
+          "text": "謝謝你做的一切 雙手撐起我們的家",
+          "startMs": 197030,
+          "endMs": 203630
         },
         {
-          "midi": 62,
-          "startMs": 21600,
-          "endMs": 22200
+          "text": "總是竭盡所有把最好的給我",
+          "startMs": 203630,
+          "endMs": 210280
         },
         {
-          "midi": 64,
-          "startMs": 22200,
-          "endMs": 22800
+          "text": "我是你的驕傲嗎 還在為我而擔心嗎",
+          "startMs": 210280,
+          "endMs": 216750
         },
         {
-          "midi": 62,
-          "startMs": 22800,
-          "endMs": 23400
+          "text": "你牽掛的孩子啊 長大了",
+          "startMs": 216750,
+          "endMs": 223150
         },
         {
-          "midi": 60,
-          "startMs": 23400,
-          "endMs": 24000
+          "text": "時光時光慢些吧 不要再讓你變老了",
+          "startMs": 223150,
+          "endMs": 229970
         },
         {
-          "midi": 59,
-          "startMs": 24000,
-          "endMs": 24600
+          "text": "我願用我一切換你歲月長留",
+          "startMs": 229970,
+          "endMs": 236320
         },
         {
-          "midi": 57,
-          "startMs": 24600,
-          "endMs": 25800
+          "text": "我是你的驕傲嗎 還在為我而擔心嗎",
+          "startMs": 236320,
+          "endMs": 243110
+        },
+        {
+          "text": "你牽掛的孩子啊 長大了",
+          "startMs": 243110,
+          "endMs": 249410
+        },
+        {
+          "text": "感謝一路上有你",
+          "startMs": 249410,
+          "endMs": 253340
+        },
+        {
+          "text": "",
+          "startMs": 253340,
+          "endMs": 280335
         }
       ]
     },
     {
-      "id": "hikari-no-michi",
-      "name": "光の小道",
-      "artist": "Rokid Original",
-      "category": "日本語",
-      "difficulty": 1,
-      "durationMs": 30000,
+      "id": "zui-xuan-min-zu-feng",
+      "name": "最炫民族风",
+      "artist": "凤凰传奇",
+      "album": "最炫民族风",
+      "category": "中文",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 284422,
       "chartVersion": 1,
-      "scoringVersion": 2,
-      "audioSource": "/source/hikari-no-michi.ogg",
+      "scoringVersion": 5,
+      "audioSource": "/source/zui-xuan-min-zu-feng.ogg",
+      "instrumentalSource": "/source/zui-xuan-min-zu-feng-instrumental.ogg",
+      "melodyFile": "melodies/zui-xuan-min-zu-feng.json",
       "lyrics": [
         {
-          "text": "朝の光が道を照らす",
-          "startMs": 2400,
-          "endMs": 7800
+          "text": "蒼茫的天涯是我的愛 綿綿的青山腳下花正開",
+          "startMs": 23540,
+          "endMs": 30770
         },
         {
-          "text": "風がそっと歌っている",
-          "startMs": 8400,
-          "endMs": 13800
+          "text": "什麼樣的節奏是最呀最搖擺 什麼樣的歌聲才是最開懷",
+          "startMs": 30770,
+          "endMs": 38370
         },
         {
-          "text": "小さな声で歩いてく",
-          "startMs": 14400,
-          "endMs": 19800
+          "text": "彎彎的河水從天上來 流向那萬紫千紅一片海",
+          "startMs": 38370,
+          "endMs": 45800
         },
         {
-          "text": "明日の空を見上げよう",
-          "startMs": 20400,
-          "endMs": 25800
-        }
-      ],
-      "refNotes": [
-        {
-          "midi": 64,
-          "startMs": 2400,
-          "endMs": 3000
+          "text": "火辣辣的歌謠是我們的期待 一路邊走邊唱才是最自在",
+          "startMs": 45800,
+          "endMs": 53630
         },
         {
-          "midi": 66,
-          "startMs": 3000,
-          "endMs": 3600
+          "text": "我們要唱就要唱得最痛快",
+          "startMs": 53630,
+          "endMs": 57380
         },
         {
-          "midi": 67,
-          "startMs": 3600,
-          "endMs": 4200
+          "text": "你是我天邊最美的雲彩 讓我用心把你留下來(留下來)",
+          "startMs": 57380,
+          "endMs": 64780
         },
         {
-          "midi": 69,
-          "startMs": 4200,
-          "endMs": 4800
+          "text": "悠悠的唱著最炫的民族風 讓愛捲走所有的塵埃(我知道)",
+          "startMs": 64780,
+          "endMs": 72670
         },
         {
-          "midi": 67,
-          "startMs": 4800,
-          "endMs": 5400
+          "text": "你是我心中最美的雲彩 斟滿美酒讓你留下來(留下來)",
+          "startMs": 72670,
+          "endMs": 79830
         },
         {
-          "midi": 66,
-          "startMs": 5400,
-          "endMs": 6000
+          "text": "永遠都唱著最炫的民族風 是整片天空最美的姿態(留下來)",
+          "startMs": 79830,
+          "endMs": 88040
         },
         {
-          "midi": 64,
-          "startMs": 6000,
-          "endMs": 6600
+          "text": "呀啦啦呵啦唄啦",
+          "startMs": 88040,
+          "endMs": 89550
         },
         {
-          "midi": 62,
-          "startMs": 6600,
-          "endMs": 7800
+          "text": "伊啦嗦啦呵啦唄呀",
+          "startMs": 89550,
+          "endMs": 91770
         },
         {
-          "midi": 62,
-          "startMs": 8400,
-          "endMs": 9000
+          "text": "我聽見你心中動人的天籟 登上天外雲霄的舞台",
+          "startMs": 91770,
+          "endMs": 114260
         },
         {
-          "midi": 64,
-          "startMs": 9000,
-          "endMs": 9600
+          "text": "蒼茫的天涯是我的愛 綿綿的青山腳下花正開",
+          "startMs": 114260,
+          "endMs": 121600
         },
         {
-          "midi": 66,
-          "startMs": 9600,
-          "endMs": 10200
+          "text": "什麼樣的節奏是最呀最搖擺 什麼樣的歌聲才是最開懷",
+          "startMs": 121600,
+          "endMs": 129280
         },
         {
-          "midi": 67,
-          "startMs": 10200,
-          "endMs": 10800
+          "text": "彎彎的河水從天上來 流向那萬紫千紅一片海",
+          "startMs": 129280,
+          "endMs": 136840
         },
         {
-          "midi": 66,
-          "startMs": 10800,
-          "endMs": 11400
+          "text": "火辣辣的歌謠是我們的期待 一路邊走邊唱才是最自在",
+          "startMs": 136840,
+          "endMs": 143960
         },
         {
-          "midi": 64,
-          "startMs": 11400,
-          "endMs": 12000
+          "text": "我們要唱就要唱得最痛快",
+          "startMs": 143960,
+          "endMs": 147900
         },
         {
-          "midi": 62,
-          "startMs": 12000,
-          "endMs": 12600
+          "text": "你是我天邊最美的雲彩 讓我用心把你留下來(留下來)",
+          "startMs": 147900,
+          "endMs": 155680
         },
         {
-          "midi": 61,
-          "startMs": 12600,
-          "endMs": 13800
+          "text": "悠悠的唱著最炫的民族風 讓愛捲走所有的塵埃(我知道)",
+          "startMs": 155680,
+          "endMs": 163390
         },
         {
-          "midi": 64,
-          "startMs": 14400,
-          "endMs": 15000
+          "text": "你是我心中最美的雲彩 斟滿美酒讓你留下來(留下來)",
+          "startMs": 163390,
+          "endMs": 170620
         },
         {
-          "midi": 67,
-          "startMs": 15000,
-          "endMs": 15600
+          "text": "永遠都唱著最炫的民族風 是整片天空最美的姿態",
+          "startMs": 170620,
+          "endMs": 199370
         },
         {
-          "midi": 69,
-          "startMs": 15600,
-          "endMs": 16200
+          "text": "你是我天邊最美的雲彩 讓我用心把你留下來(留下來)",
+          "startMs": 199370,
+          "endMs": 206410
         },
         {
-          "midi": 71,
-          "startMs": 16200,
-          "endMs": 16800
+          "text": "悠悠的唱著最炫的民族風 讓愛捲走所有的塵埃(我知道)",
+          "startMs": 206410,
+          "endMs": 214150
         },
         {
-          "midi": 69,
-          "startMs": 16800,
-          "endMs": 17400
+          "text": "你是我心中最美的雲彩 斟滿美酒讓你留下來(留下來)",
+          "startMs": 214150,
+          "endMs": 221540
         },
         {
-          "midi": 67,
-          "startMs": 17400,
-          "endMs": 18000
+          "text": "永遠都唱著最炫的民族風 是整片天空最美的姿態",
+          "startMs": 221540,
+          "endMs": 231560
         },
         {
-          "midi": 66,
-          "startMs": 18000,
-          "endMs": 18600
+          "text": "我聽見你心中那動人的天籟 就忽如一夜春風襲來滿面桃花開",
+          "startMs": 231560,
+          "endMs": 238680
         },
         {
-          "midi": 64,
-          "startMs": 18600,
-          "endMs": 19800
+          "text": "我忍不住去採我忍不住去摘 我敞開胸懷為你等待",
+          "startMs": 238680,
+          "endMs": 246470
         },
         {
-          "midi": 62,
-          "startMs": 20400,
-          "endMs": 21000
+          "text": "你是我天邊最美的雲彩 讓我用心把你留下來",
+          "startMs": 246470,
+          "endMs": 253840
         },
         {
-          "midi": 64,
-          "startMs": 21000,
-          "endMs": 21600
+          "text": "悠悠的唱著最炫的民族風 讓愛捲走所有的塵埃(我知道)",
+          "startMs": 253840,
+          "endMs": 261580
         },
         {
-          "midi": 66,
-          "startMs": 21600,
-          "endMs": 22200
+          "text": "你是我心中最美的雲彩 斟滿美酒讓你留下來(留下來)",
+          "startMs": 261580,
+          "endMs": 268870
         },
         {
-          "midi": 67,
-          "startMs": 22200,
-          "endMs": 22800
+          "text": "永遠都唱著最炫的民族風 是整片天空最美的姿態",
+          "startMs": 268870,
+          "endMs": 277690
         },
         {
-          "midi": 66,
-          "startMs": 22800,
-          "endMs": 23400
-        },
-        {
-          "midi": 64,
-          "startMs": 23400,
-          "endMs": 24000
-        },
-        {
-          "midi": 62,
-          "startMs": 24000,
-          "endMs": 24600
-        },
-        {
-          "midi": 61,
-          "startMs": 24600,
-          "endMs": 25800
+          "text": "",
+          "startMs": 277690,
+          "endMs": 284422
         }
       ]
     },
     {
-      "id": "achim-sanchack",
-      "name": "아침 산책",
-      "artist": "Rokid Original",
+      "id": "dao-xiang",
+      "name": "稻香",
+      "artist": "周杰伦",
+      "album": "稻香",
+      "category": "中文",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 223018,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/dao-xiang.ogg",
+      "instrumentalSource": "/source/dao-xiang-instrumental.ogg",
+      "melodyFile": "melodies/dao-xiang.json",
+      "lyrics": [
+        {
+          "text": "對這個世界如果你有太多的抱怨",
+          "startMs": 30850,
+          "endMs": 34170
+        },
+        {
+          "text": "跌倒了就不敢繼續往前走",
+          "startMs": 34170,
+          "endMs": 37020
+        },
+        {
+          "text": "為什麼人要這麼的脆弱 墮落",
+          "startMs": 37020,
+          "endMs": 41310
+        },
+        {
+          "text": "請你打開電視看看",
+          "startMs": 41310,
+          "endMs": 43010
+        },
+        {
+          "text": "多少人為生命在努力勇敢的走下去",
+          "startMs": 43010,
+          "endMs": 46940
+        },
+        {
+          "text": "我們是不是該知足",
+          "startMs": 46940,
+          "endMs": 49360
+        },
+        {
+          "text": "珍惜一切 就算沒有擁有",
+          "startMs": 49360,
+          "endMs": 53820
+        },
+        {
+          "text": "還記得你說家是唯一的城堡",
+          "startMs": 53820,
+          "endMs": 57620
+        },
+        {
+          "text": "隨著稻香河流繼續奔跑",
+          "startMs": 57620,
+          "endMs": 60530
+        },
+        {
+          "text": "微微笑 小時侯的夢我知道",
+          "startMs": 60530,
+          "endMs": 65610
+        },
+        {
+          "text": "不要哭讓螢火蟲帶著你逃跑",
+          "startMs": 65610,
+          "endMs": 69270
+        },
+        {
+          "text": "鄉間的歌謠永遠的依靠",
+          "startMs": 69270,
+          "endMs": 72320
+        },
+        {
+          "text": "回家吧 回到最初的美好",
+          "startMs": 72320,
+          "endMs": 77110
+        },
+        {
+          "text": "",
+          "startMs": 77110,
+          "endMs": 101030
+        },
+        {
+          "text": "不要這麼容易就想放棄 就像我說的",
+          "startMs": 101030,
+          "endMs": 104630
+        },
+        {
+          "text": "追不到的夢想 換個夢不就得了",
+          "startMs": 104630,
+          "endMs": 107980
+        },
+        {
+          "text": "為自己的人生鮮豔上色",
+          "startMs": 107980,
+          "endMs": 109750
+        },
+        {
+          "text": "先把愛塗上喜歡的顏色",
+          "startMs": 109750,
+          "endMs": 112290
+        },
+        {
+          "text": "笑一個吧 功成名就不是目的",
+          "startMs": 112290,
+          "endMs": 115740
+        },
+        {
+          "text": "讓自己快樂快樂這才叫做意義",
+          "startMs": 115740,
+          "endMs": 118590
+        },
+        {
+          "text": "童年的紙飛機",
+          "startMs": 118590,
+          "endMs": 120070
+        },
+        {
+          "text": "現在終於飛回我手裡",
+          "startMs": 120070,
+          "endMs": 124280
+        },
+        {
+          "text": "所謂的那快樂",
+          "startMs": 124280,
+          "endMs": 125680
+        },
+        {
+          "text": "赤腳在田裡追蜻蜓追到累了",
+          "startMs": 125680,
+          "endMs": 128700
+        },
+        {
+          "text": "偷摘水果被蜜蜂給叮到怕了",
+          "startMs": 128700,
+          "endMs": 131730
+        },
+        {
+          "text": "誰在偷笑呢",
+          "startMs": 131730,
+          "endMs": 133170
+        },
+        {
+          "text": "我靠著稻草人 吹著風唱著歌睡著了",
+          "startMs": 133170,
+          "endMs": 136760
+        },
+        {
+          "text": "哦 哦 午後吉它在蟲鳴中更清脆",
+          "startMs": 136760,
+          "endMs": 139560
+        },
+        {
+          "text": "哦 哦 陽光灑在路上就不怕心碎",
+          "startMs": 139560,
+          "endMs": 143010
+        },
+        {
+          "text": "珍惜一切 就算沒有擁有",
+          "startMs": 143010,
+          "endMs": 147640
+        },
+        {
+          "text": "還記得你說家是唯一的城堡",
+          "startMs": 147640,
+          "endMs": 151420
+        },
+        {
+          "text": "隨著稻香河流繼續奔跑",
+          "startMs": 151420,
+          "endMs": 154180
+        },
+        {
+          "text": "微微笑 小時候的夢我知道",
+          "startMs": 154180,
+          "endMs": 159120
+        },
+        {
+          "text": "不要哭讓螢火蟲帶著你逃跑",
+          "startMs": 159120,
+          "endMs": 162850
+        },
+        {
+          "text": "鄉間的歌謠永遠的依靠",
+          "startMs": 162850,
+          "endMs": 165880
+        },
+        {
+          "text": "回家吧 回到最初的美好",
+          "startMs": 165880,
+          "endMs": 171230
+        },
+        {
+          "text": "還記得你說家是唯一的城堡",
+          "startMs": 171230,
+          "endMs": 174590
+        },
+        {
+          "text": "隨著稻香河流繼續奔跑",
+          "startMs": 174590,
+          "endMs": 177550
+        },
+        {
+          "text": "微微笑 小時候的夢我知道",
+          "startMs": 177550,
+          "endMs": 182560
+        },
+        {
+          "text": "不要哭讓螢火蟲帶著你逃跑",
+          "startMs": 182560,
+          "endMs": 186210
+        },
+        {
+          "text": "鄉間的歌謠永遠的依靠",
+          "startMs": 186210,
+          "endMs": 189280
+        },
+        {
+          "text": "回家吧 回到最初的美好",
+          "startMs": 189280,
+          "endMs": 192160
+        },
+        {
+          "text": "",
+          "startMs": 192160,
+          "endMs": 223018
+        }
+      ]
+    },
+    {
+      "id": "ziyou-zizai",
+      "name": "自由自在",
+      "artist": "凤凰传奇",
+      "album": "凤凰传奇 自由自在",
+      "category": "中文",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 234453,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/ziyou-zizai.ogg",
+      "instrumentalSource": "/source/ziyou-zizai-instrumental.ogg",
+      "melodyFile": "melodies/ziyou-zizai.json",
+      "lyrics": [
+        {
+          "text": "保持我的態度 維繫我高溫度",
+          "startMs": 23220,
+          "endMs": 27090
+        },
+        {
+          "text": "放縱吧前進速度朝著遠處一步一步",
+          "startMs": 27090,
+          "endMs": 30660
+        },
+        {
+          "text": "微笑看著旅途 雖然遲到了",
+          "startMs": 30660,
+          "endMs": 34120
+        },
+        {
+          "text": "我也絕不認輸",
+          "startMs": 34120,
+          "endMs": 38020
+        },
+        {
+          "text": "再見吧 長髮的禁錮 對你的禁錮",
+          "startMs": 38020,
+          "endMs": 42520
+        },
+        {
+          "text": "愛對我的束縛",
+          "startMs": 42520,
+          "endMs": 45600
+        },
+        {
+          "text": "鍾愛這短髮的守護 我送的最後禮物",
+          "startMs": 45600,
+          "endMs": 52580
+        },
+        {
+          "text": "大步向前走",
+          "startMs": 52580,
+          "endMs": 56060
+        },
+        {
+          "text": "永遠不回頭",
+          "startMs": 56060,
+          "endMs": 59850
+        },
+        {
+          "text": "勇敢向前走",
+          "startMs": 59850,
+          "endMs": 63320
+        },
+        {
+          "text": "追逐我的自由",
+          "startMs": 63320,
+          "endMs": 67150
+        },
+        {
+          "text": "全都看透",
+          "startMs": 67150,
+          "endMs": 69200
+        },
+        {
+          "text": "歌唱個沒夠 看透",
+          "startMs": 69200,
+          "endMs": 71080
+        },
+        {
+          "text": "舞出個沒夠 看透",
+          "startMs": 71080,
+          "endMs": 72970
+        },
+        {
+          "text": "沒夠沒夠沒夠",
+          "startMs": 72970,
+          "endMs": 74690
+        },
+        {
+          "text": "逐那自由",
+          "startMs": 74690,
+          "endMs": 76550
+        },
+        {
+          "text": "灑脫個沒夠 自由",
+          "startMs": 76550,
+          "endMs": 78390
+        },
+        {
+          "text": "瘋狂個沒夠 自由",
+          "startMs": 78390,
+          "endMs": 80120
+        },
+        {
+          "text": "沒夠沒夠沒夠",
+          "startMs": 80120,
+          "endMs": 84550
+        },
+        {
+          "text": "哦耶 everybody",
+          "startMs": 84550,
+          "endMs": 88360
+        },
+        {
+          "text": "接下來 我們一起來",
+          "startMs": 88360,
+          "endMs": 92220
+        },
+        {
+          "text": "哦耶 are you ready?",
+          "startMs": 92220,
+          "endMs": 95260
+        },
+        {
+          "text": "呦呦呦呦呦 一起來",
+          "startMs": 95260,
+          "endMs": 98560
+        },
+        {
+          "text": "嘿嘿吹吹風 嘿嘿放放空",
+          "startMs": 98560,
+          "endMs": 102130
+        },
+        {
+          "text": "嘿嘿快跟緊我 掃興的話你別說",
+          "startMs": 102130,
+          "endMs": 105990
+        },
+        {
+          "text": "嘿嘿別囉嗦 嘿嘿別蹉跎",
+          "startMs": 105990,
+          "endMs": 109650
+        },
+        {
+          "text": "嘿嘿快跟緊我 就要這樣的快活",
+          "startMs": 109650,
+          "endMs": 113390
+        },
+        {
+          "text": "嘿嘿吹吹風 嘿嘿放放空",
+          "startMs": 113390,
+          "endMs": 116820
+        },
+        {
+          "text": "嘿嘿快跟緊我 掃興的話你別說",
+          "startMs": 116820,
+          "endMs": 120750
+        },
+        {
+          "text": "嘿嘿別囉嗦 嘿嘿別蹉跎",
+          "startMs": 120750,
+          "endMs": 124480
+        },
+        {
+          "text": "嘿嘿快跟緊我 就要這樣的快活",
+          "startMs": 124480,
+          "endMs": 127450
+        },
+        {
+          "text": "保持我的態度 維繫我高溫度",
+          "startMs": 127450,
+          "endMs": 131030
+        },
+        {
+          "text": "放縱吧前進速度朝著遠處一步一步",
+          "startMs": 131030,
+          "endMs": 134940
+        },
+        {
+          "text": "微笑看著旅途 雖然遲到了",
+          "startMs": 134940,
+          "endMs": 138280
+        },
+        {
+          "text": "我也絕不認輸",
+          "startMs": 138280,
+          "endMs": 142150
+        },
+        {
+          "text": "再見吧長髮的禁錮 對你的禁錮",
+          "startMs": 142150,
+          "endMs": 146850
+        },
+        {
+          "text": "愛對我的束縛",
+          "startMs": 146850,
+          "endMs": 149880
+        },
+        {
+          "text": "鍾愛這短髮的守護 我送的最後禮物",
+          "startMs": 149880,
+          "endMs": 156530
+        },
+        {
+          "text": "大步向前走",
+          "startMs": 156530,
+          "endMs": 160310
+        },
+        {
+          "text": "永遠不回頭",
+          "startMs": 160310,
+          "endMs": 163920
+        },
+        {
+          "text": "勇敢向前走",
+          "startMs": 163920,
+          "endMs": 167750
+        },
+        {
+          "text": "追逐我的自由",
+          "startMs": 167750,
+          "endMs": 171470
+        },
+        {
+          "text": "全都看透",
+          "startMs": 171470,
+          "endMs": 173230
+        },
+        {
+          "text": "歌唱個沒夠 看透",
+          "startMs": 173230,
+          "endMs": 175130
+        },
+        {
+          "text": "舞出個沒夠 看透",
+          "startMs": 175130,
+          "endMs": 176740
+        },
+        {
+          "text": "沒夠沒夠沒夠",
+          "startMs": 176740,
+          "endMs": 178910
+        },
+        {
+          "text": "逐那自由",
+          "startMs": 178910,
+          "endMs": 180670
+        },
+        {
+          "text": "灑脫個沒夠 自由",
+          "startMs": 180670,
+          "endMs": 182620
+        },
+        {
+          "text": "瘋狂個沒夠 自由",
+          "startMs": 182620,
+          "endMs": 184340
+        },
+        {
+          "text": "沒夠沒夠沒夠",
+          "startMs": 184340,
+          "endMs": 186440
+        },
+        {
+          "text": "大步向前走",
+          "startMs": 186440,
+          "endMs": 190180
+        },
+        {
+          "text": "永遠不回頭",
+          "startMs": 190180,
+          "endMs": 193750
+        },
+        {
+          "text": "勇敢向前走",
+          "startMs": 193750,
+          "endMs": 197600
+        },
+        {
+          "text": "追逐我的自由",
+          "startMs": 197600,
+          "endMs": 201140
+        },
+        {
+          "text": "全都看透",
+          "startMs": 201140,
+          "endMs": 202990
+        },
+        {
+          "text": "歌唱個沒夠 看透",
+          "startMs": 202990,
+          "endMs": 204870
+        },
+        {
+          "text": "舞出個沒夠 看透",
+          "startMs": 204870,
+          "endMs": 206590
+        },
+        {
+          "text": "沒夠沒夠沒夠",
+          "startMs": 206590,
+          "endMs": 208780
+        },
+        {
+          "text": "逐那自由",
+          "startMs": 208780,
+          "endMs": 210300
+        },
+        {
+          "text": "灑脫個沒夠 自由",
+          "startMs": 210300,
+          "endMs": 212340
+        },
+        {
+          "text": "瘋狂個沒夠 自由",
+          "startMs": 212340,
+          "endMs": 214270
+        },
+        {
+          "text": "沒夠沒夠沒夠",
+          "startMs": 214270,
+          "endMs": 216470
+        },
+        {
+          "text": "",
+          "startMs": 216470,
+          "endMs": 234453
+        }
+      ]
+    },
+    {
+      "id": "ziyou-feixiang",
+      "name": "自由飞翔",
+      "artist": "凤凰传奇",
+      "album": "吉祥如意",
+      "category": "中文",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 248917,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/ziyou-feixiang.ogg",
+      "instrumentalSource": "/source/ziyou-feixiang-instrumental.ogg",
+      "melodyFile": "melodies/ziyou-feixiang.json",
+      "lyrics": [
+        {
+          "text": "Yo Yo",
+          "startMs": 14160,
+          "endMs": 16490
+        },
+        {
+          "text": "Come on baby go",
+          "startMs": 16490,
+          "endMs": 19470
+        },
+        {
+          "text": "Yo Yo",
+          "startMs": 19470,
+          "endMs": 20690
+        },
+        {
+          "text": "這感 這感覺就像",
+          "startMs": 20690,
+          "endMs": 22940
+        },
+        {
+          "text": "一路的芳香還有婆娑輕波",
+          "startMs": 22940,
+          "endMs": 25500
+        },
+        {
+          "text": "轉了念的想那些是非因果",
+          "startMs": 25500,
+          "endMs": 28120
+        },
+        {
+          "text": "一路的芳香讓我不停捉摸",
+          "startMs": 28120,
+          "endMs": 30790
+        },
+        {
+          "text": "Yo yo",
+          "startMs": 30790,
+          "endMs": 32020
+        },
+        {
+          "text": "Baby go come on",
+          "startMs": 32020,
+          "endMs": 33220
+        },
+        {
+          "text": "是誰在唱歌 (For you)",
+          "startMs": 33220,
+          "endMs": 35900
+        },
+        {
+          "text": "溫暖了寂寞 (啊呵)",
+          "startMs": 35900,
+          "endMs": 38530
+        },
+        {
+          "text": "白雲悠悠藍天依舊淚水在漂泊 (Don't cry)",
+          "startMs": 38530,
+          "endMs": 43650
+        },
+        {
+          "text": "在那一片蒼茫中一個人生活",
+          "startMs": 43650,
+          "endMs": 48710
+        },
+        {
+          "text": "看見遠方天國",
+          "startMs": 48710,
+          "endMs": 50920
+        },
+        {
+          "text": "那璀璨的煙火",
+          "startMs": 50920,
+          "endMs": 53020
+        },
+        {
+          "text": "Hurry hurry time",
+          "startMs": 53020,
+          "endMs": 55560
+        },
+        {
+          "text": "Yo yo",
+          "startMs": 55560,
+          "endMs": 57720
+        },
+        {
+          "text": "Come on baby go",
+          "startMs": 57720,
+          "endMs": 60770
+        },
+        {
+          "text": "Yo yo",
+          "startMs": 60770,
+          "endMs": 62010
+        },
+        {
+          "text": "這感 這感覺就像",
+          "startMs": 62010,
+          "endMs": 64300
+        },
+        {
+          "text": "一路的芳香還有婆娑輕波",
+          "startMs": 64300,
+          "endMs": 66860
+        },
+        {
+          "text": "轉了念的想那些是非因果",
+          "startMs": 66860,
+          "endMs": 69480
+        },
+        {
+          "text": "一路的芳香讓我不停捉摸",
+          "startMs": 69480,
+          "endMs": 71900
+        },
+        {
+          "text": "Yo yo",
+          "startMs": 71900,
+          "endMs": 73350
+        },
+        {
+          "text": "Baby go come on",
+          "startMs": 73350,
+          "endMs": 74550
+        },
+        {
+          "text": "是誰聽著歌 (It's me)",
+          "startMs": 74550,
+          "endMs": 77150
+        },
+        {
+          "text": "遺忘了寂寞(愛你Love)",
+          "startMs": 77150,
+          "endMs": 79840
+        },
+        {
+          "text": "漫漫長夜一路芬芳歲月曾流過 (Don't go)",
+          "startMs": 79840,
+          "endMs": 84940
+        },
+        {
+          "text": "在那人潮人海中你也在沉默（Yea yea）",
+          "startMs": 84940,
+          "endMs": 90180
+        },
+        {
+          "text": "和我一起漂泊",
+          "startMs": 90180,
+          "endMs": 92250
+        },
+        {
+          "text": "到天涯的交錯（Okay）",
+          "startMs": 92250,
+          "endMs": 95110
+        },
+        {
+          "text": "在你的心上",
+          "startMs": 95110,
+          "endMs": 97780
+        },
+        {
+          "text": "自由地飛翔",
+          "startMs": 97780,
+          "endMs": 100330
+        },
+        {
+          "text": "燦爛的星光",
+          "startMs": 100330,
+          "endMs": 102920
+        },
+        {
+          "text": "永恆地徜徉",
+          "startMs": 102920,
+          "endMs": 105550
+        },
+        {
+          "text": "一路的方向",
+          "startMs": 105550,
+          "endMs": 108070
+        },
+        {
+          "text": "照耀我心上",
+          "startMs": 108070,
+          "endMs": 110570
+        },
+        {
+          "text": "遼遠的邊疆",
+          "startMs": 110570,
+          "endMs": 113190
+        },
+        {
+          "text": "隨我去遠方（Don't come back）",
+          "startMs": 113190,
+          "endMs": 118380
+        },
+        {
+          "text": "",
+          "startMs": 118380,
+          "endMs": 139090
+        },
+        {
+          "text": "是誰在唱歌 (It's me)",
+          "startMs": 139090,
+          "endMs": 141630
+        },
+        {
+          "text": "溫暖了寂寞 (愛你Love)",
+          "startMs": 141630,
+          "endMs": 144320
+        },
+        {
+          "text": "白雲悠悠藍天依舊淚水在漂泊 (Don't go)",
+          "startMs": 144320,
+          "endMs": 149490
+        },
+        {
+          "text": "在那一片蒼茫中一個人生活（Yea yea）",
+          "startMs": 149490,
+          "endMs": 154680
+        },
+        {
+          "text": "看見遠方天國",
+          "startMs": 154680,
+          "endMs": 156710
+        },
+        {
+          "text": "那璀璨的煙火（Okay）",
+          "startMs": 156710,
+          "endMs": 159600
+        },
+        {
+          "text": "Yo yo",
+          "startMs": 159600,
+          "endMs": 160960
+        },
+        {
+          "text": "Yo yo yo",
+          "startMs": 160960,
+          "endMs": 162340
+        },
+        {
+          "text": "在你的心上",
+          "startMs": 162340,
+          "endMs": 164960
+        },
+        {
+          "text": "自由地飛翔",
+          "startMs": 164960,
+          "endMs": 167330
+        },
+        {
+          "text": "燦爛的星光",
+          "startMs": 167330,
+          "endMs": 170060
+        },
+        {
+          "text": "永恆地徜徉",
+          "startMs": 170060,
+          "endMs": 172750
+        },
+        {
+          "text": "一路的方向",
+          "startMs": 172750,
+          "endMs": 175180
+        },
+        {
+          "text": "照耀我心上",
+          "startMs": 175180,
+          "endMs": 177870
+        },
+        {
+          "text": "遼遠的邊疆",
+          "startMs": 177870,
+          "endMs": 180360
+        },
+        {
+          "text": "隨我去遠方",
+          "startMs": 180360,
+          "endMs": 182970
+        },
+        {
+          "text": "Don't come back",
+          "startMs": 182970,
+          "endMs": 184060
+        },
+        {
+          "text": "這是我遠行的感受",
+          "startMs": 184060,
+          "endMs": 185630
+        },
+        {
+          "text": "不應該 讓我繼續這種傷痛",
+          "startMs": 185630,
+          "endMs": 188120
+        },
+        {
+          "text": "別覆蓋 我會堅持往下行走",
+          "startMs": 188120,
+          "endMs": 190660
+        },
+        {
+          "text": "原始界的風 伴隨我們的行蹤 Oh",
+          "startMs": 190660,
+          "endMs": 193250
+        },
+        {
+          "text": "腳步重 變得重 變得失去自我",
+          "startMs": 193250,
+          "endMs": 195990
+        },
+        {
+          "text": "迷戀風景我會盡情 地 去 放 鬆",
+          "startMs": 195990,
+          "endMs": 198350
+        },
+        {
+          "text": "輕風伴我相送 歲月如此沉重",
+          "startMs": 198350,
+          "endMs": 201100
+        },
+        {
+          "text": "早已熱淚感動被你 一 水 消 融",
+          "startMs": 201100,
+          "endMs": 203820
+        },
+        {
+          "text": "駕 駕 駕 吁",
+          "startMs": 203820,
+          "endMs": 213990
+        },
+        {
+          "text": "Yo yo",
+          "startMs": 213990,
+          "endMs": 215230
+        },
+        {
+          "text": "Baby go com on",
+          "startMs": 215230,
+          "endMs": 216590
+        },
+        {
+          "text": "在你的心上",
+          "startMs": 216590,
+          "endMs": 219150
+        },
+        {
+          "text": "自由地飛翔",
+          "startMs": 219150,
+          "endMs": 221640
+        },
+        {
+          "text": "燦爛的星光",
+          "startMs": 221640,
+          "endMs": 224180
+        },
+        {
+          "text": "永恆地徜徉",
+          "startMs": 224180,
+          "endMs": 226970
+        },
+        {
+          "text": "一路的方向",
+          "startMs": 226970,
+          "endMs": 229460
+        },
+        {
+          "text": "照耀我心上",
+          "startMs": 229460,
+          "endMs": 231970
+        },
+        {
+          "text": "遼遠的邊疆",
+          "startMs": 231970,
+          "endMs": 234570
+        },
+        {
+          "text": "隨我 去遠方",
+          "startMs": 234570,
+          "endMs": 243060
+        },
+        {
+          "text": "",
+          "startMs": 243060,
+          "endMs": 248917
+        }
+      ]
+    },
+    {
+      "id": "hai-kuo-tian-kong",
+      "name": "海阔天空",
+      "artist": "BEYOND",
+      "album": "海阔天空",
+      "category": "中文",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 273345,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/hai-kuo-tian-kong.ogg",
+      "instrumentalSource": "/source/hai-kuo-tian-kong-instrumental.ogg",
+      "melodyFile": "melodies/hai-kuo-tian-kong.json",
+      "lyrics": [
+        {
+          "text": "今天我寒夜里看雪飘过",
+          "startMs": 19410,
+          "endMs": 25960
+        },
+        {
+          "text": "怀着冷却了的心窝飘远方",
+          "startMs": 25960,
+          "endMs": 32040
+        },
+        {
+          "text": "风雨里追赶 雾里分不清影踪",
+          "startMs": 32040,
+          "endMs": 38780
+        },
+        {
+          "text": "天空海阔你与我 可会变 （谁没在变？）",
+          "startMs": 38780,
+          "endMs": 45250
+        },
+        {
+          "text": "多少次迎着冷眼与嘲笑",
+          "startMs": 45250,
+          "endMs": 51600
+        },
+        {
+          "text": "从没有放弃过心中的理想",
+          "startMs": 51600,
+          "endMs": 57430
+        },
+        {
+          "text": "一刹那恍惚 若有所失的感觉",
+          "startMs": 57430,
+          "endMs": 63690
+        },
+        {
+          "text": "不知不觉已变淡 心里爱 （谁明白我？）",
+          "startMs": 63690,
+          "endMs": 70340
+        },
+        {
+          "text": "原谅我这一生不羁放纵爱自由",
+          "startMs": 70340,
+          "endMs": 77380
+        },
+        {
+          "text": "也会怕有一天会跌倒",
+          "startMs": 77380,
+          "endMs": 83550
+        },
+        {
+          "text": "背弃了理想谁人都可以",
+          "startMs": 83550,
+          "endMs": 89730
+        },
+        {
+          "text": "哪会怕有一天只你共我",
+          "startMs": 89730,
+          "endMs": 95870
+        },
+        {
+          "text": "",
+          "startMs": 95870,
+          "endMs": 104370
+        },
+        {
+          "text": "今天我寒夜里看雪飘过",
+          "startMs": 104370,
+          "endMs": 110980
+        },
+        {
+          "text": "怀着冷却了的心窝飘远方",
+          "startMs": 110980,
+          "endMs": 116860
+        },
+        {
+          "text": "风雨里追赶 雾里分不清影踪",
+          "startMs": 116860,
+          "endMs": 122970
+        },
+        {
+          "text": "天空海阔你与我 可会变 （谁没在变？）",
+          "startMs": 122970,
+          "endMs": 129370
+        },
+        {
+          "text": "原谅我这一生不羁放纵爱自由",
+          "startMs": 129370,
+          "endMs": 136550
+        },
+        {
+          "text": "也会怕有一天会跌倒",
+          "startMs": 136550,
+          "endMs": 142870
+        },
+        {
+          "text": "背弃了理想谁人都可以",
+          "startMs": 142870,
+          "endMs": 149230
+        },
+        {
+          "text": "哪会怕有一天只你共我",
+          "startMs": 149230,
+          "endMs": 154830
+        },
+        {
+          "text": "",
+          "startMs": 154830,
+          "endMs": 190200
+        },
+        {
+          "text": "仍然自由自我 永远高唱我歌",
+          "startMs": 190200,
+          "endMs": 196830
+        },
+        {
+          "text": "走遍千里",
+          "startMs": 196830,
+          "endMs": 201750
+        },
+        {
+          "text": "原谅我这一生不羁放纵爱自由",
+          "startMs": 201750,
+          "endMs": 208640
+        },
+        {
+          "text": "也会怕有一天会跌倒",
+          "startMs": 208640,
+          "endMs": 214980
+        },
+        {
+          "text": "背弃了理想谁人都可以",
+          "startMs": 214980,
+          "endMs": 221130
+        },
+        {
+          "text": "哪会怕有一天只你共我",
+          "startMs": 221130,
+          "endMs": 227420
+        },
+        {
+          "text": "背弃了理想谁人都可以",
+          "startMs": 227420,
+          "endMs": 233540
+        },
+        {
+          "text": "哪会怕有一天只你共我",
+          "startMs": 233540,
+          "endMs": 239300
+        },
+        {
+          "text": "原谅我这一生不羁放纵爱自由",
+          "startMs": 239300,
+          "endMs": 245980
+        },
+        {
+          "text": "也会怕有一天会跌倒",
+          "startMs": 245980,
+          "endMs": 252270
+        },
+        {
+          "text": "背弃了理想谁人都可以",
+          "startMs": 252270,
+          "endMs": 258430
+        },
+        {
+          "text": "哪会怕有一天只你共我",
+          "startMs": 258430,
+          "endMs": 266530
+        },
+        {
+          "text": "",
+          "startMs": 266530,
+          "endMs": 273345
+        }
+      ]
+    },
+    {
+      "id": "sarang-eul-haetda",
+      "name": "사랑을 했다 (LOVE SCENARIO)",
+      "artist": "iKON",
+      "album": "iKON",
       "category": "한국어",
-      "difficulty": 1,
-      "durationMs": 30000,
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 210653,
       "chartVersion": 1,
-      "scoringVersion": 2,
-      "audioSource": "/source/achim-sanchack.ogg",
+      "scoringVersion": 5,
+      "audioSource": "/source/sarang-eul-haetda.ogg",
+      "instrumentalSource": "/source/sarang-eul-haetda-instrumental.ogg",
+      "melodyFile": "melodies/sarang-eul-haetda.json",
       "lyrics": [
         {
-          "text": "아침 햇살 길을 비추네",
-          "startMs": 2400,
-          "endMs": 7800
+          "text": "사랑을 했다 우리가 만나",
+          "startMs": 3200,
+          "endMs": 6800
         },
         {
-          "text": "바람 따라 노래하네",
-          "startMs": 8400,
-          "endMs": 13800
+          "text": "지우지 못할 추억이 됐다",
+          "startMs": 6800,
+          "endMs": 10160
         },
         {
-          "text": "가벼운 발걸음으로",
-          "startMs": 14400,
-          "endMs": 19800
+          "text": "볼만한 멜로드라마, 괜찮은 결말",
+          "startMs": 10160,
+          "endMs": 14060
         },
         {
-          "text": "오늘도 함께 걸어가",
-          "startMs": 20400,
-          "endMs": 25800
+          "text": "그거면 됐다, 널 사랑했다",
+          "startMs": 14060,
+          "endMs": 17730
+        },
+        {
+          "text": "우리가 만든 love scenario",
+          "startMs": 17730,
+          "endMs": 22240
+        },
+        {
+          "text": "이젠 조명이 꺼지고",
+          "startMs": 22240,
+          "endMs": 26450
+        },
+        {
+          "text": "마지막 페이지를 넘기면",
+          "startMs": 26450,
+          "endMs": 30320
+        },
+        {
+          "text": "조용히 막을 내리죠",
+          "startMs": 30320,
+          "endMs": 34770
+        },
+        {
+          "text": "에이, 괜찮지만은 않아 이별을 마주한다는 건",
+          "startMs": 34770,
+          "endMs": 39290
+        },
+        {
+          "text": "오늘이었던 우리의 어제에 더는 내일이 없다는 건",
+          "startMs": 39290,
+          "endMs": 42910
+        },
+        {
+          "text": "아프긴 해도 더 끌었음 상처가 덧나니까, 예, 에, 에",
+          "startMs": 42910,
+          "endMs": 47540
+        },
+        {
+          "text": "널 사랑했고 사랑 받았으니 난 이걸로 됐어, 예, 에, 에",
+          "startMs": 47540,
+          "endMs": 51900
+        },
+        {
+          "text": "나 살아가면서 가끔씩 떠오를 기억",
+          "startMs": 51900,
+          "endMs": 58380
+        },
+        {
+          "text": "그 안에 네가 있다면 그거면 충분해",
+          "startMs": 58380,
+          "endMs": 66470
+        },
+        {
+          "text": "사랑을 했다 우리가 만나",
+          "startMs": 66470,
+          "endMs": 71680
+        },
+        {
+          "text": "지우지 못할 추억이 됐다",
+          "startMs": 71680,
+          "endMs": 75670
+        },
+        {
+          "text": "볼만한 멜로드라마, 괜찮은 결말",
+          "startMs": 75670,
+          "endMs": 79640
+        },
+        {
+          "text": "그거면 됐다, 널 사랑했다",
+          "startMs": 79640,
+          "endMs": 83600
+        },
+        {
+          "text": "우리가 만든 love scenario",
+          "startMs": 83600,
+          "endMs": 87230
+        },
+        {
+          "text": "이젠 조명이 꺼지고",
+          "startMs": 87230,
+          "endMs": 91810
+        },
+        {
+          "text": "마지막 페이지를 넘기면",
+          "startMs": 91810,
+          "endMs": 96330
+        },
+        {
+          "text": "조용히 막을 내리죠",
+          "startMs": 96330,
+          "endMs": 100240
+        },
+        {
+          "text": "갈비뼈 사이사이가 찌릿찌릿한 느낌",
+          "startMs": 100240,
+          "endMs": 104340
+        },
+        {
+          "text": "나 사랑받고 있음을 알게 해주는 눈빛",
+          "startMs": 104340,
+          "endMs": 108340
+        },
+        {
+          "text": "너에게 참 많이도 배웠다 반쪽을 채웠다",
+          "startMs": 108340,
+          "endMs": 113110
+        },
+        {
+          "text": "과거로 두기엔 너무 소중한 사람이었다",
+          "startMs": 113110,
+          "endMs": 117160
+        },
+        {
+          "text": "나 살아가면서 가끔씩 떠오를 기억",
+          "startMs": 117160,
+          "endMs": 124580
+        },
+        {
+          "text": "그 안에 네가 있다면 그거면 충분해",
+          "startMs": 124580,
+          "endMs": 132670
+        },
+        {
+          "text": "사랑을 했다 우리가 만나",
+          "startMs": 132670,
+          "endMs": 137090
+        },
+        {
+          "text": "지우지 못할 추억이 됐다",
+          "startMs": 137090,
+          "endMs": 140770
+        },
+        {
+          "text": "볼만한 멜로드라마, 괜찮은 결말",
+          "startMs": 140770,
+          "endMs": 145560
+        },
+        {
+          "text": "그거면 됐다, 널 사랑했다",
+          "startMs": 145560,
+          "endMs": 148880
+        },
+        {
+          "text": "네가 벌써 그립지만",
+          "startMs": 148880,
+          "endMs": 154050
+        },
+        {
+          "text": "그리워하지 않으려 해",
+          "startMs": 154050,
+          "endMs": 157320
+        },
+        {
+          "text": "한 편의 영화 따스했던",
+          "startMs": 157320,
+          "endMs": 162020
+        },
+        {
+          "text": "봄으로 너를 기억할게",
+          "startMs": 162020,
+          "endMs": 165280
+        },
+        {
+          "text": "우리가 만든 love scenario",
+          "startMs": 165280,
+          "endMs": 169870
+        },
+        {
+          "text": "이젠 조명이 꺼지고",
+          "startMs": 169870,
+          "endMs": 173940
+        },
+        {
+          "text": "마지막 페이지를 넘기면",
+          "startMs": 173940,
+          "endMs": 178060
+        },
+        {
+          "text": "조용히 막을 내리죠",
+          "startMs": 178060,
+          "endMs": 181950
+        },
+        {
+          "text": "우린 아파도 해봤고",
+          "startMs": 181950,
+          "endMs": 186940
+        },
+        {
+          "text": "우습게 질투도 했어",
+          "startMs": 186940,
+          "endMs": 190500
+        },
+        {
+          "text": "미친 듯이 사랑했고",
+          "startMs": 190500,
+          "endMs": 195360
+        },
+        {
+          "text": "우리 이 정도면 됐어",
+          "startMs": 195360,
+          "endMs": 198410
+        },
+        {
+          "text": "사랑을 했다 우리가 만나",
+          "startMs": 198410,
+          "endMs": 202180
+        },
+        {
+          "text": "그거면 됐다, 널 사랑했다",
+          "startMs": 202180,
+          "endMs": 204740
+        },
+        {
+          "text": "",
+          "startMs": 204740,
+          "endMs": 210653
         }
-      ],
-      "refNotes": [
+      ]
+    },
+    {
+      "id": "way-back-home",
+      "name": "Way Back Home",
+      "artist": "SHAUN",
+      "album": "SHAUN",
+      "category": "한국어",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 214180,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/way-back-home.ogg",
+      "instrumentalSource": "/source/way-back-home-instrumental.ogg",
+      "melodyFile": "melodies/way-back-home.json",
+      "lyrics": [
         {
-          "midi": 58,
-          "startMs": 2400,
-          "endMs": 3000
+          "text": "멈춘 시간 속 잠든 너를 찾아가",
+          "startMs": 590,
+          "endMs": 4950
         },
         {
-          "midi": 60,
-          "startMs": 3000,
-          "endMs": 3600
+          "text": "아무리 막아도 결국 너의 곁인 걸",
+          "startMs": 4950,
+          "endMs": 9360
         },
         {
-          "midi": 62,
-          "startMs": 3600,
-          "endMs": 4200
+          "text": "길고 긴 여행을 끝내 이젠 돌아가",
+          "startMs": 9360,
+          "endMs": 14310
         },
         {
-          "midi": 63,
-          "startMs": 4200,
-          "endMs": 4800
+          "text": "너라는 집으로 지금 다시 way back home",
+          "startMs": 14310,
+          "endMs": 20150
         },
         {
-          "midi": 62,
-          "startMs": 4800,
-          "endMs": 5400
+          "text": "",
+          "startMs": 20150,
+          "endMs": 39280
         },
         {
-          "midi": 60,
-          "startMs": 5400,
-          "endMs": 6000
+          "text": "아무리 힘껏 닫아도 다시 열린 서랍 같아",
+          "startMs": 39280,
+          "endMs": 44370
         },
         {
-          "midi": 58,
-          "startMs": 6000,
-          "endMs": 6600
+          "text": "하늘로 높이 날린 넌 자꾸 내게 되돌아와",
+          "startMs": 44370,
+          "endMs": 49290
         },
         {
-          "midi": 57,
-          "startMs": 6600,
-          "endMs": 7800
+          "text": "힘들게 삼킨 이별도 다 그대로인 걸 oh, oh, oh",
+          "startMs": 49290,
+          "endMs": 57310
         },
         {
-          "midi": 57,
-          "startMs": 8400,
-          "endMs": 9000
+          "text": "수없이 떠난 길 위에서 난 너를 발견하고",
+          "startMs": 57310,
+          "endMs": 62300
         },
         {
-          "midi": 58,
-          "startMs": 9000,
-          "endMs": 9600
+          "text": "비우려 했던 맘은 또 이렇게 너로 차올라",
+          "startMs": 62300,
+          "endMs": 67220
         },
         {
-          "midi": 60,
-          "startMs": 9600,
-          "endMs": 10200
+          "text": "발걸음의 끝에 늘 니가 부딪혀",
+          "startMs": 67220,
+          "endMs": 72100
         },
         {
-          "midi": 62,
-          "startMs": 10200,
-          "endMs": 10800
+          "text": "그만 그만",
+          "startMs": 72100,
+          "endMs": 77160
         },
         {
-          "midi": 63,
-          "startMs": 10800,
-          "endMs": 11400
+          "text": "멈춘 시간 속 잠든 너를 찾아가",
+          "startMs": 77160,
+          "endMs": 81620
         },
         {
-          "midi": 62,
-          "startMs": 11400,
-          "endMs": 12000
+          "text": "아무리 막아도 결국 너의 곁인 걸",
+          "startMs": 81620,
+          "endMs": 86230
         },
         {
-          "midi": 60,
-          "startMs": 12000,
-          "endMs": 12600
+          "text": "길고 긴 여행을 끝내 이젠 돌아가",
+          "startMs": 86230,
+          "endMs": 91350
         },
         {
-          "midi": 58,
-          "startMs": 12600,
-          "endMs": 13800
+          "text": "너라는 집으로 지금 다시 way back home",
+          "startMs": 91350,
+          "endMs": 97240
         },
         {
-          "midi": 58,
-          "startMs": 14400,
-          "endMs": 15000
+          "text": "",
+          "startMs": 97240,
+          "endMs": 115000
         },
         {
-          "midi": 62,
-          "startMs": 15000,
-          "endMs": 15600
+          "text": "조용히 잠든 방을 열어 기억을 꺼내 들어",
+          "startMs": 115000,
+          "endMs": 120010
         },
         {
-          "midi": 63,
-          "startMs": 15600,
-          "endMs": 16200
+          "text": "부서진 시간 위에서 선명히 너는 떠올라",
+          "startMs": 120010,
+          "endMs": 124740
         },
         {
-          "midi": 65,
-          "startMs": 16200,
-          "endMs": 16800
+          "text": "길 잃은 맘 속에 널 가둔 채 살아",
+          "startMs": 124740,
+          "endMs": 129600
         },
         {
-          "midi": 63,
-          "startMs": 16800,
-          "endMs": 17400
+          "text": "그만 그만",
+          "startMs": 129600,
+          "endMs": 134650
         },
         {
-          "midi": 62,
-          "startMs": 17400,
-          "endMs": 18000
+          "text": "멈춘 시간 속 잠든 너를 찾아가",
+          "startMs": 134650,
+          "endMs": 139130
         },
         {
-          "midi": 60,
-          "startMs": 18000,
-          "endMs": 18600
+          "text": "아무리 막아도 결국 너의 곁인 걸",
+          "startMs": 139130,
+          "endMs": 143770
         },
         {
-          "midi": 58,
-          "startMs": 18600,
-          "endMs": 19800
+          "text": "길고 긴 여행을 끝내 이젠 돌아가",
+          "startMs": 143770,
+          "endMs": 148810
         },
         {
-          "midi": 57,
-          "startMs": 20400,
+          "text": "너라는 집으로 지금 다시 way back home",
+          "startMs": 148810,
+          "endMs": 154230
+        },
+        {
+          "text": "세상을 뒤집어 찾으려 해",
+          "startMs": 154230,
+          "endMs": 159020
+        },
+        {
+          "text": "오직 너로 완결된 이야기를",
+          "startMs": 159020,
+          "endMs": 164330
+        },
+        {
+          "text": "모든 걸 잃어도 난 너 하나면 돼",
+          "startMs": 164330,
+          "endMs": 174210
+        },
+        {
+          "text": "",
+          "startMs": 174210,
+          "endMs": 182210
+        },
+        {
+          "text": "빛이 다 꺼진 여기 나를 안아줘",
+          "startMs": 182210,
+          "endMs": 188160
+        },
+        {
+          "text": "",
+          "startMs": 188160,
+          "endMs": 192340
+        },
+        {
+          "text": "눈을 감으면 소리 없이 밀려와",
+          "startMs": 192340,
+          "endMs": 196980
+        },
+        {
+          "text": "이 마음 그 위로 넌 또 한 겹 쌓여가",
+          "startMs": 196980,
+          "endMs": 201400
+        },
+        {
+          "text": "내겐 그 누구도 아닌 니가 필요해",
+          "startMs": 201400,
+          "endMs": 206580
+        },
+        {
+          "text": "돌아와 내 곁에 그날까지 I'm not done",
+          "startMs": 206580,
+          "endMs": 211150
+        },
+        {
+          "text": "",
+          "startMs": 211150,
+          "endMs": 214180
+        }
+      ]
+    },
+    {
+      "id": "ppa-ppa-ppa",
+      "name": "빠빠빠 (Bar Bar Bar)",
+      "artist": "크레용팝 (CRAYON POP)",
+      "album": "빠빠빠",
+      "category": "한국어",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 180094,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/ppa-ppa-ppa.ogg",
+      "instrumentalSource": "/source/ppa-ppa-ppa-instrumental.ogg",
+      "melodyFile": "melodies/ppa-ppa-ppa.json",
+      "lyrics": [
+        {
+          "text": "다같이 one",
+          "startMs": 14060,
+          "endMs": 15110
+        },
+        {
+          "text": "빠빠빠빠",
+          "startMs": 15110,
+          "endMs": 17680
+        },
+        {
+          "text": "빠빠빠빠",
+          "startMs": 17680,
+          "endMs": 18770
+        },
+        {
+          "text": "날따라 two",
+          "startMs": 18770,
+          "endMs": 19390
+        },
+        {
+          "text": "빠빠빠빠",
+          "startMs": 19390,
+          "endMs": 20110
+        },
+        {
+          "text": "빠빠빠빠",
+          "startMs": 20110,
           "endMs": 21000
         },
         {
-          "midi": 58,
+          "text": "소리쳐 호 (호)",
           "startMs": 21000,
+          "endMs": 22420
+        },
+        {
+          "text": "뛰어봐 쿵 (쿵)",
+          "startMs": 22420,
+          "endMs": 23190
+        },
+        {
+          "text": "날따라 해(해)",
+          "startMs": 23190,
+          "endMs": 24260
+        },
+        {
+          "text": "엄마도 파파도 같이Go",
+          "startMs": 24260,
+          "endMs": 29620
+        },
+        {
+          "text": "빠빠빠빠",
+          "startMs": 29620,
+          "endMs": 30330
+        },
+        {
+          "text": "빠빠빠빠",
+          "startMs": 30330,
+          "endMs": 31850
+        },
+        {
+          "text": "신나게 Go",
+          "startMs": 31850,
+          "endMs": 33000
+        },
+        {
+          "text": "빠빠빠빠",
+          "startMs": 33000,
+          "endMs": 34010
+        },
+        {
+          "text": "빠빠빠빠",
+          "startMs": 34010,
+          "endMs": 35640
+        },
+        {
+          "text": "소리쳐 호 (호)",
+          "startMs": 35640,
+          "endMs": 37200
+        },
+        {
+          "text": "뛰어봐 쿵 (쿵)",
+          "startMs": 37200,
+          "endMs": 39150
+        },
+        {
+          "text": "날따라 해(해)",
+          "startMs": 39150,
+          "endMs": 41020
+        },
+        {
+          "text": "팝!",
+          "startMs": 41020,
+          "endMs": 43970
+        },
+        {
+          "text": "팝!",
+          "startMs": 43970,
+          "endMs": 44910
+        },
+        {
+          "text": "크레용팝!",
+          "startMs": 44910,
+          "endMs": 46930
+        },
+        {
+          "text": "Get, Set, Ready Go",
+          "startMs": 46930,
+          "endMs": 50520
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 50520,
+          "endMs": 51130
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 51130,
+          "endMs": 51710
+        },
+        {
+          "text": "Everybody",
+          "startMs": 51710,
+          "endMs": 54140
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 54140,
+          "endMs": 55080
+        },
+        {
+          "text": "Jumping",
+          "startMs": 55080,
+          "endMs": 56100
+        },
+        {
+          "text": "다 같이 뛰어뛰어",
+          "startMs": 56100,
+          "endMs": 57780
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 57780,
+          "endMs": 58680
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 58680,
+          "endMs": 59750
+        },
+        {
+          "text": "Everybody",
+          "startMs": 59750,
+          "endMs": 61340
+        },
+        {
+          "text": "I don't want to stick at home, now",
+          "startMs": 61340,
+          "endMs": 64990
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 64990,
+          "endMs": 65840
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 65840,
+          "endMs": 66810
+        },
+        {
+          "text": "Everybody",
+          "startMs": 66810,
+          "endMs": 68490
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 68490,
+          "endMs": 69450
+        },
+        {
+          "text": "Jumping",
+          "startMs": 69450,
+          "endMs": 70530
+        },
+        {
+          "text": "다 같이 뛰어뛰어",
+          "startMs": 70530,
+          "endMs": 72020
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 72020,
+          "endMs": 72940
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 72940,
+          "endMs": 73880
+        },
+        {
+          "text": "Everybody",
+          "startMs": 73880,
+          "endMs": 75640
+        },
+        {
+          "text": "I don't want to stick at home, now",
+          "startMs": 75640,
+          "endMs": 79280
+        },
+        {
+          "text": "I don't want to stick at home, now",
+          "startMs": 79280,
+          "endMs": 82740
+        },
+        {
+          "text": "걱정은 No",
+          "startMs": 82740,
+          "endMs": 86840
+        },
+        {
+          "text": "빠빠빠빠",
+          "startMs": 86840,
+          "endMs": 88090
+        },
+        {
+          "text": "빠빠빠빠",
+          "startMs": 88090,
+          "endMs": 89290
+        },
+        {
+          "text": "고민도 No",
+          "startMs": 89290,
+          "endMs": 90350
+        },
+        {
+          "text": "빠빠빠빠",
+          "startMs": 90350,
+          "endMs": 91740
+        },
+        {
+          "text": "빠빠빠빠",
+          "startMs": 91740,
+          "endMs": 92710
+        },
+        {
+          "text": "웃어봐 호(호)",
+          "startMs": 92710,
+          "endMs": 94730
+        },
+        {
+          "text": "더크게 예(예)",
+          "startMs": 94730,
+          "endMs": 96560
+        },
+        {
+          "text": "날따라 해(해)",
+          "startMs": 96560,
+          "endMs": 98250
+        },
+        {
+          "text": "Get, Set, Ready Go",
+          "startMs": 98250,
+          "endMs": 104250
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 104250,
+          "endMs": 105200
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 105200,
+          "endMs": 106260
+        },
+        {
+          "text": "Everybody",
+          "startMs": 106260,
+          "endMs": 107800
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 107800,
+          "endMs": 108890
+        },
+        {
+          "text": "Jumping",
+          "startMs": 108890,
+          "endMs": 109860
+        },
+        {
+          "text": "다 같이 뛰어뛰어",
+          "startMs": 109860,
+          "endMs": 111480
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 111480,
+          "endMs": 112370
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 112370,
+          "endMs": 113420
+        },
+        {
+          "text": "Everybody",
+          "startMs": 113420,
+          "endMs": 114920
+        },
+        {
+          "text": "I don't want to stick at home, now",
+          "startMs": 114920,
+          "endMs": 118670
+        },
+        {
+          "text": "I don't want to stick at home, now",
+          "startMs": 118670,
+          "endMs": 122260
+        },
+        {
+          "text": "날 따라 Follow",
+          "startMs": 122260,
+          "endMs": 127040
+        },
+        {
+          "text": "두 손을 올리고",
+          "startMs": 127040,
+          "endMs": 129260
+        },
+        {
+          "text": "뛰뛰뛰 뛰어보고 맘껏 소리 쳐보고",
+          "startMs": 129260,
+          "endMs": 133010
+        },
+        {
+          "text": "Hey, You Guys",
+          "startMs": 133010,
+          "endMs": 134860
+        },
+        {
+          "text": "벗어나 Day Life",
+          "startMs": 134860,
+          "endMs": 136680
+        },
+        {
+          "text": "다같이 Let's say",
+          "startMs": 136680,
+          "endMs": 138270
+        },
+        {
+          "text": "Ready Go",
+          "startMs": 138270,
+          "endMs": 140160
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 140160,
+          "endMs": 141140
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 141140,
+          "endMs": 142150
+        },
+        {
+          "text": "Everybody",
+          "startMs": 142150,
+          "endMs": 144000
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 144000,
+          "endMs": 144680
+        },
+        {
+          "text": "Jumping",
+          "startMs": 144680,
+          "endMs": 145740
+        },
+        {
+          "text": "다 같이 뛰어뛰어",
+          "startMs": 145740,
+          "endMs": 147290
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 147290,
+          "endMs": 148230
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 148230,
+          "endMs": 149280
+        },
+        {
+          "text": "Everybody",
+          "startMs": 149280,
+          "endMs": 150810
+        },
+        {
+          "text": "I don't want to stick at home, now",
+          "startMs": 150810,
+          "endMs": 154460
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 154460,
+          "endMs": 155350
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 155350,
+          "endMs": 156460
+        },
+        {
+          "text": "Everybody",
+          "startMs": 156460,
+          "endMs": 158020
+        },
+        {
+          "text": "Jumping Yeah Jumping",
+          "startMs": 158020,
+          "endMs": 159250
+        },
+        {
+          "text": "다 같이 뛰어뛰어",
+          "startMs": 159250,
+          "endMs": 161530
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 161530,
+          "endMs": 162430
+        },
+        {
+          "text": "Jumping Yeah",
+          "startMs": 162430,
+          "endMs": 163540
+        },
+        {
+          "text": "Everybody",
+          "startMs": 163540,
+          "endMs": 165100
+        },
+        {
+          "text": "I don't want to stick at home, now",
+          "startMs": 165100,
+          "endMs": 168700
+        },
+        {
+          "text": "I don't want to stick at home, now",
+          "startMs": 168700,
+          "endMs": 172310
+        },
+        {
+          "text": "One, Two, Three",
+          "startMs": 172310,
+          "endMs": 175020
+        },
+        {
+          "text": "Yeah",
+          "startMs": 175020,
+          "endMs": 175400
+        },
+        {
+          "text": "",
+          "startMs": 175400,
+          "endMs": 180094
+        }
+      ]
+    },
+    {
+      "id": "yue-liang-re-de-huo",
+      "name": "月亮惹的祸",
+      "artist": "张宇",
+      "album": "我是歌手精选",
+      "category": "中文",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 256069,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/yue-liang-re-de-huo.ogg",
+      "instrumentalSource": "/source/yue-liang-re-de-huo-instrumental.ogg",
+      "melodyFile": "melodies/yue-liang-re-de-huo.json",
+      "lyrics": [
+        {
+          "text": "",
+          "startMs": 10480,
+          "endMs": 14100
+        },
+        {
+          "text": "",
+          "startMs": 14100,
+          "endMs": 20550
+        },
+        {
+          "text": "",
+          "startMs": 20550,
+          "endMs": 21650
+        },
+        {
+          "text": "都是你的錯 輕易愛上我 讓我不知不覺滿足被愛的虛榮",
+          "startMs": 21650,
+          "endMs": 29350
+        },
+        {
+          "text": "都是你的錯 你對人的寵 是一種誘惑",
+          "startMs": 29350,
+          "endMs": 36550
+        },
+        {
+          "text": "都是你的錯 在你的眼中 總是藏著讓人又愛又憐的矇矓",
+          "startMs": 36550,
+          "endMs": 44380
+        },
+        {
+          "text": "都是你的錯 你的痴情夢 像一個魔咒",
+          "startMs": 44380,
+          "endMs": 51420
+        },
+        {
+          "text": "被你愛過還能為誰蠢動",
+          "startMs": 51420,
+          "endMs": 59120
+        },
+        {
+          "text": "我承認都是月亮惹的禍 那樣的月色太美你太溫柔",
+          "startMs": 59120,
+          "endMs": 66730
+        },
+        {
+          "text": "才會在剎那之間只想和你一起到白頭",
+          "startMs": 66730,
+          "endMs": 74580
+        },
+        {
+          "text": "我承認都是誓言惹的禍 偏偏似糖如蜜說來最動人",
+          "startMs": 74580,
+          "endMs": 81830
+        },
+        {
+          "text": "再怎麼心如鋼鐵也成繞指柔",
+          "startMs": 81830,
+          "endMs": 89800
+        },
+        {
+          "text": "都是你的錯 輕易愛上我 讓我不知不覺滿足被愛的虛榮",
+          "startMs": 89800,
+          "endMs": 96720
+        },
+        {
+          "text": "都是你的錯 你對人的寵 是一種誘惑",
+          "startMs": 96720,
+          "endMs": 104030
+        },
+        {
+          "text": "都是你的錯 在你的眼中 總是藏著讓人又愛又憐的矇矓",
+          "startMs": 104030,
+          "endMs": 111580
+        },
+        {
+          "text": "都是你的錯 你的痴情夢 像一個魔咒",
+          "startMs": 111580,
+          "endMs": 118670
+        },
+        {
+          "text": "被你愛過還能為誰蠢動",
+          "startMs": 118670,
+          "endMs": 126150
+        },
+        {
+          "text": "我承認都是月亮惹的禍 那樣的月色太美你太溫柔",
+          "startMs": 126150,
+          "endMs": 134390
+        },
+        {
+          "text": "才會在剎那之間只想和你一起到白頭",
+          "startMs": 134390,
+          "endMs": 142130
+        },
+        {
+          "text": "我承認都是誓言惹的禍 偏偏似糖如蜜說來最動人",
+          "startMs": 142130,
+          "endMs": 149570
+        },
+        {
+          "text": "再怎麼心如鋼鐵也成繞指柔",
+          "startMs": 149570,
+          "endMs": 157360
+        },
+        {
+          "text": "怎樣的情生意動 會讓兩個人拿一生當承諾",
+          "startMs": 157360,
+          "endMs": 172750
+        },
+        {
+          "text": "",
+          "startMs": 172750,
+          "endMs": 172930
+        },
+        {
+          "text": "",
+          "startMs": 172930,
+          "endMs": 173250
+        },
+        {
+          "text": "",
+          "startMs": 173250,
+          "endMs": 189440
+        },
+        {
+          "text": "我承認都是誓言惹的禍 偏偏似糖如蜜說來最動人",
+          "startMs": 189440,
+          "endMs": 196900
+        },
+        {
+          "text": "再怎麼心如鋼鐵也成繞指柔",
+          "startMs": 196900,
+          "endMs": 203860
+        },
+        {
+          "text": "我承認都月亮惹的禍 那樣的月色太美你太溫柔",
+          "startMs": 203860,
+          "endMs": 211670
+        },
+        {
+          "text": "才會在剎那之間只想和你一起到白頭",
+          "startMs": 211670,
+          "endMs": 219210
+        },
+        {
+          "text": "我承認都是誓言惹的禍 偏偏似糖如蜜說來最動人",
+          "startMs": 219210,
+          "endMs": 226780
+        },
+        {
+          "text": "再怎麼心如鋼鐵也成繞指柔",
+          "startMs": 226780,
+          "endMs": 236750
+        },
+        {
+          "text": "",
+          "startMs": 236750,
+          "endMs": 256069
+        }
+      ]
+    },
+    {
+      "id": "gangnam-style",
+      "name": "Gangnam Style (강남스타일)",
+      "artist": "PSY",
+      "album": "Gangnam Style (강남스타일)",
+      "category": "한국어",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 216512,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/gangnam-style.ogg",
+      "instrumentalSource": "/source/gangnam-style-instrumental.ogg",
+      "melodyFile": "melodies/gangnam-style.json",
+      "lyrics": [
+        {
+          "text": "오빤 강남스타일",
+          "startMs": 6390,
+          "endMs": 9480
+        },
+        {
+          "text": "강남스타일",
+          "startMs": 9480,
+          "endMs": 14910
+        },
+        {
+          "text": "낮에는 따사로운 인간적인 여자",
+          "startMs": 14910,
+          "endMs": 18330
+        },
+        {
+          "text": "커피 한잔의 여유를 아는 품격 있는 여자",
+          "startMs": 18330,
+          "endMs": 21960
+        },
+        {
+          "text": "밤이 오면 심장이 뜨거워지는 여자",
+          "startMs": 21960,
+          "endMs": 25650
+        },
+        {
+          "text": "그런 반전 있는 여자",
+          "startMs": 25650,
+          "endMs": 29280
+        },
+        {
+          "text": "나는 사나이",
+          "startMs": 29280,
+          "endMs": 30600
+        },
+        {
+          "text": "낮에는 너만큼 따사로운 그런 사나이",
+          "startMs": 30600,
+          "endMs": 34230
+        },
+        {
+          "text": "커피 식기도 전에 원샷 때리는 사나이",
+          "startMs": 34230,
+          "endMs": 37890
+        },
+        {
+          "text": "밤이 오면 심장이 터져버리는 사나이",
+          "startMs": 37890,
+          "endMs": 40380
+        },
+        {
+          "text": "그런 사나이",
+          "startMs": 40380,
+          "endMs": 43590
+        },
+        {
+          "text": "아름다워, 사랑스러워",
+          "startMs": 43590,
+          "endMs": 47160
+        },
+        {
+          "text": "그래, 너 (hey), 그래, 바로 너 (hey)",
+          "startMs": 47160,
+          "endMs": 50910
+        },
+        {
+          "text": "아름다워, 사랑스러워",
+          "startMs": 50910,
+          "endMs": 54450
+        },
+        {
+          "text": "그래, 너 (hey), 그래, 바로 너 (hey)",
+          "startMs": 54450,
+          "endMs": 58110
+        },
+        {
+          "text": "지금부터 갈 데까지 가볼까",
+          "startMs": 58110,
+          "endMs": 66390
+        },
+        {
+          "text": "오빤 강남스타일 (uh)",
+          "startMs": 66390,
+          "endMs": 70350
+        },
+        {
+          "text": "강남스타일",
+          "startMs": 70350,
+          "endMs": 72480
+        },
+        {
+          "text": "오, 오, 오, 오, 오빤 강남스타일 (uh)",
+          "startMs": 72480,
+          "endMs": 77610
+        },
+        {
+          "text": "강남스타일",
+          "startMs": 77610,
+          "endMs": 79770
+        },
+        {
+          "text": "오, 오, 오, 오, 오빤 강남스타일",
+          "startMs": 79770,
+          "endMs": 82230
+        },
+        {
+          "text": "Eh, sexy lady",
+          "startMs": 82230,
+          "endMs": 85890
+        },
+        {
+          "text": "오, 오, 오, 오, 오빤 강남스타일",
+          "startMs": 85890,
+          "endMs": 89370
+        },
+        {
+          "text": "Eh, sexy lady",
+          "startMs": 89370,
+          "endMs": 92760
+        },
+        {
+          "text": "오, 오, 오, 오 (eh-eh-eh, eh-eh-eh)",
+          "startMs": 92760,
+          "endMs": 96750
+        },
+        {
+          "text": "정숙해 보이지만, 놀 땐 노는 여자",
+          "startMs": 96750,
+          "endMs": 100260
+        },
+        {
+          "text": "이때다 싶으면 묶었던 머리 푸는 여자",
+          "startMs": 100260,
+          "endMs": 103770
+        },
+        {
+          "text": "가렸지만, 웬만한 노출보다 야한 여자",
+          "startMs": 103770,
+          "endMs": 107460
+        },
+        {
+          "text": "그런 감각적인 여자",
+          "startMs": 107460,
+          "endMs": 110820
+        },
+        {
+          "text": "나는 사나이",
+          "startMs": 110820,
+          "endMs": 112380
+        },
+        {
+          "text": "점잖아 보이지만, 놀 땐 노는 사나이",
+          "startMs": 112380,
+          "endMs": 115770
+        },
+        {
+          "text": "때가 되면 완전 미쳐버리는 사나이",
+          "startMs": 115770,
+          "endMs": 119430
+        },
+        {
+          "text": "근육보다 사상이 울퉁불퉁한 사나이",
+          "startMs": 119430,
+          "endMs": 122700
+        },
+        {
+          "text": "그런 사나이",
+          "startMs": 122700,
+          "endMs": 125400
+        },
+        {
+          "text": "아름다워, 사랑스러워",
+          "startMs": 125400,
+          "endMs": 129000
+        },
+        {
+          "text": "그래, 너 (hey), 그래, 바로 너 (hey)",
+          "startMs": 129000,
+          "endMs": 132720
+        },
+        {
+          "text": "아름다워, 사랑스러워",
+          "startMs": 132720,
+          "endMs": 136260
+        },
+        {
+          "text": "그래, 너 (hey), 그래, 바로 너 (hey)",
+          "startMs": 136260,
+          "endMs": 140460
+        },
+        {
+          "text": "지금부터 갈 데까지 가볼까",
+          "startMs": 140460,
+          "endMs": 148200
+        },
+        {
+          "text": "오빤 강남스타일 (uh)",
+          "startMs": 148200,
+          "endMs": 152160
+        },
+        {
+          "text": "강남스타일",
+          "startMs": 152160,
+          "endMs": 154290
+        },
+        {
+          "text": "오, 오, 오, 오, 오빤 강남스타일 (uh)",
+          "startMs": 154290,
+          "endMs": 159420
+        },
+        {
+          "text": "강남스타일",
+          "startMs": 159420,
+          "endMs": 160440
+        },
+        {
+          "text": "오, 오, 오, 오, 오빤 강남스타일",
+          "startMs": 160440,
+          "endMs": 166080
+        },
+        {
+          "text": "Eh, sexy lady",
+          "startMs": 166080,
+          "endMs": 167730
+        },
+        {
+          "text": "오, 오, 오, 오, 오빤 강남스타일",
+          "startMs": 167730,
+          "endMs": 171330
+        },
+        {
+          "text": "Eh, sexy lady",
+          "startMs": 171330,
+          "endMs": 174570
+        },
+        {
+          "text": "오, 오, 오, 오 (eh-eh-eh, eh-eh-eh)",
+          "startMs": 174570,
+          "endMs": 178560
+        },
+        {
+          "text": "뛰는 놈, 그 위에 나는 놈",
+          "startMs": 178560,
+          "endMs": 181770
+        },
+        {
+          "text": "Baby, baby, 나는 뭘 좀 아는 놈",
+          "startMs": 181770,
+          "endMs": 185340
+        },
+        {
+          "text": "뛰는 놈, 그 위에 나는 놈",
+          "startMs": 185340,
+          "endMs": 189000
+        },
+        {
+          "text": "Baby, baby, 나는 뭘 좀 아는 놈",
+          "startMs": 189000,
+          "endMs": 192000
+        },
+        {
+          "text": "You know what I'm saying",
+          "startMs": 192000,
+          "endMs": 192990
+        },
+        {
+          "text": "오빤 강남스타일 (eh-eh-eh, eh-eh-eh)",
+          "startMs": 192990,
+          "endMs": 198810
+        },
+        {
+          "text": "Eh, sexy lady",
+          "startMs": 198810,
+          "endMs": 201570
+        },
+        {
+          "text": "오, 오, 오, 오, 오빤 강남스타일",
+          "startMs": 201570,
+          "endMs": 204060
+        },
+        {
+          "text": "Eh, sexy lady",
+          "startMs": 204060,
+          "endMs": 207720
+        },
+        {
+          "text": "오, 오, 오, 오 (eh-eh-eh, eh-eh-eh)",
+          "startMs": 207720,
+          "endMs": 211830
+        },
+        {
+          "text": "오빤 강남스타일 (uh)",
+          "startMs": 211830,
+          "endMs": 216512
+        }
+      ]
+    },
+    {
+      "id": "shape-of-you",
+      "name": "Shape of You",
+      "artist": "Ed Sheeran",
+      "album": "Shape of You",
+      "category": "English",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 233778,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/shape-of-you.ogg",
+      "instrumentalSource": "/source/shape-of-you-instrumental.ogg",
+      "melodyFile": "melodies/shape-of-you.json",
+      "lyrics": [
+        {
+          "text": "The club isn't the best place to find a lover",
+          "startMs": 9870,
+          "endMs": 12100
+        },
+        {
+          "text": "So the bar is where I go",
+          "startMs": 12100,
+          "endMs": 15090
+        },
+        {
+          "text": "Me and my friends at the table doing shots",
+          "startMs": 15090,
+          "endMs": 17260
+        },
+        {
+          "text": "Drinking fast and then we talk slow",
+          "startMs": 17260,
+          "endMs": 19580
+        },
+        {
+          "text": "And you come over and start up a conversation with just me",
+          "startMs": 19580,
+          "endMs": 22470
+        },
+        {
+          "text": "And trust me I'll give it a chance now",
+          "startMs": 22470,
+          "endMs": 24620
+        },
+        {
+          "text": "Take my hand, stop, put Van the Man on the jukebox",
+          "startMs": 24620,
+          "endMs": 27420
+        },
+        {
+          "text": "And then we start to dance, and now I'm singing like",
+          "startMs": 27420,
+          "endMs": 30070
+        },
+        {
+          "text": "Girl, you know I want your love",
+          "startMs": 30070,
+          "endMs": 32460
+        },
+        {
+          "text": "Your love was handmade for somebody like me",
+          "startMs": 32460,
+          "endMs": 35640
+        },
+        {
+          "text": "Come on now, follow my lead",
+          "startMs": 35640,
+          "endMs": 37560
+        },
+        {
+          "text": "I may be crazy, don't mind me",
+          "startMs": 37560,
+          "endMs": 39610
+        },
+        {
+          "text": "Say, boy, let's not talk too much",
+          "startMs": 39610,
+          "endMs": 42560
+        },
+        {
+          "text": "Grab on my waist and put that body on me",
+          "startMs": 42560,
+          "endMs": 45680
+        },
+        {
+          "text": "Come on now, follow my lead",
+          "startMs": 45680,
+          "endMs": 47160
+        },
+        {
+          "text": "Come, come on now, follow my lead",
+          "startMs": 47160,
+          "endMs": 51050
+        },
+        {
+          "text": "I'm in love with the shape of you",
+          "startMs": 51050,
+          "endMs": 53330
+        },
+        {
+          "text": "We push and pull like a magnet do",
+          "startMs": 53330,
+          "endMs": 55840
+        },
+        {
+          "text": "Although my heart is falling too",
+          "startMs": 55840,
+          "endMs": 58500
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 58500,
+          "endMs": 60880
+        },
+        {
+          "text": "And last night you were in my room",
+          "startMs": 60880,
+          "endMs": 63340
+        },
+        {
+          "text": "And now my bedsheets smell like you",
+          "startMs": 63340,
+          "endMs": 65490
+        },
+        {
+          "text": "Every day discovering something brand new",
+          "startMs": 65490,
+          "endMs": 68440
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 68440,
+          "endMs": 70180
+        },
+        {
+          "text": "Oh-I-oh-I-oh-I-oh-I",
+          "startMs": 70180,
+          "endMs": 73410
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 73410,
+          "endMs": 75060
+        },
+        {
+          "text": "Oh-I-oh-I-oh-I-oh-I",
+          "startMs": 75060,
+          "endMs": 78450
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 78450,
+          "endMs": 80070
+        },
+        {
+          "text": "Oh-I-oh-I-oh-I-oh-I",
+          "startMs": 80070,
+          "endMs": 83420
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 83420,
+          "endMs": 85450
+        },
+        {
+          "text": "Every day discovering something brand new",
+          "startMs": 85450,
+          "endMs": 88430
+        },
+        {
+          "text": "I'm in love with the shape of you",
+          "startMs": 88430,
+          "endMs": 90020
+        },
+        {
+          "text": "One week in we let the story begin",
+          "startMs": 90020,
+          "endMs": 92040
+        },
+        {
+          "text": "We're going out on the first date",
+          "startMs": 92040,
+          "endMs": 94700
+        },
+        {
+          "text": "You and me are thrifty, so go all you can eat",
+          "startMs": 94700,
+          "endMs": 97000
+        },
+        {
+          "text": "Fill up your bag and I fill up a plate",
+          "startMs": 97000,
+          "endMs": 99610
+        },
+        {
+          "text": "We talk for hours and hours about the sweet and the sours",
+          "startMs": 99610,
+          "endMs": 102020
+        },
+        {
+          "text": "And how your family is doing okay",
+          "startMs": 102020,
+          "endMs": 104730
+        },
+        {
+          "text": "Leave and get in a taxi, then kiss in the backseat",
+          "startMs": 104730,
+          "endMs": 107190
+        },
+        {
+          "text": "Tell the driver make the radio play, and then I'm singing like",
+          "startMs": 107190,
+          "endMs": 110080
+        },
+        {
+          "text": "Girl, you know I want your love",
+          "startMs": 110080,
+          "endMs": 112470
+        },
+        {
+          "text": "Your love was handmade for somebody like me",
+          "startMs": 112470,
+          "endMs": 115550
+        },
+        {
+          "text": "Come on now, follow my lead",
+          "startMs": 115550,
+          "endMs": 117500
+        },
+        {
+          "text": "I may be crazy, don't mind me",
+          "startMs": 117500,
+          "endMs": 119630
+        },
+        {
+          "text": "Say, boy, let's not talk too much",
+          "startMs": 119630,
+          "endMs": 122440
+        },
+        {
+          "text": "Grab on my waist and put that body on me",
+          "startMs": 122440,
+          "endMs": 125560
+        },
+        {
+          "text": "Come on now, follow my lead",
+          "startMs": 125560,
+          "endMs": 127190
+        },
+        {
+          "text": "Come, come on now, follow my lead",
+          "startMs": 127190,
+          "endMs": 131080
+        },
+        {
+          "text": "I'm in love with the shape of you",
+          "startMs": 131080,
+          "endMs": 133300
+        },
+        {
+          "text": "We push and pull like a magnet do",
+          "startMs": 133300,
+          "endMs": 135890
+        },
+        {
+          "text": "Although my heart is falling too",
+          "startMs": 135890,
+          "endMs": 138560
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 138560,
+          "endMs": 140740
+        },
+        {
+          "text": "And last night you were in my room",
+          "startMs": 140740,
+          "endMs": 143290
+        },
+        {
+          "text": "And now my bedsheets smell like you",
+          "startMs": 143290,
+          "endMs": 145390
+        },
+        {
+          "text": "Every day discovering something brand new",
+          "startMs": 145390,
+          "endMs": 148430
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 148430,
+          "endMs": 150100
+        },
+        {
+          "text": "Oh-I-oh-I-oh-I-oh-I",
+          "startMs": 150100,
+          "endMs": 153470
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 153470,
+          "endMs": 155190
+        },
+        {
+          "text": "Oh-I-oh-I-oh-I-oh-I",
+          "startMs": 155190,
+          "endMs": 158470
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 158470,
+          "endMs": 160190
+        },
+        {
+          "text": "Oh-I-oh-I-oh-I-oh-I",
+          "startMs": 160190,
+          "endMs": 163440
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 163440,
+          "endMs": 165300
+        },
+        {
+          "text": "Every day discovering something brand new",
+          "startMs": 165300,
+          "endMs": 168410
+        },
+        {
+          "text": "I'm in love with the shape of you",
+          "startMs": 168410,
+          "endMs": 170390
+        },
+        {
+          "text": "Come on, be my baby, come on",
+          "startMs": 170390,
+          "endMs": 172810
+        },
+        {
+          "text": "Come on, be my baby, come on",
+          "startMs": 172810,
+          "endMs": 175320
+        },
+        {
+          "text": "Come on, be my baby, come on",
+          "startMs": 175320,
+          "endMs": 177800
+        },
+        {
+          "text": "Come on, be my baby, come on",
+          "startMs": 177800,
+          "endMs": 180330
+        },
+        {
+          "text": "Come on, be my baby, come on",
+          "startMs": 180330,
+          "endMs": 182850
+        },
+        {
+          "text": "Come on, be my baby, come on",
+          "startMs": 182850,
+          "endMs": 185300
+        },
+        {
+          "text": "Come on, be my baby, come on",
+          "startMs": 185300,
+          "endMs": 187820
+        },
+        {
+          "text": "Come on, be my baby, come on",
+          "startMs": 187820,
+          "endMs": 191020
+        },
+        {
+          "text": "I'm in love with the shape of you",
+          "startMs": 191020,
+          "endMs": 193350
+        },
+        {
+          "text": "We push and pull like a magnet do",
+          "startMs": 193350,
+          "endMs": 195820
+        },
+        {
+          "text": "Although my heart is falling too",
+          "startMs": 195820,
+          "endMs": 198560
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 198560,
+          "endMs": 200900
+        },
+        {
+          "text": "Last night you were in my room",
+          "startMs": 200900,
+          "endMs": 203290
+        },
+        {
+          "text": "And now my bedsheets smell like you",
+          "startMs": 203290,
+          "endMs": 205350
+        },
+        {
+          "text": "Every day discovering something brand new",
+          "startMs": 205350,
+          "endMs": 208480
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 208480,
+          "endMs": 210190
+        },
+        {
+          "text": "Oh-I-oh-I-oh-I-oh-I",
+          "startMs": 210190,
+          "endMs": 213450
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 213450,
+          "endMs": 215140
+        },
+        {
+          "text": "Oh-I-oh-I-oh-I-oh-I",
+          "startMs": 215140,
+          "endMs": 218440
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 218440,
+          "endMs": 220140
+        },
+        {
+          "text": "Oh-I-oh-I-oh-I-oh-I",
+          "startMs": 220140,
+          "endMs": 223440
+        },
+        {
+          "text": "I'm in love with your body",
+          "startMs": 223440,
+          "endMs": 225380
+        },
+        {
+          "text": "Every day discovering something brand new",
+          "startMs": 225380,
+          "endMs": 228440
+        },
+        {
+          "text": "I'm in love with the shape of you",
+          "startMs": 228440,
+          "endMs": 230310
+        },
+        {
+          "text": "",
+          "startMs": 230310,
+          "endMs": 233778
+        }
+      ]
+    },
+    {
+      "id": "love-story",
+      "name": "Love Story",
+      "artist": "Taylor Swift",
+      "album": "Love Story",
+      "category": "English",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 242370,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/love-story.ogg",
+      "instrumentalSource": "/source/love-story-instrumental.ogg",
+      "melodyFile": "melodies/love-story.json",
+      "lyrics": [
+        {
+          "text": "We were both young when I first saw you",
+          "startMs": 17850,
           "endMs": 21600
         },
         {
-          "midi": 60,
+          "text": "I close my eyes and the flashback starts",
           "startMs": 21600,
-          "endMs": 22200
+          "endMs": 25220
         },
         {
-          "midi": 62,
-          "startMs": 22200,
-          "endMs": 22800
+          "text": "I'm standing there",
+          "startMs": 25220,
+          "endMs": 28340
         },
         {
-          "midi": 60,
-          "startMs": 22800,
-          "endMs": 23400
+          "text": "On a balcony in summer air",
+          "startMs": 28340,
+          "endMs": 33410
         },
         {
-          "midi": 58,
-          "startMs": 23400,
-          "endMs": 24000
+          "text": "I see the lights, see the party, the ball gowns",
+          "startMs": 33410,
+          "endMs": 38150
         },
         {
-          "midi": 57,
-          "startMs": 24000,
-          "endMs": 24600
+          "text": "See you make your way through the crowd",
+          "startMs": 38150,
+          "endMs": 41130
         },
         {
-          "midi": 55,
-          "startMs": 24600,
-          "endMs": 25800
+          "text": "And say, \"Hello\"",
+          "startMs": 41130,
+          "endMs": 44780
+        },
+        {
+          "text": "Little did I know",
+          "startMs": 44780,
+          "endMs": 49420
+        },
+        {
+          "text": "That you were Romeo, you were throwin' pebbles",
+          "startMs": 49420,
+          "endMs": 53430
+        },
+        {
+          "text": "And my daddy said, \"Stay away from Juliet\"",
+          "startMs": 53430,
+          "endMs": 57020
+        },
+        {
+          "text": "And I was cryin' on the staircase",
+          "startMs": 57020,
+          "endMs": 59930
+        },
+        {
+          "text": "Beggin' you, \"Please don't go\"",
+          "startMs": 59930,
+          "endMs": 64220
+        },
+        {
+          "text": "And I said",
+          "startMs": 64220,
+          "endMs": 65940
+        },
+        {
+          "text": "\"Romeo take me somewhere we can be alone",
+          "startMs": 65940,
+          "endMs": 69980
+        },
+        {
+          "text": "I'll be waiting, all there's left to do is run",
+          "startMs": 69980,
+          "endMs": 73710
+        },
+        {
+          "text": "You'll be the prince and I'll be the princess",
+          "startMs": 73710,
+          "endMs": 77790
+        },
+        {
+          "text": "It's a love story, baby, just say yes\"",
+          "startMs": 77790,
+          "endMs": 81600
+        },
+        {
+          "text": "",
+          "startMs": 81600,
+          "endMs": 85080
+        },
+        {
+          "text": "Oh-oh-oh",
+          "startMs": 85080,
+          "endMs": 89050
+        },
+        {
+          "text": "Oh-oh-oh",
+          "startMs": 89050,
+          "endMs": 91600
+        },
+        {
+          "text": "",
+          "startMs": 91600,
+          "endMs": 93750
+        },
+        {
+          "text": "Mm-mmm",
+          "startMs": 93750,
+          "endMs": 97500
+        },
+        {
+          "text": "So I sneak out to the garden to see you",
+          "startMs": 97500,
+          "endMs": 102050
+        },
+        {
+          "text": "We keep quiet 'cause we're dead if they knew",
+          "startMs": 102050,
+          "endMs": 105210
+        },
+        {
+          "text": "So close your eyes",
+          "startMs": 105210,
+          "endMs": 108090
+        },
+        {
+          "text": "Escape this town for a little while",
+          "startMs": 108090,
+          "endMs": 113550
+        },
+        {
+          "text": "'Cause I was Romeo, you were a scarlet letter",
+          "startMs": 113550,
+          "endMs": 117430
+        },
+        {
+          "text": "And your daddy said, \"Stay away from Juliet\"",
+          "startMs": 117430,
+          "endMs": 121220
+        },
+        {
+          "text": "But you were everything to me",
+          "startMs": 121220,
+          "endMs": 123340
+        },
+        {
+          "text": "And I was beggin' you, \"Please don't go\"",
+          "startMs": 123340,
+          "endMs": 128590
+        },
+        {
+          "text": "And I said",
+          "startMs": 128590,
+          "endMs": 129840
+        },
+        {
+          "text": "\"Romeo take me somewhere we can be alone",
+          "startMs": 129840,
+          "endMs": 133890
+        },
+        {
+          "text": "I'll be waiting, all there's left to do is run",
+          "startMs": 133890,
+          "endMs": 137940
+        },
+        {
+          "text": "You'll be the prince and I'll be the princess",
+          "startMs": 137940,
+          "endMs": 141940
+        },
+        {
+          "text": "It's a love story, baby, just say yes\"",
+          "startMs": 141940,
+          "endMs": 146100
+        },
+        {
+          "text": "Romeo save me, they're tryna tell me how to feel",
+          "startMs": 146100,
+          "endMs": 150300
+        },
+        {
+          "text": "This love is difficult, but it's real",
+          "startMs": 150300,
+          "endMs": 153960
+        },
+        {
+          "text": "Don't be afraid, we'll make it out of this mess",
+          "startMs": 153960,
+          "endMs": 157940
+        },
+        {
+          "text": "It's a love story, baby, just say yes",
+          "startMs": 157940,
+          "endMs": 164610
+        },
+        {
+          "text": "Ooh-oh-oh",
+          "startMs": 164610,
+          "endMs": 168540
+        },
+        {
+          "text": "Ooh-oh-oh",
+          "startMs": 168540,
+          "endMs": 173870
+        },
+        {
+          "text": "Mm-mmm",
+          "startMs": 173870,
+          "endMs": 176960
+        },
+        {
+          "text": "I got tired of waiting",
+          "startMs": 176960,
+          "endMs": 180950
+        },
+        {
+          "text": "Wonderin' if you were ever comin' around",
+          "startMs": 180950,
+          "endMs": 184510
+        },
+        {
+          "text": "My faith in you was fading",
+          "startMs": 184510,
+          "endMs": 189370
+        },
+        {
+          "text": "When I met you on the outskirts of town",
+          "startMs": 189370,
+          "endMs": 194610
+        },
+        {
+          "text": "And I said",
+          "startMs": 194610,
+          "endMs": 195100
+        },
+        {
+          "text": "\"Romeo save me I've been feelin' so alone",
+          "startMs": 195100,
+          "endMs": 199860
+        },
+        {
+          "text": "I keep waiting for you but you never come",
+          "startMs": 199860,
+          "endMs": 203790
+        },
+        {
+          "text": "Is this in my head? I don't know what to think\"",
+          "startMs": 203790,
+          "endMs": 207480
+        },
+        {
+          "text": "He knelt to the ground and pulled out a ring and said",
+          "startMs": 207480,
+          "endMs": 211830
+        },
+        {
+          "text": "\"Marry me, Juliet",
+          "startMs": 211830,
+          "endMs": 213530
+        },
+        {
+          "text": "You'll never have to be alone",
+          "startMs": 213530,
+          "endMs": 215970
+        },
+        {
+          "text": "I love you and that's all I really know",
+          "startMs": 215970,
+          "endMs": 219660
+        },
+        {
+          "text": "I talked to your dad, go pick out a white dress",
+          "startMs": 219660,
+          "endMs": 223850
+        },
+        {
+          "text": "It's a love story, baby, just say yes\"",
+          "startMs": 223850,
+          "endMs": 227850
+        },
+        {
+          "text": "",
+          "startMs": 227850,
+          "endMs": 242370
+        }
+      ]
+    },
+    {
+      "id": "what-makes-you-beautiful",
+      "name": "What Makes You Beautiful",
+      "artist": "One Direction",
+      "album": "One Direction - What Makes You Beautiful (Official",
+      "category": "English",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 204985,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/what-makes-you-beautiful.ogg",
+      "instrumentalSource": "/source/what-makes-you-beautiful-instrumental.ogg",
+      "melodyFile": "melodies/what-makes-you-beautiful.json",
+      "lyrics": [
+        {
+          "text": "You're insecure, don't know what for",
+          "startMs": 11210,
+          "endMs": 15120
+        },
+        {
+          "text": "You're turning heads when you walk through the door",
+          "startMs": 15120,
+          "endMs": 19000
+        },
+        {
+          "text": "Don't need makeup to cover up",
+          "startMs": 19000,
+          "endMs": 22430
+        },
+        {
+          "text": "Being the way that you are is enough",
+          "startMs": 22430,
+          "endMs": 27150
+        },
+        {
+          "text": "Everyone else in the room can see it",
+          "startMs": 27150,
+          "endMs": 31000
+        },
+        {
+          "text": "Everyone else, but you, ooh",
+          "startMs": 31000,
+          "endMs": 34330
+        },
+        {
+          "text": "Baby, you light up my world like nobody else",
+          "startMs": 34330,
+          "endMs": 38120
+        },
+        {
+          "text": "The way that you flip your hair gets me overwhelmed",
+          "startMs": 38120,
+          "endMs": 42050
+        },
+        {
+          "text": "But when you smile at the ground, it ain't hard to tell",
+          "startMs": 42050,
+          "endMs": 45520
+        },
+        {
+          "text": "You don't know, oh-oh",
+          "startMs": 45520,
+          "endMs": 48560
+        },
+        {
+          "text": "You don't know you're beautiful",
+          "startMs": 48560,
+          "endMs": 50300
+        },
+        {
+          "text": "If only you saw what I can see",
+          "startMs": 50300,
+          "endMs": 53290
+        },
+        {
+          "text": "You'll understand why I want you so desperately",
+          "startMs": 53290,
+          "endMs": 57150
+        },
+        {
+          "text": "Right now I'm lookin' at you, and I can't believe",
+          "startMs": 57150,
+          "endMs": 61180
+        },
+        {
+          "text": "You don't know, oh-oh",
+          "startMs": 61180,
+          "endMs": 63790
+        },
+        {
+          "text": "You don't know you're beautiful, oh, oh-oh",
+          "startMs": 63790,
+          "endMs": 67250
+        },
+        {
+          "text": "That's what makes you beautiful",
+          "startMs": 67250,
+          "endMs": 72840
+        },
+        {
+          "text": "So c-come on, you got it wrong",
+          "startMs": 72840,
+          "endMs": 76240
+        },
+        {
+          "text": "To prove I'm right, I put it in a song",
+          "startMs": 76240,
+          "endMs": 80240
+        },
+        {
+          "text": "I don't know why you're being shy",
+          "startMs": 80240,
+          "endMs": 84140
+        },
+        {
+          "text": "And turn away when I look into your eyes",
+          "startMs": 84140,
+          "endMs": 88780
+        },
+        {
+          "text": "Everyone else in the room can see it",
+          "startMs": 88780,
+          "endMs": 92340
+        },
+        {
+          "text": "Everyone else, but you, ooh",
+          "startMs": 92340,
+          "endMs": 95910
+        },
+        {
+          "text": "Baby, you light up my world like nobody else",
+          "startMs": 95910,
+          "endMs": 99770
+        },
+        {
+          "text": "The way that you flip your hair gets me overwhelmed",
+          "startMs": 99770,
+          "endMs": 103620
+        },
+        {
+          "text": "But when you smile at the ground, it ain't hard to tell",
+          "startMs": 103620,
+          "endMs": 107220
+        },
+        {
+          "text": "You don't know, oh-oh",
+          "startMs": 107220,
+          "endMs": 110240
+        },
+        {
+          "text": "You don't know you're beautiful",
+          "startMs": 110240,
+          "endMs": 111960
+        },
+        {
+          "text": "If only you saw what I can see",
+          "startMs": 111960,
+          "endMs": 114970
+        },
+        {
+          "text": "You'll understand why I want you so desperately",
+          "startMs": 114970,
+          "endMs": 118890
+        },
+        {
+          "text": "Right now I'm lookin' at you, and I can't believe",
+          "startMs": 118890,
+          "endMs": 122480
+        },
+        {
+          "text": "You don't know, oh-oh",
+          "startMs": 122480,
+          "endMs": 125120
+        },
+        {
+          "text": "You don't know you're beautiful, oh, oh-oh",
+          "startMs": 125120,
+          "endMs": 128520
+        },
+        {
+          "text": "That's what makes you beautiful",
+          "startMs": 128520,
+          "endMs": 131890
+        },
+        {
+          "text": "Na-na-na, na-na-na, na, na, na",
+          "startMs": 131890,
+          "endMs": 134980
+        },
+        {
+          "text": "Na-na-na, na-na-na",
+          "startMs": 134980,
+          "endMs": 138400
+        },
+        {
+          "text": "Na-na-na, na-na-na, na, na, na",
+          "startMs": 138400,
+          "endMs": 142300
+        },
+        {
+          "text": "Na-na-na, na-na-na",
+          "startMs": 142300,
+          "endMs": 145860
+        },
+        {
+          "text": "Baby, you light up my world like nobody else",
+          "startMs": 145860,
+          "endMs": 149330
+        },
+        {
+          "text": "The way that you flip your hair gets me overwhelmed",
+          "startMs": 149330,
+          "endMs": 153260
+        },
+        {
+          "text": "But when you smile at the ground, it ain't hard to tell",
+          "startMs": 153260,
+          "endMs": 157230
+        },
+        {
+          "text": "(You don't know, oh-oh)",
+          "startMs": 157230,
+          "endMs": 159450
+        },
+        {
+          "text": "You don't know you're beautiful",
+          "startMs": 159450,
+          "endMs": 161950
+        },
+        {
+          "text": "Baby, you light up my world like nobody else",
+          "startMs": 161950,
+          "endMs": 164980
+        },
+        {
+          "text": "The way that you flip your hair gets me overwhelmed",
+          "startMs": 164980,
+          "endMs": 168470
+        },
+        {
+          "text": "But when you smile at the ground, it ain't hard to tell",
+          "startMs": 168470,
+          "endMs": 172360
+        },
+        {
+          "text": "You don't know, oh-oh",
+          "startMs": 172360,
+          "endMs": 175070
+        },
+        {
+          "text": "You don't know you're beautiful",
+          "startMs": 175070,
+          "endMs": 177560
+        },
+        {
+          "text": "If only you saw what I can see",
+          "startMs": 177560,
+          "endMs": 180120
+        },
+        {
+          "text": "You'll understand why I want you so desperately",
+          "startMs": 180120,
+          "endMs": 184010
+        },
+        {
+          "text": "Right now I'm lookin' at you, and I can't believe",
+          "startMs": 184010,
+          "endMs": 187550
+        },
+        {
+          "text": "You don't know, oh-oh",
+          "startMs": 187550,
+          "endMs": 190340
+        },
+        {
+          "text": "You don't know you're beautiful, oh, oh-oh",
+          "startMs": 190340,
+          "endMs": 194280
+        },
+        {
+          "text": "You don't know you're beautiful, oh, oh-oh",
+          "startMs": 194280,
+          "endMs": 198150
+        },
+        {
+          "text": "That's what makes you beautiful",
+          "startMs": 198150,
+          "endMs": 199990
+        },
+        {
+          "text": "",
+          "startMs": 199990,
+          "endMs": 204985
+        }
+      ]
+    },
+    {
+      "id": "wo-huai-nian-de",
+      "name": "我怀念的",
+      "artist": "孙燕姿",
+      "album": "逆光",
+      "category": "中文",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 288577,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/wo-huai-nian-de.ogg",
+      "instrumentalSource": "/source/wo-huai-nian-de-instrumental.ogg",
+      "melodyFile": "melodies/wo-huai-nian-de.json",
+      "lyrics": [
+        {
+          "text": "我問為什麼那女孩傳簡訊給我",
+          "startMs": 16660,
+          "endMs": 24020
+        },
+        {
+          "text": "而你為什麼不解釋 低著頭沉默?",
+          "startMs": 24020,
+          "endMs": 30270
+        },
+        {
+          "text": "我該相信你很愛我 不願意敷衍我",
+          "startMs": 30270,
+          "endMs": 37420
+        },
+        {
+          "text": "還是明白你已不想挽回什麼?",
+          "startMs": 37420,
+          "endMs": 45860
+        },
+        {
+          "text": "想問為什麼我不再是你的快樂",
+          "startMs": 45860,
+          "endMs": 52900
+        },
+        {
+          "text": "可是為什麼 卻苦笑說我都懂了?",
+          "startMs": 52900,
+          "endMs": 59270
+        },
+        {
+          "text": "自尊常常將人拖著 把愛都走曲折",
+          "startMs": 59270,
+          "endMs": 66130
+        },
+        {
+          "text": "假裝了解是怕真相太赤裸裸 狼狽比失去難受",
+          "startMs": 66130,
+          "endMs": 74360
+        },
+        {
+          "text": "我懷念的是無話不說 我懷念的是一起做夢",
+          "startMs": 74360,
+          "endMs": 81060
+        },
+        {
+          "text": "我懷念的是爭吵以後 還是想要愛你的衝動",
+          "startMs": 81060,
+          "endMs": 88210
+        },
+        {
+          "text": "我記得那年生日 也記得那一首歌",
+          "startMs": 88210,
+          "endMs": 95190
+        },
+        {
+          "text": "記得那片星空 最緊的右手 最暖的胸口",
+          "startMs": 95190,
+          "endMs": 100230
+        },
+        {
+          "text": "誰記得? 誰忘了?",
+          "startMs": 100230,
+          "endMs": 106010
+        },
+        {
+          "text": "",
+          "startMs": 106010,
+          "endMs": 108610
+        },
+        {
+          "text": "",
+          "startMs": 108610,
+          "endMs": 116220
+        },
+        {
+          "text": "想問為什麼我不再是你的快樂",
+          "startMs": 116220,
+          "endMs": 123170
+        },
+        {
+          "text": "可是為什麼 卻苦笑說我都懂了?",
+          "startMs": 123170,
+          "endMs": 129320
+        },
+        {
+          "text": "自尊常常將人拖著 把愛都走曲折",
+          "startMs": 129320,
+          "endMs": 136230
+        },
+        {
+          "text": "假裝了解是怕真相太赤裸裸 狼狽比失去難受",
+          "startMs": 136230,
+          "endMs": 144140
+        },
+        {
+          "text": "我懷念的是無話不說 我懷念的是一起做夢",
+          "startMs": 144140,
+          "endMs": 150930
+        },
+        {
+          "text": "我懷念的是爭吵以後 還是想要愛你的衝動",
+          "startMs": 150930,
+          "endMs": 158300
+        },
+        {
+          "text": "我記得那年生日 也記得那一首歌",
+          "startMs": 158300,
+          "endMs": 164790
+        },
+        {
+          "text": "記得那片星空 最緊的右手 最暖的胸口",
+          "startMs": 164790,
+          "endMs": 169890
+        },
+        {
+          "text": "誰忘了?",
+          "startMs": 169890,
+          "endMs": 171660
+        },
+        {
+          "text": "我懷念的是無言感動 我懷念的是絕對熾熱",
+          "startMs": 171660,
+          "endMs": 178360
+        },
+        {
+          "text": "我懷念的是你很激動 求我原諒 抱得我都痛",
+          "startMs": 178360,
+          "endMs": 185530
+        },
+        {
+          "text": "我記得你在背後 也記得我顫抖著",
+          "startMs": 185530,
+          "endMs": 192140
+        },
+        {
+          "text": "記得感覺洶湧 最美的煙火 最長的相擁",
+          "startMs": 192140,
+          "endMs": 197140
+        },
+        {
+          "text": "誰愛的太自由?",
+          "startMs": 197140,
+          "endMs": 200620
+        },
+        {
+          "text": "誰過頭太遠了?",
+          "startMs": 200620,
+          "endMs": 204170
+        },
+        {
+          "text": "誰要走我的心?",
+          "startMs": 204170,
+          "endMs": 207480
+        },
+        {
+          "text": "誰忘了那就是承諾?",
+          "startMs": 207480,
+          "endMs": 210900
+        },
+        {
+          "text": "誰自顧自地走?",
+          "startMs": 210900,
+          "endMs": 214340
+        },
+        {
+          "text": "誰忘了看著我?",
+          "startMs": 214340,
+          "endMs": 217600
+        },
+        {
+          "text": "誰讓愛變沉重?",
+          "startMs": 217600,
+          "endMs": 221270
+        },
+        {
+          "text": "誰忘了要給你溫柔?",
+          "startMs": 221270,
+          "endMs": 228600
+        },
+        {
+          "text": "",
+          "startMs": 228600,
+          "endMs": 236660
+        },
+        {
+          "text": "(我懷念的)",
+          "startMs": 236660,
+          "endMs": 239270
+        },
+        {
+          "text": "我還有想要愛你的衝動",
+          "startMs": 239270,
+          "endMs": 243670
+        },
+        {
+          "text": "我記得那年生日 也記得那一首歌",
+          "startMs": 243670,
+          "endMs": 250130
+        },
+        {
+          "text": "記得那片星空 最緊的右手 最暖的胸口",
+          "startMs": 250130,
+          "endMs": 255200
+        },
+        {
+          "text": "我放手 我讓座 假灑脫",
+          "startMs": 255200,
+          "endMs": 265430
+        },
+        {
+          "text": "誰懂我多麼不捨得?",
+          "startMs": 265430,
+          "endMs": 269100
+        },
+        {
+          "text": "太愛了 所以我",
+          "startMs": 269100,
+          "endMs": 275720
+        },
+        {
+          "text": "沒有哭 沒有說",
+          "startMs": 275720,
+          "endMs": 280430
+        },
+        {
+          "text": "",
+          "startMs": 280430,
+          "endMs": 288577
         }
       ]
     }

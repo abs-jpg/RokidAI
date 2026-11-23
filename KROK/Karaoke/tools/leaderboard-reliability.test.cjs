@@ -10,11 +10,12 @@ let offline = true
 let profileMode = 'error'
 let profileId = 'verified-user'
 let uploadStatus = 201
+let uploadError
 const uploads = []
 const token = 'a'.repeat(64)
 
 function load() {
-  return vm.runInNewContext(source + '\n;({submitScore,flushPendingScores,getPlayerToken})', {
+  return vm.runInNewContext(source + '\n;({submitScore,flushPendingScores,getPlayerToken,scoreUploadMessage,getScoreUploadBlock})', {
     SCORING_VERSION: 2, LEADERBOARD_API_URL: 'https://example.test',
     AbortController, setTimeout, clearTimeout,
     console: { error() {} },
@@ -33,7 +34,7 @@ function load() {
         return { ok: true, status: 201, async json() { return { token, accountLinked: Boolean(options.body) } } }
       }
       uploads.push(JSON.parse(options.body))
-      return { ok: uploadStatus < 400, status: uploadStatus, async json() { return { ok: uploadStatus < 400 } } }
+      return { ok: uploadStatus < 400, status: uploadStatus, async json() { return { ok: uploadStatus < 400, error: uploadError } } }
     }
   })
 }
@@ -85,6 +86,10 @@ async function main() {
   await restarted.flushPendingScores()
   assert.equal(memory.get(pendingKey).length, 0)
   console.log('PASS  切换账号隔离待传成绩，服务器临时故障后可重试')
+  assert.equal(restarted.scoreUploadMessage('BODY_TOO_LARGE'), '服务器限制了成绩数据大小')
+  assert.equal(restarted.scoreUploadMessage('NOT_ELIGIBLE'), '服务器未识别到有效唱词')
+  assert.equal(restarted.scoreUploadMessage('VERSION_MISMATCH'), '曲谱或计分版本不一致')
+  console.log('PASS  服务端拒绝原因能够显示具体提示')
 
   const resultSource = readFileSync(join(__dirname, '../pages/result/result.ink'), 'utf8')
     .match(/<script setup>([\s\S]*?)<\/script>/)[1]
@@ -100,9 +105,51 @@ async function main() {
   resultPage.song = { id: 'test-song' }
   const pendingSubmit = resultPage.doSubmit()
   resultPage.onUnload()
-  finishSubmit({ success: true, message: 'uploaded' })
+  finishSubmit({ uploaded: true, message: 'uploaded' })
   await pendingSubmit
   console.log('PASS  退出成绩页后，后台提交不会更新已卸载页面')
+
+  const latest = load()
+  const endToEndPage = vm.runInNewContext(resultSource, {
+    console,
+    submitScore: latest.submitScore,
+    calcAccuracyScore: () => ({ score: 80, accuracy: 90, coverage: 90 }),
+    getGrade: () => ({ grade: 'A', label: '优秀' }),
+    encodePitchTrack: () => [[0, 60, 1]],
+    buildPracticeFeedback: () => [],
+    playFeedbackSpeech() {},
+    wx: { getStorageSync: () => ({ ...entry, attemptId: 'auto-solo', pitchTrack: [{}] }) }
+  })
+  endToEndPage.song = { id: 'test-song', chartVersion: 1, refNotes: [{}] }
+  endToEndPage.attemptId = 'auto-solo'
+  endToEndPage.setData = (update, callback) => { Object.assign(endToEndPage.data, update); callback?.() }
+  const beforeAuto = uploads.length
+  endToEndPage.calculateScore()
+  endToEndPage.calculateScore()
+  await latest.flushPendingScores()
+  await new Promise(setImmediate)
+  assert.equal(uploads.length, beforeAuto + 1, '单人完整演唱结算自动提交，仅提交一次')
+  assert.equal(uploads.at(-1).attemptId, 'auto-solo')
+  assert.match(endToEndPage.data.submitMsg, /已保存到服务器排行榜/)
+  assert.equal(endToEndPage.data.actionLabels[0], '已上传')
+  const partial = await latest.submitScore({ ...entry, completed: false, attemptId: 'partial-solo' }, [[0, 60, 1]])
+  assert.equal(partial.message, '唱完最后一句后才能上榜')
+  assert.equal(partial.uploaded, false)
+  uploadStatus = 422
+  uploadError = 'NOT_ELIGIBLE'
+  const missingWords = await latest.submitScore({ ...entry, coverage: 0, attemptId: 'silent-asr' }, [[0, 60, 1]])
+  assert.equal(missingWords.message, '服务器未识别到有效唱词')
+  assert.equal(uploads.length, beforeAuto + 2, '完整演唱应提交给服务器判断，即使本地覆盖率是零')
+  uploadStatus = 413
+  uploadError = undefined
+  const large = await latest.submitScore({ ...entry, attemptId: 'large-solo' }, [[0, 60, 1]])
+  assert.equal(large.retryable, true)
+  assert.equal(large.message, '服务器限制了成绩数据大小')
+  assert.equal(memory.get(pendingKey)[0].entry.attemptId, 'large-solo')
+  uploadStatus = 201
+  await latest.flushPendingScores()
+  assert.equal(memory.get(pendingKey).length, 0)
+  console.log('PASS  完整演唱自动提交，只在服务器确认后标记已上传，413 响应保留待上传成绩')
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1 })

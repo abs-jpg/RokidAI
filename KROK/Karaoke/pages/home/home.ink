@@ -1,20 +1,18 @@
-<script def>
-{
-  "usingComponents": {}
-}
-</script>
-
 <script setup>
 import wx from 'wx'
 import { songs } from '../../utils/songData.js'
 import { isServerConnected } from '../../utils/leaderboard.js'
-import { loadSongCatalog, prepareSongDownload } from '../../utils/songLibrary.js'
+import { loadSongCatalog, preloadSongAudio } from '../../utils/songLibrary.js'
+import { isDownloadReturnEcho, takeDownloadInput } from '../../utils/downloadReturn.js'
+
+const ROW_HEIGHT = 58
+const DOWNLOAD_PAGE = '/pages/download/download'
 
 function navItems(connected) {
   return [
     { label: connected ? '排行榜' : '本机排行榜', url: '/pages/leaderboard/leaderboard' },
     { label: '多人联机', url: '/pages/battle/battle' },
-    { label: '音乐下载', url: '/pages/download/download' }
+    { label: '音乐下载', url: DOWNLOAD_PAGE }
   ]
 }
 
@@ -22,6 +20,7 @@ export default {
   data: {
     songs,
     selectedIdx: 0,
+    scrollTop: 0,
     songCount: songs.length,
     navItems: navItems(isServerConnected()),
     hintText: '上下选择 · 确认',
@@ -29,13 +28,18 @@ export default {
     choiceIndex: 0,
     choiceSongId: '',
     choiceSongName: '',
+    defaultAudioReady: false,
     choiceOptions: [
-      { value: 'withMusic', label: '有音乐的版本', desc: '播放伴奏 · 可评分' },
-      { value: 'silent', label: '无声版本', desc: '显示歌词和音高 · 不播放伴奏' }
+      { value: 'guide', label: '带歌词版', desc: '伴奏与跟唱引导' },
+      { value: 'instrumental', label: '纯音乐版', desc: '纯伴奏 · 自己唱' }
     ]
   },
 
   onLoad() {
+    this.prewarmDefaultAudio()
+  },
+
+  onShow() {
     this.refreshCatalog()
   },
 
@@ -47,10 +51,16 @@ export default {
     try {
       const result = await loadSongCatalog()
       if (this.unloaded) return
+      const playable = result.songs.filter(song => song.bundled || song.downloaded)
+      const songCount = playable.length
+      const selectedIdx = songCount
+        ? Math.max(0, Math.min(this.data.selectedIdx, songCount - 1))
+        : 0
       this.setData({
-        songs: result.songs,
-        songCount: result.songs.length,
-        selectedIdx: Math.max(0, Math.min(this.data.selectedIdx, result.songs.length - 1)),
+        songs: playable,
+        songCount,
+        selectedIdx,
+        scrollTop: selectedIdx * ROW_HEIGHT,
         navItems: navItems(result.connected || isServerConnected())
       })
     } catch (e) {
@@ -58,7 +68,26 @@ export default {
     }
   },
 
+  async prewarmDefaultAudio() {
+    const song = this.data.songs[0]
+    if (!song) return
+    const results = await Promise.allSettled([
+      preloadSongAudio(song, 'guide'),
+      preloadSongAudio(song, 'instrumental')
+    ])
+    if (this.unloaded) return
+    const ready = results.every(result => result.status === 'fulfilled')
+    this.setData({
+      defaultAudioReady: ready,
+      hintText: ready ? '默认伴奏已就绪 · 上下选择 · 确认' : '默认伴奏预热失败 · 可在真机重试'
+    })
+  },
+
   onKeyUp(event) {
+    if (isDownloadReturnEcho(event)) {
+      takeDownloadInput(event)
+      return
+    }
     const { code } = event
     if (this.data.choiceVisible) {
       if (code === 'Backspace') {
@@ -83,9 +112,13 @@ export default {
       event.preventDefault()
       const count = this.data.songCount + this.data.navItems.length
       const offset = code === 'ArrowUp' ? -1 : 1
-      this.setData({ selectedIdx: (this.data.selectedIdx + offset + count) % count })
+      const selectedIdx = (this.data.selectedIdx + offset + count) % count
+      const patch = { selectedIdx }
+      if (selectedIdx < this.data.songCount) patch.scrollTop = selectedIdx * ROW_HEIGHT
+      this.setData(patch)
     } else if (code === 'Enter') {
       event.preventDefault()
+      event.stopPropagation?.()
       this.activate(this.data.selectedIdx)
     }
   },
@@ -117,7 +150,13 @@ export default {
     }
     const navIndex = index - this.data.songCount
     const nav = navIndex >= 0 ? this.data.navItems[navIndex] : null
-    if (nav) wx.navigateTo({ url: nav.url })
+    if (!nav) return
+    wx.navigateTo({
+      url: nav.url,
+      success: () => {
+        if (nav.url === DOWNLOAD_PAGE) this.setData({ selectedIdx: 0, scrollTop: 0 })
+      }
+    })
   },
 
   async confirmChoice() {
@@ -128,13 +167,10 @@ export default {
 
     this.choosing = true
     try {
-      if (option.value === 'withMusic' && song.online && !song.cached && !song.downloaded) {
-        this.setData({ hintText: '正在准备 ' + song.name })
-        await prepareSongDownload(song.id)
+      if (song.bundled && !this.data.defaultAudioReady) {
+        this.setData({ hintText: '正在预热默认伴奏' })
+        await this.prewarmDefaultAudio()
         if (this.unloaded) return
-        this.setData({
-          songs: this.data.songs.map(item => item.id === song.id ? { ...item, cached: true } : item)
-        })
       }
       if (this.unloaded) return
       this.setData({ choiceVisible: false, hintText: '上下选择 · 确认' })
@@ -153,11 +189,12 @@ export default {
 
 <page>
   <view class="page-root">
+    <view class="main-view" ink:if="{{!choiceVisible}}">
     <view class="topbar">
       <text class="title">K 歌</text>
     </view>
 
-    <scroll-view class="song-list" scroll-y="{{true}}" scroll-into-view="song-item-{{selectedIdx}}">
+    <scroll-view class="song-list" scroll-y="{{true}}" scroll-top="{{scrollTop}}">
       <view
         id="song-item-{{index}}"
         class="song-item"
@@ -167,13 +204,14 @@ export default {
         data-idx="{{index}}"
       >
         <view class="song-marker">
-          <view class="song-dot" ink:if="{{selectedIdx === index}}"></view>
+          <view class="song-dot {{selectedIdx === index ? 'dot-on' : ''}}"></view>
         </view>
         <view class="song-info">
           <text class="song-name">{{item.name}}</text>
           <text class="song-artist">{{item.artist}}</text>
         </view>
-        <text class="song-badge" ink:if="{{item.online}}">{{item.cached ? '已缓存' : '在线'}}</text>
+        <text class="song-badge" ink:if="{{item.online}}">已下载</text>
+        <text class="song-tag" ink:if="{{item.tag}}">{{item.tag}}</text>
         <text class="song-diff">
           <text ink:if="{{item.difficulty === 1}}">★☆☆</text>
           <text ink:elif="{{item.difficulty === 2}}">★★☆</text>
@@ -191,7 +229,7 @@ export default {
         data-idx="{{index}}"
       >
         <view class="nav-marker">
-          <view class="nav-dot" ink:if="{{selectedIdx === songCount + index}}"></view>
+          <view class="nav-dot {{selectedIdx === songCount + index ? 'dot-on' : ''}}"></view>
         </view>
         <text class="nav-label">{{item.label}}</text>
       </view>
@@ -200,41 +238,60 @@ export default {
     <view class="hintbar">
       <text class="hint-text">{{hintText}}</text>
     </view>
+    </view>
 
     <view class="choice-mask" ink:if="{{choiceVisible}}">
       <view class="choice-panel">
-        <text class="choice-title">{{choiceSongName}}</text>
-        <text class="choice-sub">选择演唱版本</text>
-        <view
-          class="choice-option {{choiceIndex === index ? 'choice-active' : ''}}"
-          ink:for="{{choiceOptions}}"
-          ink:key="value"
-          bindtap="onTapChoice"
-          data-idx="{{index}}"
-        >
-          <view class="choice-copy">
-            <text class="choice-label">{{item.label}}</text>
-            <text class="choice-desc">{{item.desc}}</text>
+        <view class="choice-header">
+          <text class="choice-sub">选择演唱版本</text>
+          <text class="choice-title">{{choiceSongName}}</text>
+        </view>
+        <view class="choice-options">
+          <view
+            class="choice-option choice-option-first {{choiceIndex === 0 ? 'choice-active' : ''}}"
+            bindtap="onTapChoice"
+            data-idx="0"
+          >
+            <view class="choice-radio"><view class="choice-radio-dot" ink:if="{{choiceIndex === 0}}"></view></view>
+            <view class="choice-copy">
+              <text class="choice-label">带歌词版</text>
+              <text class="choice-desc">{{choiceOptions[0].desc}}</text>
+            </view>
+            <text class="choice-selected" ink:if="{{choiceIndex === 0}}">已选</text>
           </view>
-          <view class="choice-dot" ink:if="{{choiceIndex === index}}"></view>
+          <view
+            class="choice-option {{choiceIndex === 1 ? 'choice-active' : ''}}"
+            bindtap="onTapChoice"
+            data-idx="1"
+          >
+            <view class="choice-radio"><view class="choice-radio-dot" ink:if="{{choiceIndex === 1}}"></view></view>
+            <view class="choice-copy">
+              <text class="choice-label">纯音乐版</text>
+              <text class="choice-desc">{{choiceOptions[1].desc}}</text>
+            </view>
+            <text class="choice-selected" ink:if="{{choiceIndex === 1}}">已选</text>
+          </view>
         </view>
-        <view class="choice-confirm" bindtap="confirmChoice">
-          <text class="choice-confirm-text">确认开始</text>
+        <view class="choice-footer">
+          <text class="choice-hint">上下切换 · 返回</text>
+          <view class="choice-confirm" bindtap="confirmChoice">
+            <text class="choice-confirm-text">确认开始 ›</text>
+          </view>
         </view>
-        <text class="choice-hint">上下选择 · 确认开始 · 返回</text>
       </view>
     </view>
+
   </view>
 </page>
 
 <style>
 :root {
-  --green-100: #40ff5e;
-  --green-72: rgba(64,255,94,0.72);
-  --green-48: rgba(64,255,94,0.48);
-  --green-24: rgba(64,255,94,0.24);
-  --green-12: rgba(64,255,94,0.12);
-  --green-06: rgba(64,255,94,0.06);
+  --green-100: #4cc773;
+  --green-72: rgba(76,199,115,0.72);
+  --green-48: rgba(76,199,115,0.48);
+  --green-24: rgba(76,199,115,0.24);
+  --green-12: rgba(76,199,115,0.12);
+  --green-06: rgba(76,199,115,0.06);
 }
 
 .page-root {
@@ -247,6 +304,13 @@ export default {
   padding: 0;
 }
 
+.main-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .topbar {
   display: flex;
   flex-direction: row;
@@ -254,7 +318,7 @@ export default {
   height: 36px;
   padding: 0 12px;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(64,255,94,0.40);
+  border-bottom: 1px solid rgba(76,199,115,0.40);
 }
 
 .title {
@@ -264,8 +328,6 @@ export default {
 }
 
 .song-list {
-  display: flex;
-  flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
   padding: 16px 12px;
@@ -329,6 +391,15 @@ export default {
   flex-shrink: 0;
 }
 
+.song-tag {
+  font-size: 10px;
+  color: #041006;
+  background-color: var(--green-72);
+  padding: 1px 5px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
 .nav-row {
   display: flex;
   flex-direction: row;
@@ -387,42 +458,73 @@ export default {
   left: 0;
   top: 0;
   width: 100%;
+  max-width: calc(100vw - 32px);
   height: 100%;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0,0,0,0.86);
+  background-color: transparent;
   z-index: 10;
 }
 
 .choice-panel {
   display: flex;
   flex-direction: column;
-  width: 360px;
-  padding: 14px;
-  background-color: #050805;
-  border: 1px solid var(--green-48);
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 0 12px;
+}
+
+.choice-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 86px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--green-24);
 }
 
 .choice-title {
-  font-size: 19px;
+  max-width: 100%;
+  font-size: 24px;
   font-weight: bold;
   color: var(--green-100);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .choice-sub {
-  font-size: 11px;
-  color: var(--green-48);
-  margin: 2px 0 10px;
+  font-size: 14px;
+  color: var(--green-72);
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.choice-options {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  justify-content: center;
 }
 
 .choice-option {
   display: flex;
   flex-direction: row;
   align-items: center;
-  height: 52px;
-  margin-bottom: 6px;
-  padding: 0 10px;
-  border: 1px solid var(--green-24);
+  box-sizing: border-box;
+  height: 72px;
+  flex-shrink: 0;
+  padding: 0 16px;
+  border: 2px solid var(--green-24);
+  border-radius: 8px;
+  background-color: transparent;
+}
+
+.choice-option-first {
+  margin-bottom: 12px;
 }
 
 .choice-active {
@@ -430,47 +532,169 @@ export default {
   background-color: var(--green-12);
 }
 
+.choice-radio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  border: 1px solid var(--green-48);
+  border-radius: 9px;
+}
+
+.choice-active .choice-radio {
+  border-color: var(--green-100);
+}
+
+.choice-radio-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background-color: var(--green-100);
+}
+
 .choice-copy {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
+  min-width: 0;
 }
 
 .choice-label {
-  font-size: 15px;
-  color: var(--green-100);
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--green-72);
 }
 
 .choice-desc {
-  font-size: 10px;
-  color: var(--green-48);
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--green-72);
 }
 
-.choice-dot {
-  width: 7px;
-  height: 7px;
-  background-color: var(--green-100);
+.choice-active .choice-label, .choice-selected {
+  color: var(--green-100);
+}
+
+.choice-active .choice-desc {
+  color: var(--green-72);
+}
+
+.choice-selected {
+  flex-shrink: 0;
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.song-dot, .nav-dot {
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 190ms ease, transform 190ms ease;
+}
+
+.song-dot.dot-on, .nav-dot.dot-on {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.choice-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  height: 58px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--green-24);
 }
 
 .choice-confirm {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 38px;
-  margin-top: 2px;
-  background-color: var(--green-72);
+  width: 136px;
+  height: 40px;
+  background-color: var(--green-12);
+  border: 1px solid var(--green-72);
+  border-radius: 6px;
 }
 
 .choice-confirm-text {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: bold;
-  color: #041006;
+  color: var(--green-100);
 }
 
 .choice-hint {
-  font-size: 10px;
-  color: var(--green-24);
-  text-align: center;
-  margin-top: 6px;
+  font-size: 14px;
+  color: var(--green-72);
 }
+
+@media (max-height: 200px) {
+  .choice-mask {
+    height: calc(100vh - 24px);
+  }
+
+  .choice-header {
+    flex-direction: row;
+    justify-content: flex-start;
+    height: 32px;
+  }
+
+  .choice-sub {
+    margin: 0 10px 0 0;
+    font-size: 12px;
+  }
+
+  .choice-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  .choice-options {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .choice-option {
+    flex: 1 1 0;
+    height: 46px;
+    padding: 0 8px;
+  }
+
+  .choice-option-first {
+    margin: 0 8px 0 0;
+  }
+
+  .choice-radio {
+    margin-right: 8px;
+  }
+
+  .choice-label {
+    font-size: 16px;
+  }
+
+  .choice-desc {
+    margin-top: 2px;
+    font-size: 12px;
+  }
+
+  .choice-footer {
+    height: 33px;
+  }
+
+  .choice-confirm {
+    width: 104px;
+    height: 28px;
+  }
+
+  .choice-hint, .choice-confirm-text {
+    font-size: 13px;
+  }
+}
+
 </style>

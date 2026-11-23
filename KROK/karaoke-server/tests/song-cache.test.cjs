@@ -9,7 +9,6 @@ const os = require('node:os')
 const path = require('node:path')
 
 const serverPath = path.join(__dirname, '..', 'server.js')
-const audioFixture = path.join(__dirname, '..', '..', 'Karaoke', 'assets', 'morning-light.ogg')
 
 function waitForBase(child) {
   return new Promise((resolve, reject) => {
@@ -41,7 +40,8 @@ async function main() {
   let sourceServer
 
   try {
-    const audio = await fsp.readFile(audioFixture)
+    // 缓存测试只校验字节流与 Range，不依赖具体曲目文件。
+    const audio = Buffer.from('OggS' + 'karaoke-cache-fixture'.repeat(64))
     sourceServer = http.createServer((req, res) => {
       sourceRequests++
       res.writeHead(200, { 'Content-Type': 'audio/ogg', 'Content-Length': audio.length })

@@ -45,9 +45,9 @@ export default {
     try {
       const catalog = await loadSongCatalog()
       if (this.unloaded) return
-      const playable = catalog.songs.filter(song => song.bundled || song.cached)
+      const playable = catalog.songs.filter(song => song.bundled || song.downloaded)
       if (!playable.length) {
-        this.setData({ phase: 'error', errorMsg: '暂无可对战的已缓存歌曲' })
+        this.setData({ phase: 'error', errorMsg: '暂无可对战的已下载歌曲' })
         return
       }
       this.setData({ songs: playable })
@@ -327,11 +327,11 @@ export default {
 
 <style>
 :root {
-  --green-100: #40ff5e;
-  --green-72: rgba(64,255,94,0.72);
-  --green-48: rgba(64,255,94,0.48);
-  --green-24: rgba(64,255,94,0.24);
-  --green-12: rgba(64,255,94,0.12);
+  --green-100: #4cc773;
+  --green-72: rgba(76,199,115,0.72);
+  --green-48: rgba(76,199,115,0.48);
+  --green-24: rgba(76,199,115,0.24);
+  --green-12: rgba(76,199,115,0.12);
 }
 
 .page-root {

@@ -1,6 +1,6 @@
 const { createHash, randomBytes } = require('node:crypto')
 const { createReadStream, existsSync, mkdirSync, readFileSync, statSync } = require('node:fs')
-const { readFile, rename, unlink, writeFile } = require('node:fs/promises')
+const { appendFile, mkdir, readFile, rename, unlink, writeFile } = require('node:fs/promises')
 const { createServer } = require('node:http')
 const { isIP } = require('node:net')
 const { basename, dirname, extname, join, resolve } = require('node:path')
@@ -9,11 +9,15 @@ const { WebSocketServer } = require('ws')
 
 const PORT = Number(process.env.PORT || 3100)
 const DB_PATH = resolve(process.env.KARAOKE_DB || join(__dirname, 'data', 'karaoke.sqlite'))
+const SONG_REQUEST_DIR = join(dirname(DB_PATH), 'song-requests')
+const SONG_REQUEST_FILE = join(SONG_REQUEST_DIR, 'requests.txt')
+const MAX_SONG_REQUEST_CHARS = 160
 const ROKID_DEVELOPER_SK = process.env.ROKID_DEVELOPER_SK || ''
 const CATALOG_PATH = resolve(process.env.KARAOKE_CATALOG || join(__dirname, 'catalog.json'))
 const EXTRA_CATALOG_PATH = resolve(process.env.KARAOKE_CATALOG_EXTRA || join(__dirname, 'catalog-extra.json'))
 const MEDIA_DIR = resolve(process.env.KARAOKE_MEDIA || join(__dirname, 'media', 'songs'))
 const SOURCE_DIR = resolve(process.env.KARAOKE_SOURCE || join(__dirname, 'source'))
+const MELODY_DIR = resolve(process.env.KARAOKE_MELODIES || join(__dirname, 'melodies'))
 const MAX_AUDIO_BYTES = 30 * 1024 * 1024
 // 曲库元数据来自 catalog.json：bundled 歌曲使用应用内置伴奏，
 // audioSource 歌曲由服务端首次请求时下载并缓存，之后所有用户共用一份。
@@ -27,17 +31,46 @@ if (existsSync(EXTRA_CATALOG_PATH)) {
     console.error('load extra catalog failed', error.message)
   }
 }
-const SONGS = [...catalog.songs, ...extraSongs]
+function loadSongMelody(song) {
+  const inlineNotes = Array.isArray(song.refNotes) ? song.refNotes : []
+  if (inlineNotes.length || !song.melodyFile) {
+    return { ...song, refNotes: inlineNotes }
+  }
+  const match = /^melodies\/([a-z0-9_-]+\.json)$/i.exec(song.melodyFile)
+  if (!match) throw new Error(`invalid melodyFile for ${song.id}: ${song.melodyFile}`)
+  const melodyPath = join(MELODY_DIR, match[1])
+  const melody = JSON.parse(readFileSync(melodyPath, 'utf8'))
+  const notes = Array.isArray(melody) ? melody : melody?.notes
+  if (!Array.isArray(notes) || notes.length === 0) {
+    throw new Error(`melody is empty for ${song.id}: ${melodyPath}`)
+  }
+  if (melody?.songId && melody.songId !== song.id) {
+    throw new Error(`melody songId mismatch for ${song.id}: ${melody.songId}`)
+  }
+  if (melody?.chartVersion != null && Number(melody.chartVersion) !== Number(song.chartVersion)) {
+    throw new Error(
+      `melody chartVersion mismatch for ${song.id}: ${melody.chartVersion} != ${song.chartVersion}`
+    )
+  }
+  return {
+    ...song,
+    estimatedKey: song.estimatedKey || melody?.estimatedKey || '',
+    refNotes: notes
+  }
+}
+
+const SONGS = [...catalog.songs, ...extraSongs].map(loadSongMelody)
 const SONGS_BY_ID = new Map(SONGS.map(song => [song.id, song]))
 const DEFAULT_SONG = SONGS[0]
 const BODY_LIMIT = 4096
-const SCORE_BODY_LIMIT = 64 * 1024
+const SCORE_BODY_LIMIT = 256 * 1024
 const PITCH_STEP_MS = 40
 const cacheJobs = new Map()
 
 mkdirSync(dirname(DB_PATH), { recursive: true, mode: 0o750 })
 mkdirSync(MEDIA_DIR, { recursive: true, mode: 0o755 })
 mkdirSync(SOURCE_DIR, { recursive: true, mode: 0o755 })
+mkdirSync(MELODY_DIR, { recursive: true, mode: 0o755 })
 const db = new DatabaseSync(DB_PATH, { timeout: 5000 })
 db.exec(`
   PRAGMA journal_mode = WAL;
@@ -62,6 +95,14 @@ db.exec(`
     UNIQUE (user_id, attempt_id)
   ) STRICT;
 
+  CREATE TABLE IF NOT EXISTS player_asr_results (
+    user_id INTEGER PRIMARY KEY REFERENCES players(id),
+    attempt_id TEXT NOT NULL,
+    song_id TEXT NOT NULL,
+    recognized_text TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  ) STRICT;
+
   CREATE INDEX IF NOT EXISTS scores_by_song_player
   ON scores (song_id, chart_version, scoring_version, user_id, score DESC, id);
 
@@ -77,6 +118,10 @@ db.exec(`
 const scoreColumns = db.prepare('PRAGMA table_info(scores)').all()
 if (!scoreColumns.some(column => column.name === 'calculated')) {
   db.exec('ALTER TABLE scores ADD COLUMN calculated INTEGER NOT NULL DEFAULT 0')
+}
+const asrColumns = db.prepare('PRAGMA table_info(player_asr_results)').all()
+if (!asrColumns.some(column => column.name === 'attempt_id')) {
+  db.exec("ALTER TABLE player_asr_results ADD COLUMN attempt_id TEXT NOT NULL DEFAULT ''")
 }
 
 // 兼容旧库：players 增加 Rokid 账号 ID，用于跨设备识别同一位歌手。
@@ -128,6 +173,20 @@ const insertScore = db.prepare(`
     score = excluded.score, accuracy = excluded.accuracy, coverage = excluded.coverage, calculated = 1
   WHERE scores.calculated = 0 AND scores.song_id = excluded.song_id
     AND scores.chart_version = excluded.chart_version AND scores.scoring_version = excluded.scoring_version
+`)
+const upsertPlayerAsr = db.prepare(`
+  INSERT INTO player_asr_results (user_id, attempt_id, song_id, recognized_text, updated_at)
+  VALUES (?, ?, ?, ?, ?)
+  ON CONFLICT (user_id) DO UPDATE SET
+    attempt_id = excluded.attempt_id,
+    song_id = excluded.song_id,
+    recognized_text = excluded.recognized_text,
+    updated_at = excluded.updated_at
+`)
+const findPlayerAsr = db.prepare(`
+  SELECT attempt_id, song_id, recognized_text
+  FROM player_asr_results
+  WHERE user_id = ?
 `)
 const findAttempt = db.prepare(`
   SELECT 1 FROM scores WHERE user_id = ? AND attempt_id = ?
@@ -250,91 +309,136 @@ function audioContentType(fileName) {
   }
 }
 
-function mediaFileName(song) {
+function audioVariants(song) {
+  const guideSource = song.guideAudioSource || song.audioSource || null
+  const instrumentalSource = song.instrumentalSource || song.audioSource || null
+  const sharedCache = guideSource && guideSource === instrumentalSource
+  return [
+    {
+      kind: 'guide',
+      source: guideSource,
+      bundled: song.guideAccompaniment || (!guideSource ? song.accompaniment : null),
+      cacheKey: sharedCache ? 'shared' : 'guide'
+    },
+    {
+      kind: 'instrumental',
+      source: instrumentalSource,
+      bundled: song.instrumentalAccompaniment || (!instrumentalSource ? song.accompaniment : null),
+      cacheKey: sharedCache ? 'shared' : 'instrumental'
+    }
+  ]
+}
+
+function uniqueOnlineVariants(song) {
+  const seen = new Set()
+  return audioVariants(song).filter(variant => {
+    if (!variant.source || seen.has(variant.cacheKey)) return false
+    seen.add(variant.cacheKey)
+    return true
+  })
+}
+
+function cacheSongId(song, variant) {
+  return song.id + '::' + variant.cacheKey
+}
+
+function mediaFileName(song, variant, source) {
   let ext = '.ogg'
   try {
-    const parsed = new URL(song.audioSource, 'http://localhost')
+    const parsed = new URL(source, 'http://localhost')
     ext = extname(parsed.pathname) || '.ogg'
   } catch {}
   if (!/^\.(ogg|mp3|wav|m4a|aac)$/i.test(ext)) ext = '.ogg'
-  return song.id + ext.toLowerCase()
+  const suffix = variant.cacheKey === 'shared' ? '' : '-' + variant.cacheKey
+  return song.id + suffix + ext.toLowerCase()
 }
 
 function songSummary(song) {
-  const cache = readySongCache(song)
-  const online = typeof song.audioSource === 'string' && song.audioSource.length > 0
+  const onlineVariants = uniqueOnlineVariants(song)
+  const online = onlineVariants.length > 0
+  const cached = !online || onlineVariants.every(variant => Boolean(readySongCache(song, variant)))
   return {
     id: song.id,
     name: song.name,
     artist: song.artist || '',
     category: song.category || '其他',
+    tag: song.tag || '',
     difficulty: song.difficulty ?? 1,
     durationMs: song.durationMs,
     chartVersion: song.chartVersion,
     scoringVersion: song.scoringVersion,
     online,
-    cached: !online || Boolean(cache)
+    cached
   }
 }
 
-function readySongCache(song) {
-  const cache = findSongCache.get(song.id)
-  if (cache?.status !== 'ready' || cache.source_url !== song.audioSource ||
-      cache.file_name !== mediaFileName(song)) return null
+function readySongCache(song, variant) {
+  const cache = findSongCache.get(cacheSongId(song, variant))
+  if (cache?.status !== 'ready' || cache.source_url !== variant.source ||
+      cache.file_name !== mediaFileName(song, variant, variant.source)) return null
   return existsSync(join(MEDIA_DIR, cache.file_name)) ? cache : null
 }
 
+function variantUrl(song, variant) {
+  if (!variant.source) return variant.bundled || null
+  const cache = readySongCache(song, variant)
+  return cache ? '/media/songs/' + encodeURIComponent(cache.file_name) : null
+}
+
 function publicSong(song) {
-  const cache = readySongCache(song)
-  const online = typeof song.audioSource === 'string' && song.audioSource.length > 0
-  let accompaniment = song.accompaniment || null
-  if (online) {
-    accompaniment = cache
-      ? '/media/songs/' + encodeURIComponent(cache.file_name)
-      : null
-  }
+  const [guide, instrumental] = audioVariants(song)
+  const guideAccompaniment = variantUrl(song, guide)
+  const instrumentalAccompaniment = variantUrl(song, instrumental)
   return {
     ...songSummary(song),
-    accompaniment,
+    guideAccompaniment,
+    instrumentalAccompaniment,
+    // 旧客户端继续使用纯伴奏入口。
+    accompaniment: instrumentalAccompaniment || guideAccompaniment,
+    estimatedKey: song.estimatedKey || '',
     lyrics: song.lyrics,
     refNotes: song.refNotes
   }
 }
 
 async function ensureSongCached(song) {
-  if (!song.audioSource) return publicSong(song)
-  const fileName = mediaFileName(song)
+  await Promise.all(uniqueOnlineVariants(song).map(variant => ensureAudioVariantCached(song, variant)))
+  return publicSong(song)
+}
+
+async function ensureAudioVariantCached(song, variant) {
+  if (readySongCache(song, variant)) return
+  const cacheId = cacheSongId(song, variant)
+  const fileName = mediaFileName(song, variant, variant.source)
   const targetPath = join(MEDIA_DIR, fileName)
-  if (readySongCache(song)) return publicSong(song)
-  if (cacheJobs.has(song.id)) return cacheJobs.get(song.id)
+  if (cacheJobs.has(cacheId)) return cacheJobs.get(cacheId)
 
   const job = (async () => {
-    upsertSongCache.run(song.id, 'downloading', fileName, 0, song.audioSource, new Date().toISOString())
+    upsertSongCache.run(cacheId, 'downloading', fileName, 0, variant.source, new Date().toISOString())
     let tempPath = null
     try {
-      const buffer = await readSongSource(song.audioSource)
+      const buffer = await readSongSource(variant.source)
       if (buffer.length === 0) throw new RequestError(502, 'EMPTY_AUDIO')
       if (buffer.length > MAX_AUDIO_BYTES) throw new RequestError(413, 'AUDIO_TOO_LARGE')
       tempPath = targetPath + '.part-' + randomBytes(4).toString('hex')
       await writeFile(tempPath, buffer)
       await rename(tempPath, targetPath)
-      upsertSongCache.run(song.id, 'ready', fileName, buffer.length, song.audioSource, new Date().toISOString())
-      return publicSong(song)
+      upsertSongCache.run(cacheId, 'ready', fileName, buffer.length, variant.source, new Date().toISOString())
     } catch (error) {
       if (tempPath) await unlink(tempPath).catch(() => {})
-      upsertSongCache.run(song.id, 'failed', fileName, 0, song.audioSource, new Date().toISOString())
+      upsertSongCache.run(cacheId, 'failed', fileName, 0, variant.source, new Date().toISOString())
       if (error instanceof RequestError) throw error
-      console.error('song download failed', song.id, error.message)
+      console.error('song download failed', song.id, variant.kind, error.message)
       throw new RequestError(502, 'DOWNLOAD_FAILED')
     }
-  })().finally(() => cacheJobs.delete(song.id))
+  })().finally(() => cacheJobs.delete(cacheId))
 
-  cacheJobs.set(song.id, job)
+  cacheJobs.set(cacheId, job)
   return job
 }
 
 async function readSongSource(source) {
-  const local = /^\/source\/([a-z0-9_-]+\.ogg)$/i.exec(source)
+  const local = /^\/source\/([a-z0-9_-]+\.(?:ogg|wav|mp3|m4a|aac))$/i.exec(source)
   if (local) {
     const file = join(SOURCE_DIR, local[1])
     if (statSync(file).size > MAX_AUDIO_BYTES) throw new RequestError(413, 'AUDIO_TOO_LARGE')
@@ -418,10 +522,41 @@ function checkScore(input) {
     throw new RequestError(409, 'VERSION_MISMATCH')
   }
   if (input.completed !== true) throw new RequestError(422, 'NOT_ELIGIBLE')
+  if (input.recognizedText != null && typeof input.recognizedText !== 'string') {
+    throw new RequestError(400, 'INVALID_RECOGNITION')
+  }
   return song
 }
 
-function calculatePerformance(song, samples) {
+function normalizeRecognitionText(text) {
+  return String(text || '').normalize('NFKC').replace(/\s+/g, ' ').trim()
+}
+
+function mergeRecognitionText(previous, incoming) {
+  const oldText = normalizeRecognitionText(previous)
+  const newText = normalizeRecognitionText(incoming)
+  if (!oldText) return newText
+  if (!newText) return oldText
+  if (newText.startsWith(oldText) || oldText.startsWith(newText)) return newText
+  if (oldText.endsWith(newText)) return oldText
+  const maxOverlap = Math.min(oldText.length, newText.length)
+  for (let size = maxOverlap; size > 0; size--) {
+    if (oldText.slice(-size) === newText.slice(0, size)) {
+      return normalizeRecognitionText(oldText + newText.slice(size))
+    }
+  }
+  return normalizeRecognitionText(oldText + ' ' + newText)
+}
+
+function normalizeScoreText(text) {
+  return String(text || '').replace(/[\s，。、！？!?,，.·「」『』（）()\[\]"'“”‘’…—\-:：;；]/g, '')
+}
+
+function lyricCharacterCount(text) {
+  return Array.from(normalizeScoreText(text)).length
+}
+
+function calculatePerformance(song, samples, recognizedText = '') {
   const maxFrames = Math.ceil(song.durationMs / PITCH_STEP_MS)
   if (!Array.isArray(samples) || samples.length > maxFrames) {
     throw new RequestError(400, 'INVALID_PITCH_TRACK')
@@ -433,15 +568,20 @@ function calculatePerformance(song, samples) {
   }
   let lastFrame = -1
   let voiced = 0
+  let pitched = 0
   let captured = 0
   let points = 0
   let battleScore = 0
   let noteIndex = 0
+  const pitchPenalty = song.scoringVersion >= 5 ? 5 : song.scoringVersion >= 4 ? 10 : 20
   for (const sample of samples) {
-    if (!Array.isArray(sample) || sample.length !== 2) throw new RequestError(400, 'INVALID_PITCH_TRACK')
-    const [frame, midi] = sample
+    if (!Array.isArray(sample) || (sample.length !== 2 && sample.length !== 3)) {
+      throw new RequestError(400, 'INVALID_PITCH_TRACK')
+    }
+    const [frame, midi, voiceFlag] = sample
     if (!Number.isInteger(frame) || frame <= lastFrame || frame >= maxFrames ||
-        (midi !== null && (!Number.isFinite(midi) || midi < 0 || midi > 127))) {
+        (midi !== null && (!Number.isFinite(midi) || midi < 0 || midi > 127)) ||
+        (voiceFlag !== undefined && voiceFlag !== 0 && voiceFlag !== 1)) {
       throw new RequestError(400, 'INVALID_PITCH_TRACK')
     }
     lastFrame = frame
@@ -450,20 +590,34 @@ function calculatePerformance(song, samples) {
     const note = song.refNotes[noteIndex]
     if (!note || note.startMs > time) continue
     captured++
-    if (midi === null) continue
-    const difference = Math.abs(midi - note.midi)
-    points += Math.max(0, 100 - difference * 20)
-    battleScore += difference <= 0.25 ? 10 : difference <= 0.5 ? 6 : difference <= 1 ? 2 : 0
+    const voiceActive = sample.length === 3 ? voiceFlag === 1 : midi !== null
+    if (!voiceActive) continue
     voiced++
-  }
-  if (song.scoringVersion >= 2 && (!expected || captured / expected < 0.95)) {
-    throw new RequestError(422, 'INSUFFICIENT_SAMPLES')
+    if (midi === null) continue
+    pitched++
+    const difference = Math.abs(midi - note.midi)
+    points += Math.max(0, 100 - difference * pitchPenalty)
+    battleScore += difference <= 0.25 ? 10 : difference <= 0.5 ? 6 : difference <= 1 ? 2 : 0
   }
   const denominator = song.scoringVersion >= 2 ? captured : expected
+  const accuracy = pitched ? Math.round(points / pitched) : 0
+  const coverageDenominator = song.scoringVersion >= 3 ? expected : denominator
+  const vocalCoverage = coverageDenominator ? Math.min(100, Math.round(100 * voiced / coverageDenominator)) : 0
+  const expectedLyricChars = lyricCharacterCount((song.lyrics || []).map(line => line.text || '').join(''))
+  const recognizedChars = lyricCharacterCount(recognizedText)
+  const coverage = song.scoringVersion >= 4 && expectedLyricChars
+    ? Math.min(100, Math.round(100 * recognizedChars / expectedLyricChars))
+    : vocalCoverage
+  const score = song.scoringVersion >= 4
+    ? Math.round(coverage * 0.8 + accuracy * 0.2)
+    : song.scoringVersion >= 3
+      ? Math.round(vocalCoverage * 0.8 + accuracy * 0.2)
+    : (denominator ? Math.min(100, Math.round(points / denominator)) : 0)
   return {
-    score: denominator ? Math.min(100, Math.round(points / denominator)) : 0,
-    accuracy: voiced ? Math.round(points / voiced) : 0,
-    coverage: denominator ? Math.min(100, Math.round(100 * voiced / denominator)) : 0,
+    score,
+    accuracy,
+    coverage,
+    completeness: coverage,
     battleScore: song.scoringVersion >= 2 && captured ? Math.round(battleScore * expected / captured) : battleScore,
     voiced
   }
@@ -472,15 +626,26 @@ function calculatePerformance(song, samples) {
 function saveScore(userId, input) {
   const song = checkScore(input)
   const { attemptId } = input
-  const { score, accuracy, coverage } = calculatePerformance(song, input.samples)
+  const incomingRecognition = normalizeRecognitionText(input.recognizedText)
+  const previousAsr = findPlayerAsr.get(userId)
+  const sameAttempt = previousAsr?.attempt_id === attemptId && previousAsr?.song_id === song.id
+  const recognizedText = sameAttempt
+    ? mergeRecognitionText(previousAsr.recognized_text, incomingRecognition)
+    : incomingRecognition
+  const { score, accuracy, coverage } = calculatePerformance(song, input.samples, recognizedText)
   if (!coverage) throw new RequestError(422, 'NOT_ELIGIBLE')
   const values = [song.id, song.chartVersion, song.scoringVersion, score, accuracy, coverage]
-  const result = insertScore.run(userId, attemptId, ...values, new Date().toISOString())
-  if (result.changes) return true
+  const now = new Date().toISOString()
+  const result = insertScore.run(userId, attemptId, ...values, now)
+  if (result.changes) {
+    upsertPlayerAsr.run(userId, attemptId, song.id, recognizedText, now)
+    return true
+  }
 
   if (!findAttempt.get(userId, attemptId, ...values)) {
     throw new RequestError(409, 'ATTEMPT_CONFLICT')
   }
+  upsertPlayerAsr.run(userId, attemptId, song.id, recognizedText, now)
   return false
 }
 
@@ -503,6 +668,45 @@ function limitRequests(req, res, kind, max) {
     throw new RequestError(429, 'RATE_LIMITED')
   }
   limits.set(key, count + 1)
+}
+
+let songRequestWrite = Promise.resolve()
+let songRequestIndex
+
+function saveSongRequest(input) {
+  const id = input?.id
+  const text = typeof input?.text === 'string'
+    ? input.text.replace(/[\u0000-\u001f\u007f]+/g, ' ').trim()
+    : ''
+  if (typeof id !== 'string' || !/^[a-z0-9-]{12,80}$/.test(id) ||
+      !text || Array.from(text).length > MAX_SONG_REQUEST_CHARS) {
+    throw new RequestError(400, 'INVALID_SONG_REQUEST')
+  }
+
+  // 同一进程串行写入，重试使用同一条留言 ID，避免重复记录。
+  const write = songRequestWrite.then(async () => {
+    if (!songRequestIndex) {
+      const contents = await readFile(SONG_REQUEST_FILE, 'utf8').catch(error => {
+        if (error.code === 'ENOENT') return ''
+        throw error
+      })
+      songRequestIndex = new Map(contents.split('\n').filter(line => line.trim()).map(line => {
+        const item = JSON.parse(line)
+        return [item.id, item.text]
+      }))
+    }
+    if (songRequestIndex.has(id)) {
+      if (songRequestIndex.get(id) !== text) throw new RequestError(409, 'SONG_REQUEST_CONFLICT')
+      return false
+    }
+    await mkdir(SONG_REQUEST_DIR, { recursive: true, mode: 0o750 })
+    const line = JSON.stringify({ receivedAt: new Date().toISOString(), id, text })
+    await appendFile(SONG_REQUEST_FILE, line + '\n', { encoding: 'utf8', mode: 0o640 })
+    songRequestIndex.set(id, text)
+    return true
+  })
+  songRequestWrite = write.catch(() => {})
+  return write
 }
 
 async function route(req, res) {
@@ -540,6 +744,13 @@ async function route(req, res) {
     const userId = getPlayerId(req)
     if (!userId) throw new RequestError(401, 'INVALID_TOKEN')
     const created = saveScore(userId, await readJson(req, false, SCORE_BODY_LIMIT))
+    send(res, created ? 201 : 200, { ok: true, duplicate: !created })
+    return
+  }
+  if (req.method === 'POST' && path === '/api/song-requests') {
+    limitRequests(req, res, 'song-requests', 10)
+    if (!getPlayerId(req)) throw new RequestError(401, 'INVALID_TOKEN')
+    const created = await saveSongRequest(await readJson(req))
     send(res, created ? 201 : 200, { ok: true, duplicate: !created })
     return
   }
@@ -837,7 +1048,10 @@ function finishBattle(room) {
   const resultPlayers = players.map(player => ({
     id: player.id,
     name: player.name,
-    score: player.score
+    score: player.score,
+    accuracy: player.accuracy ?? 0,
+    coverage: player.coverage ?? 0,
+    completeness: player.completeness ?? player.coverage ?? 0
   }))
   for (const player of players) {
     playerRooms.delete(player.id)
@@ -988,7 +1202,7 @@ function handleBattleMessage(player, message) {
       if (target.players.size < 2) return sendRoomError(player, 'WAITING_OPPONENT', '等待对手加入')
       const song = SONGS_BY_ID.get(String(message.songId || ''))
       if (!song) return sendRoomError(player, 'SONG_NOT_FOUND', '歌曲不存在')
-      const cached = song.bundled || readySongCache(song)
+      const cached = song.bundled || songSummary(song).cached
       if (!cached) return sendRoomError(player, 'SONG_NOT_CACHED', '歌曲尚未缓存')
       const member = target.players.get(player.id)
       member.selectedSongId = song.id
@@ -1033,7 +1247,11 @@ function handleBattleMessage(player, message) {
         }
         let performance
         try {
-          performance = calculatePerformance(SONGS_BY_ID.get(target.songId), message.samples)
+          performance = calculatePerformance(
+            SONGS_BY_ID.get(target.songId),
+            message.samples,
+            typeof message.recognizedText === 'string' ? message.recognizedText.slice(0, 8000) : ''
+          )
         } catch (error) {
           if (!(error instanceof RequestError)) throw error
           cancelBattle(target, '音高采样无效 · 对战已取消')
@@ -1043,7 +1261,11 @@ function handleBattleMessage(player, message) {
           cancelBattle(target, '未检测到有效演唱 · 对战已取消')
           return
         }
-        member.score = performance.battleScore
+        const song = SONGS_BY_ID.get(target.songId)
+        member.score = Number(song?.scoringVersion) >= 3 ? performance.score : performance.battleScore
+        member.accuracy = performance.accuracy
+        member.coverage = performance.coverage
+        member.completeness = performance.completeness
         member.finished = true
         finishBattle(target)
         return
@@ -1056,7 +1278,7 @@ function handleBattleMessage(player, message) {
         type: 'opponent.progress',
         roomId: target.id,
         roundId: target.roundId,
-        score: Math.max(0, Math.min(1000000, Number(message.score) || 0)),
+        score: Math.max(0, Math.min(100, Number(message.score) || 0)),
         midi: Number.isFinite(message.midi) ? message.midi : null,
         note: String(message.note || '').slice(0, 8),
         cents: Math.max(-1200, Math.min(1200, Number(message.cents) || 0))
