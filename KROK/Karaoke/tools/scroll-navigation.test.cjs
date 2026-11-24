@@ -131,7 +131,8 @@ async function checkNavigation() {
 
   const categories = openDownload()
   await new Promise(setImmediate)
-  assert.equal(categories.data.categories[1].countLabel, '20 首', '音乐下载入口显示在线曲库的语种数量')
+  assert.equal(categories.data.categories[1].label, '英文歌', '语言分类按钮只显示语种')
+  assert.equal('countLabel' in categories.data.categories[1], false, '语言分类按钮不显示歌曲数量')
   key('ArrowDown', { pressed: true })
   assert.equal(categories.data.categoryIndex, 0, '常规手势在抬起时执行')
   assert.equal(key('ArrowDown', { delay: 50, appOnly: true }), true)

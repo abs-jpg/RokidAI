@@ -102,6 +102,7 @@ async function main() {
     assert.equal(Boolean(resultPage.unloaded), false, 'submission must not update an unloaded result page')
     Object.assign(resultPage.data, update)
   }
+  assert.equal(resultPage.data.actionLabels[0], '上传成绩')
   resultPage.song = { id: 'test-song' }
   const pendingSubmit = resultPage.doSubmit()
   resultPage.onUnload()

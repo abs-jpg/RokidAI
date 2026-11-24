@@ -179,6 +179,8 @@ export default {
     battleOpponentNote: '--',
     battleOpponentName: '对手',
     battleResultText: '',
+    battleResultOutcome: '',
+    battleResultTitle: '对战结束',
     statusText: '正在加载伴奏',
     hintText: '返回'
   },
@@ -186,7 +188,7 @@ export default {
   onLoad(query) {
     this.query = query || {}
     this.isBattle = this.query.mode === 'battle'
-    this.mode = this.query.mode === 'guide' ? 'guide' : 'instrumental'
+    this.mode = this.isBattle || this.query.mode === 'guide' ? 'guide' : 'instrumental'
     this.playbackLabel = this.mode === 'guide' ? '带歌词版' : '纯音乐版'
     this.roomId = this.query.roomId || ''
     this.roundId = this.query.roundId || ''
@@ -264,13 +266,19 @@ export default {
         this.abortBattle('未收到完整结算分数', false)
         return
       }
+      const battleResultOutcome = mine.score > other.score ? 'win' : (mine.score < other.score ? 'loss' : 'draw')
+      const battleResultTitle = battleResultOutcome === 'win'
+        ? '胜利'
+        : (battleResultOutcome === 'loss' ? '失败' : '平局')
       this.releaseAudio()
       this.setData({
         phase: 'battleDone',
         battleResultText: '我 ' + mine.score + ' · 对手 ' + other.score,
+        battleResultOutcome,
+        battleResultTitle,
         battleSelfScore: mine.score,
         battleOpponentScore: other.score,
-        hintText: '确认返回联机大厅'
+        hintText: '点按镜腿 · 确认离开'
       })
       return
     }
@@ -414,7 +422,7 @@ export default {
         this.goToResult()
         break
       case 'battleDone':
-        wx.navigateBack()
+        this.leavePage()
         break
     }
   },
@@ -873,6 +881,16 @@ export default {
     return sendBattle(type, { ...payload, roomId: this.roomId, roundId: this.roundId })
   },
 
+  getRecordingRecognitionText() {
+    const finalText = String(this.recognizedFinalText || '').trim()
+    const pendingText = String(this.asrPendingDisplayText || '').trim()
+    const displayText = this.data.asrDisplayText === ASR_BLANK
+      ? ''
+      : String(this.data.asrDisplayText || '').trim()
+    if (!pendingText && !finalText) return displayText
+    return mergeRecognitionText(finalText || displayText, pendingText)
+  },
+
   abortBattle(reason, notify = true) {
     if (this.data.phase === 'battleDone') return
     this.releaseAudio()
@@ -881,8 +899,10 @@ export default {
       currentLyric: '',
       nextLyric: '',
       asrDisplayText: ASR_BLANK,
+      battleResultOutcome: 'cancelled',
+      battleResultTitle: '对战结束',
       statusText: reason,
-      hintText: '确认返回联机大厅'
+      hintText: '点按镜腿 · 确认离开'
     })
     if (notify) this.sendRound('battle.cancel')
   },
@@ -1289,7 +1309,7 @@ export default {
       }
       if (!this.sendRound('battle.finish', {
         samples: encodePitchTrack(this.pitchTrack),
-        recognizedText: this.recognizedFinalText || this.asrPendingDisplayText || ''
+        recognizedText: this.getRecordingRecognitionText()
       })) {
         this.abortBattle('联机已断开', false)
         return
@@ -1339,7 +1359,7 @@ export default {
         chartVersion: this.song.chartVersion,
         scoringVersion: SCORING_VERSION,
         pitchTrack: this.pitchTrack,
-        recognizedText: this.asrPendingDisplayText || this.recognizedFinalText || ''
+        recognizedText: this.getRecordingRecognitionText()
       })
     } catch (error) {
       this.showError('保存本次演唱失败', error)
@@ -1449,7 +1469,25 @@ export default {
       </view>
     </view>
     <view class="battle-field" ink:if="{{isBattle}}" bindtap="onConfirm">
-      <view class="battle-panels" ink:if="{{phase === 'recording' && !cueText}}">
+      <view class="battle-result" ink:if="{{phase === 'battleDone'}}">
+        <text class="battle-result-eyebrow">本局结算</text>
+        <view class="battle-result-badge {{battleResultOutcome}}">
+          <text class="battle-result-title">{{battleResultTitle}}</text>
+        </view>
+        <view class="battle-result-scores" ink:if="{{battleResultOutcome === 'win' || battleResultOutcome === 'loss' || battleResultOutcome === 'draw'}}">
+          <view class="battle-result-score-cell {{battleResultOutcome === 'win' ? 'battle-result-score-leading' : ''}}">
+            <text class="battle-result-score-role">你</text>
+            <text class="battle-result-score-value">{{battleSelfScore}}</text>
+          </view>
+          <view class="battle-result-score-separator"></view>
+          <view class="battle-result-score-cell {{battleResultOutcome === 'loss' ? 'battle-result-score-leading' : ''}}">
+            <text class="battle-result-score-role">对手</text>
+            <text class="battle-result-score-value">{{battleOpponentScore}}</text>
+          </view>
+        </view>
+        <text class="battle-result-reason" ink:if="{{battleResultOutcome === 'cancelled'}}">{{statusText}}</text>
+      </view>
+      <view class="battle-panels" ink:elif="{{phase === 'recording' && !cueText}}">
         <view class="battle-side battle-self">
           <view class="battle-player">
             <text class="battle-role">我</text>
@@ -1480,8 +1518,7 @@ export default {
         </view>
       </view>
       <view class="battle-state" ink:else>
-        <text class="battle-result-line" ink:if="{{phase === 'battleDone' && battleResultText}}">{{battleResultText}}</text>
-        <text class="{{phase === 'countdown' || cueText ? 'countdown' : 'status'}}" ink:else>{{phase === 'recording' ? cueText : statusText}}</text>
+        <text class="{{phase === 'countdown' || cueText ? 'countdown' : 'status'}}">{{phase === 'recording' ? cueText : statusText}}</text>
       </view>
       <view class="battle-hintbar">
         <text class="battle-hint battle-legend" ink:if="{{phase === 'recording' && !cueText}}">横线参考 · 圆点实唱</text>
@@ -1563,6 +1600,114 @@ export default {
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
+}
+
+.battle-result {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px 0;
+}
+
+.battle-result-eyebrow {
+  margin-bottom: 8px;
+  color: rgba(76,199,115,0.56);
+  font-size: 10px;
+  letter-spacing: 4px;
+}
+
+.battle-result-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 126px;
+  height: 126px;
+  border: 4px solid #a5adb2;
+  border-radius: 63px;
+  background-color: rgba(255,255,255,0.025);
+}
+
+.battle-result-badge.win {
+  border-color: #ff6573;
+  background-color: rgba(255,101,115,0.06);
+  box-shadow: 0 0 18px rgba(255,101,115,0.18);
+}
+
+.battle-result-badge.draw {
+  border-color: #4cc773;
+  background-color: rgba(76,199,115,0.06);
+}
+
+.battle-result-title {
+  color: #b7bec2;
+  font-size: 38px;
+  font-weight: bold;
+  letter-spacing: 5px;
+}
+
+.battle-result-badge.win .battle-result-title {
+  color: #ff6573;
+}
+
+.battle-result-badge.draw .battle-result-title {
+  color: #4cc773;
+}
+
+.battle-result-scores {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 280px;
+  height: 50px;
+  margin-top: 8px;
+}
+
+.battle-result-score-cell {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.battle-result-score-role {
+  color: rgba(76,199,115,0.48);
+  font-size: 10px;
+  line-height: 12px;
+}
+
+.battle-result-score-value {
+  color: rgba(76,199,115,0.82);
+  font-size: 25px;
+  line-height: 29px;
+  font-weight: bold;
+}
+
+.battle-result-score-leading .battle-result-score-value {
+  color: #ff6573;
+}
+
+.battle-result-score-separator {
+  width: 1px;
+  height: 30px;
+  flex-shrink: 0;
+  background-color: rgba(76,199,115,0.20);
+}
+
+.battle-result-reason {
+  max-width: 320px;
+  margin-top: 12px;
+  color: rgba(76,199,115,0.64);
+  font-size: 12px;
+  line-height: 17px;
+  text-align: center;
 }
 
 .battle-panels {
@@ -1851,12 +1996,6 @@ export default {
 
 .cue-overlay {
   background-color: rgba(0, 0, 0, 0.55);
-}
-
-.battle-result-line {
-  font-size: 30px;
-  color: #4cc773;
-  font-weight: bold;
 }
 
 .hintbar {

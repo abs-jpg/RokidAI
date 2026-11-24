@@ -174,6 +174,11 @@ async function main() {
   page.handleBattleMessage({ type: 'socket.close' })
   assert.equal(page.data.phase, 'battleDone')
   assert.equal(page.data.statusText, '联机已断开')
+  page.leaving = false
+  const resultBackCount = backCount
+  page.onConfirm()
+  page.onConfirm()
+  assert.equal(backCount, resultBackCount + 1, '结算页单次确认只能返回一次')
   console.log('PASS  伴奏播放、浏览器异步拒绝、全屏恢复和对战断线退出')
 
   const pitchSource = readFileSync(join(__dirname, '../utils/pitchEngine.js'), 'utf8')
@@ -316,6 +321,13 @@ async function main() {
   await new Promise(setImmediate)
   assert.deepEqual(finalOrder, ['write', 'close'])
   assert.equal(savedRecording.recognizedText, '已经确认的前一句 最后一句')
+  recording.recognizedFinalText = '后台最终结果'
+  recording.asrPendingDisplayText = '后台最终结果最后临时结果'
+  assert.equal(recording.getRecordingRecognitionText(), '后台最终结果最后临时结果')
+  recording.recognizedFinalText = ''
+  recording.asrPendingDisplayText = ''
+  recording.data.asrDisplayText = '屏幕上仍在显示的识别内容'
+  assert.equal(recording.getRecordingRecognitionText(), '屏幕上仍在显示的识别内容')
   assert.equal(savedRecording.completed, true)
   assert.equal(recording.data.phase, 'settling')
   recording.song.lyrics = [{ text: '最后一句', startMs: 1000, endMs: 2000 }]

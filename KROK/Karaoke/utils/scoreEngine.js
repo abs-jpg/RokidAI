@@ -138,9 +138,6 @@ export function calcLyricMatchScore(recognizedText, lyricsText) {
   return Math.min(100, Math.round(100 * 2 * lcs / (a.length + b.length)));
 }
 
-const MAX_LYRIC_ALIGNMENT_CELLS = 3_000_000;
-const MAX_LYRIC_EXAMPLES = 2;
-
 // 拉丁文字按词核对，中日韩文字按字核对。保留原文位置，以便指出短片段。
 function lyricReviewTokens(text) {
   return Array.from(text.matchAll(/[\p{Script=Latin}\p{N}]+(?:['’][\p{Script=Latin}\p{N}]+)*|[\p{L}\p{N}]/gu), match => ({
@@ -150,142 +147,125 @@ function lyricReviewTokens(text) {
   }));
 }
 
-function alignLyricReview(lines, heard, completed) {
-  const expected = lines.flatMap(line => line.tokens.map(token => ({ key: token.key, line })));
-  const columns = heard.length + 1;
-  const cells = (expected.length + 1) * columns;
-  if (!heard.length || !expected.length || cells > MAX_LYRIC_ALIGNMENT_CELLS) return;
-
-  const directions = new Uint8Array(cells);
-  let previous = new Uint32Array(columns);
-  let current = new Uint32Array(columns);
-  for (let j = 1; j < columns; j++) previous[j] = j;
-
-  for (let i = 1; i <= expected.length; i++) {
-    current[0] = i;
-    const row = i * columns;
-    const key = expected[i - 1].key;
-    for (let j = 1; j < columns; j++) {
-      const diagonal = previous[j - 1] + (key === heard[j - 1].key ? 0 : 1);
-      const missing = previous[j] + 1;
-      const extra = current[j - 1] + 1;
-      if (diagonal <= missing && diagonal <= extra) {
-        current[j] = diagonal;
-      } else if (missing <= extra) {
-        current[j] = missing;
-        directions[row + j] = 1;
-      } else {
-        current[j] = extra;
-        directions[row + j] = 2;
-      }
-    }
-    [previous, current] = [current, previous];
-  }
-
-  // 提前结束时，末尾可能还有一段未唱完的歌词，允许识别文本尾部未被匹配。
-  let end = heard.length;
-  if (!completed) {
-    for (let j = 0; j < heard.length; j++) {
-      if (previous[j] < previous[end]) end = j;
-    }
-  }
-
-  for (let i = expected.length, j = end; i > 0;) {
-    const token = expected[i - 1];
-    const line = token.line;
-    const direction = j === 0 ? 1 : directions[i * columns + j];
-    if (direction === 1) {
-      line.edits++;
-      i--;
+function recognitionReviewSnippets(text) {
+  const normalized = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!normalized) return [];
+  const snippets = [];
+  for (const phrase of normalized.split(/[。！？!?；;\n]+/u).map(value => value.trim()).filter(Boolean)) {
+    const tokens = lyricReviewTokens(phrase);
+    if (!tokens.length) continue;
+    const limit = phrase.includes(' ') ? 48 : 24;
+    if (phrase.length <= limit) {
+      snippets.push(phrase);
       continue;
     }
-    line.heardStart = j - 1;
-    if (line.heardEnd == null) line.heardEnd = j;
-    if (direction === 2) {
-      line.edits++;
-    } else {
-      if (token.key === heard[j - 1].key) {
-        line.matches++;
-      } else {
-        line.edits++;
-      }
-      i--;
+    let start = 0;
+    while (start < tokens.length) {
+      let end = start + 1;
+      while (end < tokens.length && tokens[end].end - tokens[start].start <= limit) end++;
+      const snippet = phrase.slice(tokens[start].start, tokens[end - 1].end).trim();
+      if (snippet) snippets.push(snippet);
+      start = end;
     }
-    j--;
   }
+  return [...new Set(snippets)];
 }
 
-function lyricReviewExcerpt(text, tokens, focus = 0) {
-  const limit = 24;
-  if (text.length <= limit) return text;
-  const index = Math.min(focus, tokens.length - 1);
-  const previous = tokens[Math.max(0, index - 1)];
-  const start = tokens[index].end - previous.start <= limit ? previous.start : tokens[index].start;
-  let end = Math.min(start + limit, tokens[index].end);
-  for (let i = index + 1; i < tokens.length && tokens[i].end - start <= limit; i++) end = tokens[i].end;
-  return (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '');
-}
-
-function buildLyricReview(lyrics, recognizedText, completed, sungUntilMs) {
+function buildLyricReview(lyrics, recognizedText, completed, sungUntilMs, random = Math.random) {
   const lines = lyrics.map((line, index) => {
     const text = String(line?.text || '').trim();
-    return { number: index + 1, text, tokens: lyricReviewTokens(text), endMs: line?.endMs, edits: 0, matches: 0 };
+    return {
+      number: index + 1,
+      text,
+      normalized: normalizeLyrics(text),
+      tokens: lyricReviewTokens(text),
+      endMs: line?.endMs
+    };
   }).filter(line => line.tokens.length);
 
   const heardText = String(recognizedText || '').trim();
   const heardTokens = lyricReviewTokens(heardText);
-  if (!heardTokens.length) return ['本次没有取得可对照的识别唱词。'];
+  if (!heardTokens.length) {
+    return ['这一遍已经把旋律走完，下一遍继续跟着歌词唱，保持现在的节奏和清楚咬字。'];
+  }
   const sungLines = completed ? lines : lines.filter(line => line.endMs <= sungUntilMs);
-  alignLyricReview(sungLines, heardTokens, completed);
+  const heardNormalized = normalizeLyrics(heardText);
+  const exactMatches = sungLines.filter(line =>
+    line.normalized && heardNormalized.includes(line.normalized)
+  );
+  const randomValue = typeof random === 'function' ? random() : random;
+  const secureRandomValue = Number.isFinite(randomValue)
+    ? Math.max(0, Math.min(0.999999, randomValue))
+    : Math.random();
 
-  const isAnchor = line => line && line.matches >= Math.max(1, Math.ceil(line.tokens.length * 0.65));
-  const candidates = sungLines.filter((line, index) => line.heardStart != null &&
-    (line.matches >= Math.min(2, line.tokens.length) ||
-      (isAnchor(sungLines[index - 1]) && isAnchor(sungLines[index + 1]))));
-  candidates.sort((a, b) => b.edits / b.tokens.length - a.edits / a.tokens.length || b.edits - a.edits || a.number - b.number);
-  const differing = candidates.filter(line => line.edits > 0);
-  const examples = (differing.length ? differing.slice(0, MAX_LYRIC_EXAMPLES) : candidates.slice(0, 1));
-  if (!examples.length) {
-    const observed = lyricReviewExcerpt(heardText, heardTokens);
-    return ['识别「' + observed + '」。' + (lines.length ? '未找到可靠对应的原词。' : '这首歌缺少参考歌词。')];
+  if (exactMatches.length) {
+    return ['这一句歌词跟得很准，咬字也很清楚，下一遍继续保持。'];
   }
 
-  return examples.map(line => {
-    const heard = heardTokens.slice(line.heardStart, line.heardEnd);
-    const mismatch = line.tokens.findIndex((token, index) => token.key !== heard[index]?.key);
-    const focus = mismatch < 0 ? 0 : mismatch;
-    const intended = lyricReviewExcerpt(line.text, line.tokens, focus);
-    const heardStart = heard[0].start;
-    const phrase = heardText.slice(heardStart, heard[heard.length - 1].end);
-    const observed = lyricReviewExcerpt(phrase, lyricReviewTokens(phrase), focus);
-    return '第' + line.number + '句 识别「' + observed + '」 · 原词「' + intended + '」。';
-  });
+  const snippets = recognitionReviewSnippets(heardText);
+  const snippet = snippets[Math.floor(secureRandomValue * Math.max(1, snippets.length))] || '';
+  const snippetTokens = lyricReviewTokens(snippet).map(token => token.key);
+  let bestCoverage = 0;
+  if (snippetTokens.length) {
+    for (const line of sungLines) {
+      const lineTokens = line.tokens.map(token => token.key);
+      const matched = longestCommonSubsequenceLength(lineTokens, snippetTokens);
+      bestCoverage = Math.max(bestCoverage, matched / lineTokens.length);
+    }
+  }
+  if (bestCoverage >= 0.65) {
+    return ['这一句已经跟上了歌词，个别字再唱清楚一点，下一遍会更顺畅。'];
+  }
+  return ['这一段的节奏跟得比较稳，下一遍继续跟着歌词唱，保持清楚的咬字。'];
 }
 
 function practicePitchAdvice(profile) {
   if (!profile || profile.pitchedFrames < Math.max(12, profile.expectedFrames * 0.08)) {
-    return '音高样本较少，下次把长音唱稳，再对照参考线。';
+    return '这一遍的音高轨迹已经记录下来，下一遍继续跟着起音和长音唱，保持现在的节奏。';
   }
-  const { pitchedFrames, highFrames, lowFrames, octaveHighFrames, octaveLowFrames } = profile;
+  const {
+    pitchedFrames,
+    highFrames,
+    lowFrames,
+    octaveHighFrames,
+    octaveLowFrames,
+    averageLowDifference,
+    averageHighDifference
+  } = profile;
+  const lowSemitones = Math.max(0.5, Number(averageLowDifference) || 0).toFixed(1);
+  const highSemitones = Math.max(0.5, Number(averageHighDifference) || 0).toFixed(1);
   if (Math.max(octaveHighFrames, octaveLowFrames) >= pitchedFrames * 0.6) {
-    const direction = octaveHighFrames > octaveLowFrames ? '高' : '低';
-    return `实唱大多比参考${direction}近一个八度，先听起音确认音区。`;
+    if (octaveLowFrames >= octaveHighFrames) {
+      return `整体音高比参考低约 ${lowSemitones} 个半音，接近一个八度；下一遍保持现在的节奏，再把起音带到更高的音区。`;
+    }
+    return `整体音高比参考高约 ${highSemitones} 个半音，接近一个八度；下一遍保持现在的节奏，再把起音放到更合适的音区。`;
   }
   const high = highFrames / pitchedFrames;
   const low = lowFrames / pitchedFrames;
-  if (high >= 0.6) return '音准多半偏高，听清起音后往下微调。';
-  if (low >= 0.6) return '音准多半偏低，听清起音后往上微调。';
-  if (high + low < 0.2) return '大部分音贴近参考旋律，继续稳住句尾和长音。';
-  if (high >= 0.15 && low >= 0.15) return '音高有时偏高、有时偏低，先唱稳长音，再练换音。';
-  return high > low
-    ? '有些片段偏高，重唱时留意换音后的落点。'
-    : '有些片段偏低，重唱时跟住参考线的上行音。';
+  if (low >= 0.6) {
+    return `整体音高比参考低约 ${lowSemitones} 个半音；下一遍保持现在的节奏和长音，再把音高轻轻往上托一点。`;
+  }
+  if (high >= 0.6) {
+    return `整体音高比参考高约 ${highSemitones} 个半音；下一遍保持现在的节奏和长音，再把音高轻轻往下收一点。`;
+  }
+  if (high + low < 0.2) {
+    return '大部分音高贴近参考旋律，下一遍继续保持现在的起音、长音和句尾稳定。';
+  }
+  return '这一遍的音高起伏已经控制得不错，下一遍继续保持长音和句尾稳定。';
 }
 
-export function buildPracticeFeedback({ lyrics = [], recognizedText, completed, sungUntilMs, hasRefNotes, pitchProfile }) {
-  const lyricReview = buildLyricReview(lyrics, recognizedText, completed, sungUntilMs);
+export function buildPracticeFeedback({
+  lyrics = [],
+  recognizedText,
+  completed,
+  sungUntilMs,
+  hasRefNotes,
+  pitchProfile,
+  random
+}) {
+  const lyricReview = buildLyricReview(lyrics, recognizedText, completed, sungUntilMs, random);
   const pitchReview = hasRefNotes
     ? practicePitchAdvice(pitchProfile)
-    : '这首歌缺少参考音高，可以先跟伴奏找准每句起音。';
+    : '这一遍先跟着伴奏找好起音，下一遍继续保持现在的节奏和清楚咬字。';
   return [...lyricReview, pitchReview];
 }

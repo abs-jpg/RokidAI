@@ -182,6 +182,8 @@ export function calcAccuracyScore(samples, refNotes, version = SCORING_VERSION) 
   let lowFrames = 0
   let octaveHighFrames = 0
   let octaveLowFrames = 0
+  let highDifferenceTotal = 0
+  let lowDifferenceTotal = 0
   for (const sample of samples) {
     const ref = getRefNoteAt(refNotes, sample.timeMs)
     if (!ref) continue
@@ -191,8 +193,14 @@ export function calcAccuracyScore(samples, refNotes, version = SCORING_VERSION) 
     if (!Number.isFinite(sample.midi)) continue
     const difference = sample.midi - ref.midi
     points += Math.max(0, 100 - Math.abs(difference) * pitchPenalty)
-    if (difference > 0.5) highFrames++
-    if (difference < -0.5) lowFrames++
+    if (difference > 0.5) {
+      highFrames++
+      highDifferenceTotal += difference
+    }
+    if (difference < -0.5) {
+      lowFrames++
+      lowDifferenceTotal -= difference
+    }
     if (difference >= 10 && difference <= 14) octaveHighFrames++
     if (difference >= -14 && difference <= -10) octaveLowFrames++
     pitchedFrames++
@@ -212,7 +220,16 @@ export function calcAccuracyScore(samples, refNotes, version = SCORING_VERSION) 
     coverage,
     completeness: coverage,
     score,
-    pitchProfile: { pitchedFrames, expectedFrames, highFrames, lowFrames, octaveHighFrames, octaveLowFrames },
+    pitchProfile: {
+      pitchedFrames,
+      expectedFrames,
+      highFrames,
+      lowFrames,
+      octaveHighFrames,
+      octaveLowFrames,
+      averageHighDifference: highFrames ? highDifferenceTotal / highFrames : 0,
+      averageLowDifference: lowFrames ? lowDifferenceTotal / lowFrames : 0
+    },
     sampleQuality: expectedFrames ? Math.min(100, 100 * capturedFrames / expectedFrames) : 0
   }
 }

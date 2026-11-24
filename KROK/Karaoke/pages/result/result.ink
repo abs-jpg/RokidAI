@@ -13,7 +13,7 @@ import { playFeedbackSpeech } from '../../utils/feedbackSpeech.js'
 import { submitScore } from '../../utils/leaderboard.js'
 import { getSongFromLibrary } from '../../utils/songLibrary.js'
 
-const UPLOAD_ACTION = '保存到服务器排行榜'
+const UPLOAD_ACTION = '上传成绩'
 
 export default {
   data: {

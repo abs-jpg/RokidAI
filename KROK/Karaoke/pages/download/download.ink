@@ -97,7 +97,6 @@ export default {
         data-value="{{item.key}}"
       >
         <text class="download-category-tab-label">{{item.label}}</text>
-        <text class="download-category-count" ink:if="{{item.countLabel}}">{{item.countLabel}}</text>
       </view>
     </view>
 
@@ -343,12 +342,6 @@ export default {
   color: var(--green-72);
 }
 
-.download-category-count {
-  margin-top: 2px;
-  font-size: 12px;
-  color: var(--green-72);
-}
-
 .download-tab-active {
   background-color: var(--green-12);
   border-bottom-color: var(--green-100);
@@ -477,7 +470,6 @@ export default {
   .download-category-bar { height: 32px; }
   .download-category-tab { height: 30px; }
   .download-category-tab-label { font-size: 13px; }
-  .download-category-count { font-size: 10px; }
   .download-song-list { padding-top: 2px; }
   .download-song-artist { display: none; }
   .download-empty-area { height: 38px; }

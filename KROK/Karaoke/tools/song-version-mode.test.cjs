@@ -61,6 +61,11 @@ assert.equal(instrumental.mode, 'instrumental')
 assert.equal(instrumental.data.playbackLabel, '纯音乐版')
 assert.equal(instrumental.data.practiceOnly, false)
 
+const battle = createPage()
+battle.onLoad({ mode: 'battle', songId: 'test' })
+assert.equal(battle.mode, 'guide', '联机对战应播放带歌词导唱版')
+assert.equal(battle.data.playbackLabel, '带歌词版')
+
 let countdownTick
 let countdownFinished = false
 const countdownPage = createPage(callback => { countdownTick = callback })

@@ -1,0 +1,9 @@
+{
+  "name": "联机结算预览",
+  "description": "多人联机胜利与失败结算界面预览。",
+  "engine": ">=0.19.0",
+  "pages": [
+    "pages/result/result"
+  ],
+  "permissions": []
+}

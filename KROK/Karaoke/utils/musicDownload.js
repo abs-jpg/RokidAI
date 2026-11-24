@@ -168,10 +168,7 @@ export class MusicDownload {
   }
 
   categoryOptions() {
-    return CATEGORIES.map((category, index) => ({
-      ...category,
-      countLabel: category.key === ADD_MUSIC ? '' : this.categorySongs(index).length + ' 首'
-    }))
+    return CATEGORIES.map(category => ({ ...category }))
   }
 
   categoryPreview(index) {
