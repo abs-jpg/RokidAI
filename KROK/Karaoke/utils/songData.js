@@ -1,7 +1,7 @@
-import { sarangEulHaetdaSong } from './sarangEulHaetdaSong.js'
+import { daoXiangSong } from './daoXiangSong.js'
 
-// 사랑을 했다 直接随应用发布，首次启动无需从音乐下载页获取。
-export const songs = [sarangEulHaetdaSong]
+// 稻香直接随应用发布，首次启动无需从音乐下载页获取。
+export const songs = [daoXiangSong]
 
 export function getSongById(id) {
   return songs.find(song => song.id === id)
