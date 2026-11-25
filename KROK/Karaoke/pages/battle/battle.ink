@@ -45,7 +45,7 @@ export default {
     try {
       const catalog = await loadSongCatalog()
       if (this.unloaded) return
-      const playable = catalog.songs.filter(song => song.bundled || song.downloaded)
+      const playable = catalog.songs.filter(song => song.bundled || song.downloadedVariants?.guide)
       if (!playable.length) {
         this.setData({ phase: 'error', errorMsg: '暂无可对战的已下载歌曲' })
         return

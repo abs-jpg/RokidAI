@@ -71,6 +71,11 @@ function createTestApp(songs, globals = {}) {
   const wx = {
     navigateTo({ url, success }) {
       const route = new URL(url, 'https://test.invalid')
+      if (route.pathname === '/pages/record/record') {
+        stack.push({ query: Object.fromEntries(route.searchParams) })
+        success?.()
+        return
+      }
       assert.equal(route.pathname, downloadPath)
       current().onHide?.()
       const page = loadPage(downloadScript, { wx, MusicDownload, ...guards })
@@ -88,10 +93,11 @@ function createTestApp(songs, globals = {}) {
     }
   }
   const homeSongs = Array.from({ length: 20 }, (_, i) => ({ id: 'h' + i, bundled: true }))
+  const homeCatalog = [...homeSongs, ...songs]
   const home = loadPage(homeScript, {
     ...guards, console, wx, songs: homeSongs,
     isServerConnected: () => false,
-    loadSongCatalog: async () => ({ songs: homeSongs, connected: false })
+    loadSongCatalog: async () => ({ songs: homeCatalog, connected: false })
   })
   stack.push(home)
   function key(code, { delay = 300, pressed = false, appOnly = false, ...fields } = {}) {
@@ -118,9 +124,9 @@ async function checkNavigation() {
   const songs = Array.from({ length: 20 }, (_, i) => ({ id: 's' + i, category: i === 0 ? '英文' : 'English' }))
   const requested = []
   const flow = createTestApp(songs, {
-    async downloadSong(id) {
-      requested.push(id)
-      return { offline: true }
+    async downloadSong(id, variant) {
+      requested.push([id, variant])
+      return { offline: true, downloadedVariants: { guide: false, instrumental: true } }
     }
   })
   const { home, current, key, openDownload } = flow
@@ -162,9 +168,22 @@ async function checkNavigation() {
   key('Unidentified', { key: 'ArrowLeft' })
   assert.equal(list.data.selectedIdx, 18)
   assert.equal(key('Enter'), true)
+  assert.equal(list.data.choiceVisible, true)
+  assert.deepEqual(requested, [], '进入下载选项时不发送任何下载请求')
+  key('ArrowDown')
+  key('Enter')
   await new Promise(setImmediate)
-  assert.deepEqual(requested, ['s18'])
-  assert.equal(list.data.songs[18].downloaded, true)
+  assert.deepEqual(requested, [['s18', 'instrumental']])
+  assert.equal(list.data.songs[18].downloaded, false)
+  assert.equal(list.data.songs[18].downloadedVariants.instrumental, true)
+  key('Enter')
+  assert.equal(requested.length, 1, '已下载的版本不再触发下载')
+  assert.equal(key('Backspace'), true)
+  assert.equal(list.data.choiceVisible, false)
+  assert.equal(current(), list)
+  key('Enter')
+  assert.equal(list.data.choiceIndex, 0, '重新打开时优先选中尚未下载的版本')
+  key('Backspace')
   assert.equal(key('Backspace'), true)
   assert.equal(current(), categories)
   assert.equal(categories.data.categoryIndex, 1)
@@ -220,8 +239,8 @@ async function checkTempleFallback() {
 async function checkDownloadCancellation() {
   let pending
   const { current, key, openDownload, hostBack } = createTestApp([{ id: 'first', category: '中文' }], {
-    downloadSong(id, options) {
-      return new Promise(resolve => { pending = { ...options, resolve } })
+    downloadSong(id, variant, options) {
+      return new Promise(resolve => { pending = { id, variant, ...options, resolve } })
     }
   })
   const categories = openDownload()
@@ -229,15 +248,46 @@ async function checkDownloadCancellation() {
   await new Promise(setImmediate)
   const list = current()
   list.onTapDownloadSong({ currentTarget: { id: 'download-song-first' } })
-  pending.onProgress({ bytes: 1, total: 2, count: 1 })
-  assert.equal(list.data.downloadLabel, '50%')
+  assert.equal(list.data.choiceVisible, true)
+  assert.equal(pending, undefined)
+  list.onConfirmDownload()
+  assert.equal(pending.variant, 'guide')
+  pending.onProgress({ bytes: 1, total: 2 })
+  assert.equal(list.data.downloadProgress, 50)
   hostBack()
   assert.equal(pending.signal.aborted, true)
-  pending.resolve({ offline: true })
+  pending.resolve({ offline: true, downloadedVariants: { guide: true, instrumental: false } })
   await new Promise(setImmediate)
   assert.equal(current(), categories)
-  assert.equal(list.data.downloadLabel, '50%')
+  assert.equal(list.data.downloadProgress, 50)
   key('Backspace')
+}
+
+async function checkPartiallyDownloadedHome() {
+  const { home, current, key, openDownload } = createTestApp([
+    { id: 'red-high-heels', name: '红色高跟鞋', category: '中文', downloadedVariants: { guide: false, instrumental: true } }
+  ])
+  const categories = openDownload()
+  await new Promise(setImmediate)
+  categories.onTapDownloadSong({ currentTarget: { id: 'download-song-red-high-heels' } })
+  const list = current()
+  assert.equal(list.data.choiceVisible, true, '点击语种预览中的歌曲直接打开版本选择')
+  await new Promise(setImmediate)
+  assert.equal(list.data.choiceDownloaded.instrumental, true)
+  key('Backspace')
+  key('Backspace')
+  key('Backspace')
+  await new Promise(setImmediate)
+  const index = home.data.songs.findIndex(song => song.id === 'red-high-heels')
+  assert.ok(index >= 0, '只下载一版的歌曲也应出现在首页')
+  home.onTapSong({ currentTarget: { dataset: { idx: index } } })
+  assert.equal(home.data.choiceIndex, 1)
+  assert.equal(home.data.choiceAvailable[0], false)
+  home.onTapChoice({ currentTarget: { dataset: { idx: 0 } } })
+  key('ArrowUp')
+  assert.equal(home.data.choiceIndex, 1, '点按和滑动均无法选择未下载的版本')
+  key('Enter')
+  assert.deepEqual(current().query, { songId: 'red-high-heels', mode: 'instrumental' })
 }
 
 async function checkUnavailableCatalog() {
@@ -313,6 +363,7 @@ async function main() {
   checkNativeBack()
   await checkTempleFallback()
   await checkDownloadCancellation()
+  await checkPartiallyDownloadedHome()
   await checkUnavailableCatalog()
   await checkSongRequests()
   console.log('PASS  音乐下载两层返回、滑动选歌、下载和留言')

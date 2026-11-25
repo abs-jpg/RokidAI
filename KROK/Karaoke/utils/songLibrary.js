@@ -89,33 +89,58 @@ function sameVersion(a, b) {
   return a?.id === b?.id && a?.chartVersion === b?.chartVersion
 }
 
-async function audioFile(song, variant, create) {
+async function audioFile(song, variant, url, create) {
   const root = await navigator.storage.getDirectory()
   const folder = await root.getDirectoryHandle('karaoke-audio', { create })
-  const url = audioUrl(song, variant)
   const extension = (url?.split(/[?#]/)[0].match(/\.(ogg|mp3|wav|m4a|aac)$/i)?.[1] || 'ogg').toLowerCase()
-  const storageVariant = audioUrl(song, 'guide') === audioUrl(song, 'instrumental') ? 'shared' : variant
   const key = encodeURIComponent(SERVER_URL) + '-' + song.id + '-' + song.chartVersion + '-' +
-    storageVariant + '.' + extension
+    variant + '.' + extension
   return folder.getFileHandle(key, { create })
+}
+
+function savedAudio(song, variant) {
+  try {
+    const key = DOWNLOAD_KEY + song.id
+    const saved = wx.getStorageSync(key + ':' + variant)
+    if (sameVersion(saved, song) && saved.src) return { src: saved.src, variant }
+
+    // 兼容旧版一次下载两种版本时写入的歌曲记录和文件名。
+    const legacy = wx.getStorageSync(key)
+    if (!sameVersion(legacy, song)) return null
+    const guide = legacy.guideAccompaniment || legacy.accompaniment
+    const instrumental = legacy.instrumentalAccompaniment || legacy.accompaniment
+    const src = variant === 'guide' ? guide : instrumental
+    return src ? { src, variant: guide === instrumental ? 'shared' : variant } : null
+  } catch {
+    return null
+  }
 }
 
 async function localFile(song, variant) {
   try {
-    const saved = wx.getStorageSync(DOWNLOAD_KEY + song.id)
-    if (!saved || !sameVersion(saved, song)) return null
-    const file = await (await audioFile({ ...song, ...saved }, variant, false)).getFile()
+    const audio = savedAudio(song, variant)
+    if (!audio) return null
+    const file = await (await audioFile(song, audio.variant, audio.src, false)).getFile()
     return file.size > 0 && file.size <= MAX_AUDIO_BYTES ? file : null
   } catch {
     return null
   }
 }
 
+async function downloadedVersions(song) {
+  if (song.bundled) return { guide: true, instrumental: true }
+  const [guide, instrumental] = await Promise.all(
+    AUDIO_VARIANTS.map(async variant => Boolean(await localFile(song, variant)))
+  )
+  return { guide, instrumental }
+}
+
 export function getSongAudio(song, mode = 'instrumental') {
   const variant = mode === 'guide' ? 'guide' : 'instrumental'
-  const src = variant === 'guide'
-    ? song.guideAccompaniment || song.accompaniment
-    : song.instrumentalAccompaniment || song.accompaniment
+  const { guideAccompaniment, instrumentalAccompaniment, accompaniment } = song
+  const src = guideAccompaniment || instrumentalAccompaniment
+    ? (variant === 'guide' ? guideAccompaniment : instrumentalAccompaniment)
+    : accompaniment
   if (!src) return null
   const extension = (src.split(/[?#]/)[0].match(/\.(ogg|mp3|wav|m4a|aac)$/i)?.[1] || 'ogg').toLowerCase()
   return { variant, src, format: extension === 'm4a' || extension === 'aac' ? 'm4a' : extension }
@@ -212,10 +237,6 @@ export function getPreloadedSongAudio(song, mode = 'instrumental') {
   return key ? preloadedAudio.get(key) || null : null
 }
 
-function audioUrl(song, variant) {
-  return getSongAudio(song, variant)?.src || null
-}
-
 export async function readDownloadedAudio(song, mode = 'instrumental') {
   const file = await localFile(song, mode === 'guide' ? 'guide' : 'instrumental')
   if (file) return file.arrayBuffer()
@@ -291,18 +312,8 @@ export async function loadSongCatalog() {
       const remoteSongs = remote.songs
       latestCatalog = new Map(remoteSongs.map(song => [song.id, song]))
       const songs = await Promise.all(mergeCatalog(remoteSongs).map(async song => {
-        let saved = null
-        try {
-          const candidate = wx.getStorageSync(DOWNLOAD_KEY + song.id)
-          saved = candidate && sameVersion(candidate, song) ? candidate : null
-        } catch (e) {
-          saved = null
-        }
-        const effective = saved ? { ...song, ...saved } : song
-        const variants = [...new Set(AUDIO_VARIANTS.map(variant => audioUrl(effective, variant)).filter(Boolean))]
-        const localFiles = await Promise.all(AUDIO_VARIANTS.map(variant => localFile(effective, variant)))
-        const downloaded = song.bundled || (variants.length > 0 && variants.every((url, index) => Boolean(localFiles[index])))
-        return { ...song, downloaded }
+        const variants = await downloadedVersions(song)
+        return { ...song, downloaded: variants.guide && variants.instrumental, downloadedVariants: variants }
       }))
       return { songs, connected: remote.connected }
     })().finally(() => { catalogPromise = null })
@@ -346,21 +357,23 @@ export async function getSongFromLibrary(id) {
       song = cached
     }
   }
-  return normalizeSongUrls(song, activeOrigin)
+  const normalized = normalizeSongUrls(song, activeOrigin)
+  return {
+    ...normalized,
+    guideAccompaniment: savedAudio(song, 'guide')?.src || getSongAudio(normalized, 'guide')?.src || null,
+    instrumentalAccompaniment: savedAudio(song, 'instrumental')?.src || getSongAudio(normalized, 'instrumental')?.src || null
+  }
 }
 
 /**
  * 请求服务器准备歌曲。服务器只会从源站下载一次，并发请求共享同一次下载。
  */
-export async function prepareSongDownload(id, options = {}) {
-  const { body, baseUrl } = await request('/api/songs/' + encodeURIComponent(id) + '/prepare', {
+async function prepareSongDownload(id, variant, signal) {
+  const path = '/api/songs/' + encodeURIComponent(id) + '/prepare?variant=' + variant
+  const { body, baseUrl } = await request(path, {
     method: 'POST',
-    signal: options.signal
-  }, 40000)
-  if (body?.song?.id !== id ||
-      !(body.song.guideAccompaniment || body.song.instrumentalAccompaniment || body.song.accompaniment)) {
-    throw new Error('伴奏不可用')
-  }
+    signal
+  }, 40000, data => data?.song?.id === id && Boolean(getSongAudio(data.song, variant)))
   const song = normalizeSongUrls(body.song, baseUrl)
   latestCatalog.set(id, song)
   try {
@@ -371,22 +384,19 @@ export async function prepareSongDownload(id, options = {}) {
   return song
 }
 
-export async function downloadSong(id, options = {}) {
-  const song = await prepareSongDownload(id, options)
-  const variants = [...new Set(AUDIO_VARIANTS.map(variant => audioUrl(song, variant)).filter(Boolean))]
-  if (!variants.length) throw new Error('伴奏不可用')
+export async function downloadSong(id, variant, options = {}) {
+  if (!AUDIO_VARIANTS.includes(variant)) throw new Error('请选择下载版本')
+  const song = await prepareSongDownload(id, variant, options.signal)
+  const { src } = getSongAudio(song, variant)
   try {
-    for (let index = 0; index < variants.length; index++) {
-      const url = variants[index]
-      const variant = AUDIO_VARIANTS.find(name => audioUrl(song, name) === url)
-      await downloadAudio(song, variant, url, options, index, variants.length)
-    }
+    await downloadAudio(song, variant, src, options)
   } catch (error) {
     if (!navigator.storage || error.name === 'NotSupportedError') return { offline: false }
     throw error
   }
-  wx.setStorageSync(DOWNLOAD_KEY + id, song)
-  return { offline: true }
+  if (options.signal?.aborted) throw new DOMException('下载已取消', 'AbortError')
+  wx.setStorageSync(DOWNLOAD_KEY + id + ':' + variant, { id, chartVersion: song.chartVersion, src })
+  return { offline: true, downloadedVariants: await downloadedVersions(song) }
 }
 
 // 单个分片使用独立的 AbortController 和 8 秒超时，失败重试一次。
@@ -426,8 +436,8 @@ async function fetchAudioChunk(url, start, end, outerSignal, useNative) {
   throw lastError || new Error('伴奏下载失败')
 }
 
-async function downloadAudio(song, variant, url, options, index, count) {
-  const handle = await audioFile(song, variant, true)
+async function downloadAudio(song, variant, url, options) {
+  const handle = await audioFile(song, variant, url, true)
   const controller = new AbortController()
   const cancel = () => controller.abort()
   if (options.signal?.aborted) controller.abort()
@@ -462,7 +472,7 @@ async function downloadAudio(song, variant, url, options, index, count) {
           chunks.push(chunk)
           loaded = chunk.byteLength
           total = chunk.byteLength
-          options.onProgress?.({ bytes: loaded, total, variant, index, count })
+          options.onProgress?.({ bytes: loaded, total })
           break
         }
         if (!total) throw new Error('伴奏响应缺少长度')
@@ -473,7 +483,7 @@ async function downloadAudio(song, variant, url, options, index, count) {
       loaded += chunk.byteLength
       start += chunk.byteLength
       if (loaded > MAX_AUDIO_BYTES) throw new Error('伴奏文件过大')
-      options.onProgress?.({ bytes: loaded, total: total || loaded, variant, index, count })
+      options.onProgress?.({ bytes: loaded, total: total || loaded })
       if (start >= total) break
     }
     if (controller.signal.aborted) throw new DOMException('下载已取消', 'AbortError')

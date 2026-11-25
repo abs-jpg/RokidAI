@@ -82,7 +82,18 @@ console.log(`${silenceOk ? 'PASS' : 'FAIL'}  静音                 expected=nul
   const ok = standard === null && measured.every((hz, index) =>
     hz != null && Math.abs(hz - frequencies[index]) / frequencies[index] < 0.02)
   if (!ok) failed++
-  console.log(`${ok ? 'PASS' : 'FAIL'}  单人低音 55–98 Hz      measured=${measured.map(hz => hz?.toFixed(2) ?? 'null').join(', ')}`)
+  console.log(`${ok ? 'PASS' : 'FAIL'}  55 Hz 下限检测        measured=${measured.map(hz => hz?.toFixed(2) ?? 'null').join(', ')}`)
+}
+
+{
+  const frequencies = [43.65, 49, 1046.5, 1174.66]
+  const measured = frequencies.map(freq => {
+    const signal = index => 0.15 * Math.sin(2 * Math.PI * freq * index / SAMPLE_RATE)
+    return engine.createPitchDetector(makeAnalyser(signal), 40, 1200)()
+  })
+  const ok = measured.every((hz, index) => hz != null && Math.abs(hz - frequencies[index]) / frequencies[index] < 0.02)
+  if (!ok) failed++
+  console.log(`${ok ? 'PASS' : 'FAIL'}  单人曲库音域           measured=${measured.map(hz => hz?.toFixed(2) ?? 'null').join(', ')}`)
 }
 
 const noise = detect(() => 0.05 * (Math.random() * 2 - 1))

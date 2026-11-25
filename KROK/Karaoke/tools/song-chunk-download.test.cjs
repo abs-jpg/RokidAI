@@ -54,7 +54,7 @@ const api = vm.runInNewContext(source + '\n;({downloadSong,readDownloadedAudio,g
       assert.ok(options.url.startsWith(backup))
       if (options.url.endsWith('/api/songs')) {
         options.success({ statusCode: 200, data: JSON.stringify({ songs: [base] }) })
-      } else if (options.url.endsWith('/prepare')) {
+      } else if (options.url.endsWith('/prepare?variant=instrumental')) {
         assert.equal(options.method, 'POST')
         options.success({ statusCode: 200, data: { song: { ...base, accompaniment: '/big.ogg' } } })
       } else {
@@ -79,7 +79,7 @@ const api = vm.runInNewContext(source + '\n;({downloadSong,readDownloadedAudio,g
       if (url === primary + '/api/songs') return { ok: true, async json() { return {} } }
       throw new TypeError('模拟 fetch 在眼镜运行环境无法连接')
     }
-    if (url.endsWith('/prepare')) {
+    if (url.endsWith('/prepare?variant=instrumental')) {
       return {
         ok: true,
         async json() {
@@ -115,7 +115,7 @@ const api = vm.runInNewContext(source + '\n;({downloadSong,readDownloadedAudio,g
 })
 
 async function main() {
-  const result = await api.downloadSong(base.id, { onProgress: event => progress.push(event) })
+  const result = await api.downloadSong(base.id, 'instrumental', { onProgress: event => progress.push(event) })
   assert.equal(result.offline, true)
 
   const chunkSize = 64 * 1024
@@ -139,12 +139,12 @@ async function main() {
   const catalog = await api.loadSongCatalog()
   assert.equal(catalog.connected, true)
   assert.equal(catalog.songs[0].id, base.id)
-  assert.equal((await api.downloadSong(base.id)).offline, true)
+  assert.equal((await api.downloadSong(base.id, 'instrumental')).offline, true)
   const song = await api.getSongFromLibrary(base.id)
   assert.equal(song.accompaniment, backup + '/big.ogg', '缓存保留备用服务器的实际音频地址')
   assert.deepEqual(new Uint8Array(await api.readDownloadedAudio(song)), audio)
   assert.equal(nativeRequests[0].url, backup + '/api/songs')
-  assert.equal(nativeRequests[1].url, backup + '/api/songs/' + base.id + '/prepare')
+  assert.equal(nativeRequests[1].url, backup + '/api/songs/' + base.id + '/prepare?variant=instrumental')
   assert.equal(nativeRequests.length, 2 + Math.ceil(audio.length / chunkSize))
   console.log('PASS  主入口响应无效时切到备用服务器，原生网络取曲库及下载全部音频分片')
 }

@@ -192,9 +192,11 @@ async function main() {
   let savedRecording
   let nextFrame
   let pitchDot
+  let pitchFeedback
   const canvas = {
-    clearRect() { pitchDot = null }, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, fill() {}, flush() {},
-    arc(x, y) { pitchDot = { x, y } }
+    clearRect() { pitchDot = null; pitchFeedback = null }, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, fill() {}, flush() {},
+    arc(x, y) { pitchDot = { x, y } },
+    fillText(text, x, y) { pitchFeedback = { text, x, y } }
   }
   const recording = vm.runInNewContext(source, {
     ...engine, getRefNoteAt, performance, console,
@@ -234,6 +236,8 @@ async function main() {
   console.log('PASS  暂停绘图仍按时采样，缺失采样按实际记录评分并清理计时器')
 
   let voiceHz = 440
+  recording.minMidi = 60
+  recording.maxMidi = 80
   recording.detectPitch = () => voiceHz
   recording.player = { currentTime: 0, destroy() {} }
   recording.beginFollowing()
@@ -243,6 +247,10 @@ async function main() {
     recording.samplePitch()
   }
   sing(20, 57)
+  recording.drawPitch(canvas, 448, 180, 20, recording.selfPitch)
+  const referenceY = 8 + (80 - 69) * (180 - 16) / (80 - 60)
+  assert.equal(pitchDot.y, referenceY, '第一拍的低八度圆点立即绘制在参考线上')
+  assert.deepEqual(pitchFeedback, { text: 'Perfect', x: pitchDot.x, y: pitchDot.y - 8 }, '提示随圆点绘制在上方')
   sing(40, 69)
   assert.equal(recording.data.selfOctaveShift, 0, '单次低八度识别不能触发音区切换')
   for (let timeMs = 60; timeMs <= 200; timeMs += 20) sing(timeMs, 58)
@@ -258,6 +266,29 @@ async function main() {
   assert.ok(Math.abs(recording.getPitchDotMidi(recording.selfPitch, 260) - 69) < 0.001, '回到原音区的第一帧就不应过度抬高')
   for (let timeMs = 280; timeMs <= 400; timeMs += 20) sing(timeMs, 69)
   assert.equal(recording.data.selfOctaveShift, 0, '回到参考音区后应解除偏移')
+  sing(420, 53)
+  assert.ok(Math.abs(recording.getPitchDotMidi(recording.selfPitch, 420) - 65) < 0.001, '音高偏离超过旧阈值时仍抬到画面内，并留下半音偏差')
+  recording.drawPitch(canvas, 448, 180, 444, recording.selfPitch)
+  assert.equal(pitchFeedback.text, 'Good', '圆点超过宽松范围时显示 Good')
+  sing(460, 45)
+  const lowSample = recording.pitchTrack.at(-1)
+  assert.ok(Math.abs(recording.getPitchDotMidi(recording.selfPitch, 460) - 69) < 0.001, '低两个八度时显示到参考线附近')
+  recording.drawPitch(canvas, 448, 180, 484, recording.selfPitch)
+  assert.equal(pitchFeedback.text, 'Perfect', '提示根据圆点所在的显示音区判断')
+  assert.ok(Math.abs(lowSample.midi - 45) < 0.001)
+  assert.equal(engine.calcAccuracyScore([lowSample], recording.song.refNotes).accuracy, 0, '显示对齐不抵消评分中的两个八度偏差')
+  recording.song.refNotes[0].endMs = 480
+  sing(480, 45)
+  assert.ok(Math.abs(recording.getPitchDotMidi(recording.selfPitch, 480) - 69) < 0.001, '参考线间隙沿用当前显示音区')
+  recording.drawPitch(canvas, 448, 180, 504, recording.selfPitch)
+  assert.equal(pitchFeedback.text, 'Good', '没有参考音符时跟随可见圆点显示 Good')
+  recording.song.refNotes[0].endMs = 1000
+  sing(500, 50.9)
+  sing(520, 51.1)
+  assert.ok(Math.abs(recording.getPitchDotMidi(recording.selfPitch, 520) - 75.1) < 0.001, '八度交界处的轻微波动不能让圆点跳一个八度')
+  sing(560, 70.75)
+  recording.drawPitch(canvas, 448, 180, 584, recording.selfPitch)
+  assert.equal(pitchFeedback.text, 'Perfect', '偏差超过一个半音但仍在宽松范围内')
   recording.releaseAudio()
   console.log('PASS  单人音高显示高频采样、八度稳定切换、保留音准偏差和停唱隐藏')
 
@@ -286,6 +317,7 @@ async function main() {
   recording.samplePitch()
   nextFrame()
   assert.equal(pitchDot, null, '静音不能沿用上一个过期的圆点')
+  assert.equal(pitchFeedback, null, '停唱后文字与圆点同时消失')
   recording.releaseAudio()
   console.log('PASS  播放时钟以 100ms 更新时，真实波形采样仍可绘制和隐藏音准圆点')
 

@@ -15,16 +15,16 @@ const MIN_RMS = 0.003
 const MIN_CLARITY = 0.55
 const CONFIDENCE_THRESHOLD = 0.18
 const DEFAULT_MIN_HZ = 80
-const MAX_HZ = 1000
+const DEFAULT_MAX_HZ = 1000
 
 // Reuse the working buffers and search for the first strong minimum of the normalized difference.
-export function createPitchDetector(analyser, minHz = DEFAULT_MIN_HZ) {
+export function createPitchDetector(analyser, minHz = DEFAULT_MIN_HZ, maxHz = DEFAULT_MAX_HZ) {
   const sampleRate = analyser.context.sampleRate
   const downsample = Math.max(1, Math.floor(sampleRate / 12000))
   const reducedRate = sampleRate / downsample
   const waveform = new Float32Array(analyser.fftSize)
   const window = new Float32Array(Math.floor(waveform.length / downsample))
-  const minLag = Math.floor(reducedRate / MAX_HZ)
+  const minLag = Math.floor(reducedRate / maxHz)
   const maxLag = Math.min(Math.ceil(reducedRate / minHz), Math.floor(window.length / 2) - 1)
   const differences = new Float32Array(maxLag + 2)
   const length = window.length - maxLag - 1
@@ -93,7 +93,7 @@ export function createPitchDetector(analyser, minHz = DEFAULT_MIN_HZ) {
         if (1 - center < MIN_CLARITY) continue
         const offset = (left - right) / (2 * (left - 2 * center + right))
         const hz = reducedRate / (peak + offset)
-        if (hz < minHz || hz > MAX_HZ) break
+        if (hz < minHz || hz > maxHz) break
         return accept(hz)
       }
     }

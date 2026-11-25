@@ -21,11 +21,15 @@ const GUIDE_HEIGHT = 22
 const GUIDE_PADDING = 2
 const PRACTICE_READY_HINT = '确认开始 · 返回'
 const CARD_PITCH_HINT = '双击展开全屏可显示音准 · 返回'
-const MIN_SINGING_HZ = 55
+const BATTLE_MIN_SINGING_HZ = 55
+const SOLO_MIN_SINGING_HZ = 40
+const SOLO_MAX_SINGING_HZ = 1200
 const LOCAL_DOT_DELAY_MS = 24
 const LOCAL_PITCH_GAP_MS = 65
+const PERFECT_PITCH_TOLERANCE = 2
 const OCTAVE_CONFIRM_MS = 120
 const SEMITONES_PER_OCTAVE = 12
+const SOLO_OCTAVE_SWITCH_DISTANCE = SEMITONES_PER_OCTAVE / 2 + 1
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 // 真机采音链路固定延迟估计：麦克风采集缓冲 + 分析窗一半 + 播放输出延迟。
 // 如果真机测试发现曲线整体提前/滞后，只调整 INPUT_LATENCY_MS 即可。
@@ -610,7 +614,9 @@ export default {
       if (this.player !== player || this.audioContext !== context) return
       if (context.state === 'suspended' || context.state === 'closed') throw new Error('音频分析未启动')
 
-      this.detectPitch = createPitchDetector(analyser, MIN_SINGING_HZ)
+      this.detectPitch = this.isBattle
+        ? createPitchDetector(analyser, BATTLE_MIN_SINGING_HZ)
+        : createPitchDetector(analyser, SOLO_MIN_SINGING_HZ, SOLO_MAX_SINGING_HZ)
       this.detectVoice = createVoiceActivityDetector(analyser)
       const analysisWindowMs = 1000 * analyser.fftSize / (2 * context.sampleRate)
       const outputLatencyMs = Number.isFinite(context.baseLatency) ? context.baseLatency * 1000 : 0
@@ -1031,9 +1037,26 @@ export default {
     const difference = ref ? ref.midi - midi : NaN
     const nearestOctave = Math.round(difference / SEMITONES_PER_OCTAVE) * SEMITONES_PER_OCTAVE
     let wantedShift = null
-    if (Math.abs(difference) <= 5) wantedShift = 0
-    else if (Math.abs(nearestOctave) === SEMITONES_PER_OCTAVE &&
-        Math.abs(difference - nearestOctave) <= 3) wantedShift = nearestOctave
+    let soloDisplayShift
+    if (this.isBattle) {
+      if (Math.abs(difference) <= 5) wantedShift = 0
+      else if (Math.abs(nearestOctave) === SEMITONES_PER_OCTAVE &&
+          Math.abs(difference - nearestOctave) <= 3) wantedShift = nearestOctave
+    } else if (voiced) {
+      soloDisplayShift = previous?.midi != null ? previous.shift : trace.shift
+      const displayedMidi = midi + soloDisplayShift
+      const atEdge = displayedMidi <= this.minMidi || displayedMidi >= this.maxMidi
+      if (ref) {
+        // 八度交界处保留一个半音的回差，防止圆点来回跳动。
+        if (atEdge || Math.abs(ref.midi - displayedMidi) > SOLO_OCTAVE_SWITCH_DISTANCE) {
+          soloDisplayShift = nearestOctave
+        }
+        wantedShift = soloDisplayShift
+      } else if (atEdge) {
+        const centerMidi = (this.minMidi + this.maxMidi) / 2
+        soloDisplayShift = Math.round((centerMidi - midi) / SEMITONES_PER_OCTAVE) * SEMITONES_PER_OCTAVE
+      }
+    }
 
     if (wantedShift == null || wantedShift === trace.shift) {
       trace.candidate = null
@@ -1044,8 +1067,9 @@ export default {
       trace.candidate = null
     }
 
-    // 原音更接近参考时立即使用原音坐标，避免等待音区确认期间的跳点。
-    const displayShift = Math.abs(difference) < Math.abs(difference - trace.shift) ? 0 : trace.shift
+    // 单人圆点即时对齐，提示文字等音区稳定后再更新。
+    const displayShift = soloDisplayShift ??
+      (Math.abs(difference) < Math.abs(difference - trace.shift) ? 0 : trace.shift)
     points.push({ timeMs, midi: voiced ? midi + displayShift : null, shift: displayShift })
     while (points[0].timeMs < timeMs - PAST_MS - trace.gapMs) points.shift()
     this.pitchFrameDirty = true
@@ -1210,11 +1234,25 @@ export default {
     }
     if (dotMidi != null) {
       const ref = getRefNoteAt(this.song.refNotes, dotTimeMs)
-      const offPitch = ref && Math.abs(dotMidi - ref.midi) >= 1
+      const pitchError = ref ? Math.abs(dotMidi - ref.midi) : Infinity
+      const offPitch = !!ref && pitchError >= 1
+      const dotX = toX(dotTimeMs)
+      const dotY = toY(dotMidi)
       ctx.beginPath()
-      ctx.arc(toX(dotTimeMs), toY(dotMidi), offPitch ? 5 : 4, 0, 2 * Math.PI)
+      ctx.arc(dotX, dotY, offPitch ? 5 : 4, 0, 2 * Math.PI)
       if (offPitch) ctx.stroke()
       else ctx.fill()
+
+      if (!this.isBattle) {
+        const perfect = pitchError <= PERFECT_PITCH_TOLERANCE
+        const fitsAbove = dotY >= 21
+        ctx.font = 'bold 12px sans-serif'
+        ctx.textAlign = fitsAbove ? 'center' : 'left'
+        ctx.textBaseline = 'bottom'
+        ctx.fillStyle = perfect ? '#4cc773' : 'rgba(76,199,115,0.72)'
+        // 圆点靠近画布上沿时，文字向右错开以免遮挡圆点。
+        ctx.fillText(perfect ? 'Perfect' : 'Good', fitsAbove ? dotX : dotX + 9, Math.max(13, dotY - 8))
+      }
     }
     ctx.flush()
   },

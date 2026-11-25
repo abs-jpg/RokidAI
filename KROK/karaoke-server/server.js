@@ -401,8 +401,15 @@ function publicSong(song) {
   }
 }
 
-async function ensureSongCached(song) {
-  await Promise.all(uniqueOnlineVariants(song).map(variant => ensureAudioVariantCached(song, variant)))
+async function ensureSongCached(song, kind) {
+  if (kind === null) {
+    await Promise.all(uniqueOnlineVariants(song).map(variant => ensureAudioVariantCached(song, variant)))
+  } else {
+    const variant = audioVariants(song).find(item => item.kind === kind)
+    if (!variant) throw new RequestError(400, 'INVALID_AUDIO_VARIANT')
+    if (variant.source) await ensureAudioVariantCached(song, variant)
+    else if (!variant.bundled) throw new RequestError(404, 'AUDIO_VARIANT_NOT_FOUND')
+  }
   return publicSong(song)
 }
 
@@ -764,7 +771,7 @@ async function route(req, res) {
     limitRequests(req, res, 'songPrepare', 120)
     const song = SONGS_BY_ID.get(prepareMatch[1])
     if (!song) throw new RequestError(404, 'SONG_NOT_FOUND')
-    const prepared = await ensureSongCached(song)
+    const prepared = await ensureSongCached(song, url.searchParams.get('variant'))
     send(res, 200, { song: prepared })
     return
   }

@@ -33,7 +33,9 @@ async function main() {
   let api
   let source
   try {
+    const sourceRequests = []
     source = http.createServer((req, res) => {
+      sourceRequests.push(req.url)
       const wav = req.url.includes('instrumental')
       const body = Buffer.from(wav ? 'RIFF-test' : 'OggS-test')
       res.writeHead(200, {
@@ -69,6 +71,14 @@ async function main() {
       stdio: ['ignore', 'pipe', 'pipe']
     })
     const base = await waitForBase(api)
+    const selectedResponse = await fetch(`${base}/api/songs/variants/prepare?variant=instrumental`, { method: 'POST' })
+    assert.equal(selectedResponse.status, 200)
+    const selectedSong = (await selectedResponse.json()).song
+    assert.equal(selectedSong.instrumentalAccompaniment, '/media/songs/variants-instrumental.wav')
+    assert.equal(selectedSong.guideAccompaniment, null)
+    assert.deepEqual(sourceRequests, ['/instrumental.wav'], '选择纯音乐版时服务器只准备该版')
+    const invalidResponse = await fetch(`${base}/api/songs/variants/prepare?variant=other`, { method: 'POST' })
+    assert.equal(invalidResponse.status, 400)
     const response = await fetch(`${base}/api/songs/variants/prepare`, { method: 'POST' })
     assert.equal(response.status, 200)
     const { song } = await response.json()
@@ -76,6 +86,7 @@ async function main() {
     assert.equal(song.instrumentalAccompaniment, '/media/songs/variants-instrumental.wav')
     assert.equal(song.accompaniment, song.instrumentalAccompaniment)
     assert.equal(song.cached, true)
+    assert.deepEqual(sourceRequests, ['/instrumental.wav', '/guide.ogg'], '旧客户端仍可准备两版，已缓存版本不重复下载')
 
     const guide = await fetch(`${base}${song.guideAccompaniment}`)
     const instrumental = await fetch(`${base}${song.instrumentalAccompaniment}`)

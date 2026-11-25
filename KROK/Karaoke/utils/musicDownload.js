@@ -12,8 +12,13 @@ const DOUBLE_TAP_SETTLE_MS = 200
 const ADD_MUSIC = 'add-music'
 const MAX_REQUEST_CHARS = 160
 const CATEGORY_HINT = '滑动选语种 · 单击进入 · 双击返回首页'
-const SONG_HINT = '滑动选歌 · 单击下载 · 双击返回语种'
+const SONG_HINT = '滑动选歌 · 单击选版本 · 双击返回语种'
+const CHOICE_HINT = '上下切换 · 返回'
 const REQUEST_HINT = '滑动切换 · 单击确认 · 双击返回语种'
+const AUDIO_OPTIONS = [
+  { variant: 'guide', label: '带歌词版' },
+  { variant: 'instrumental', label: '纯音乐版' }
+]
 const CATEGORIES = [
   { key: 'zh', label: '中文歌' },
   { key: 'en', label: '英文歌' },
@@ -66,9 +71,17 @@ function actionValue(event, kind) {
   return id?.startsWith(prefix) ? id.slice(prefix.length) : undefined
 }
 
+function downloadedVersions(song) {
+  return {
+    guide: Boolean(song.bundled || song.downloadedVariants?.guide),
+    instrumental: Boolean(song.bundled || song.downloadedVariants?.instrumental)
+  }
+}
+
 export class MusicDownload {
   constructor(page) {
     this.page = page
+    this.catalogRevision = 0
   }
 
   get data() {
@@ -109,6 +122,7 @@ export class MusicDownload {
       message: '正在连接曲库',
       hintText: SONG_HINT
     })
+    if (songId && songs[selectedIdx]?.id === songId) this.openChoice(selectedIdx)
     this.refreshCatalog()
   }
 
@@ -122,14 +136,15 @@ export class MusicDownload {
   async refreshCatalog() {
     if (this.refreshing) return
     this.refreshing = true
+    const revision = this.catalogRevision
     if (this.data.phase === 'songs') this.setData({ catalogLoading: true, message: '正在连接曲库' })
     try {
       const result = await loadSongCatalog()
-      if (this.closed || this.downloadController) return
+      if (this.closed || revision !== this.catalogRevision) return
       this.useCatalog(result.songs, result.connected)
     } catch (error) {
       console.error('load download catalog error', error)
-      if (!this.closed && !this.downloadController) this.useCatalog(this.catalog, false)
+      if (!this.closed && revision === this.catalogRevision) this.useCatalog(this.catalog, false)
     } finally {
       this.refreshing = false
     }
@@ -148,7 +163,7 @@ export class MusicDownload {
     const selectedId = this.data.songs[this.data.selectedIdx]?.id
     const existingIdx = list.findIndex(song => song.id === selectedId)
     const selectedIdx = list.length ? Math.max(0, existingIdx) : -1
-    this.setData({
+    const patch = {
       songs: list,
       selectedIdx,
       scrollTop: Math.max(0, selectedIdx) * ROW_HEIGHT,
@@ -156,7 +171,14 @@ export class MusicDownload {
       catalogConnected: connected,
       catalogLoading: false,
       message: connected ? '' : (list.length ? '暂未连接曲库 · 显示已有曲目' : '')
-    })
+    }
+    if (this.data.choiceVisible) {
+      const song = list.find(item => item.id === this.data.choiceSongId)
+      if (song) patch.choiceDownloaded = downloadedVersions(song)
+      else if (!this.downloadController) patch.choiceVisible = false
+      else return
+    }
+    this.setData(patch)
   }
 
   mergeCachedCatalog(songs) {
@@ -218,7 +240,7 @@ export class MusicDownload {
     this.doubleTapTimer = setTimeout(() => {
       this.clearTempleTaps()
       rememberDownloadReturn()
-      this.page.goBack()
+      this.back()
     }, DOUBLE_TAP_SETTLE_MS)
   }
 
@@ -233,7 +255,7 @@ export class MusicDownload {
     }
     if (action === 'back') {
       this.clearTempleTaps()
-      this.page.goBack()
+      this.back()
       return
     }
 
@@ -257,6 +279,10 @@ export class MusicDownload {
 
   stepSelection(direction) {
     const { phase, categoryIndex, selectedIdx, songs } = this.data
+    if (this.data.choiceVisible) {
+      this.selectChoice(1 - this.data.choiceIndex)
+      return
+    }
     if (phase === 'request') {
       this.setData({ requestAction: direction < 0 ? 0 : 1 })
       return
@@ -274,7 +300,9 @@ export class MusicDownload {
     if (this.closed) return
     this.clearTempleTaps()
     const { phase, requestAction, categoryIndex, selectedIdx } = this.data
-    if (phase === 'request') {
+    if (this.data.choiceVisible) {
+      this.downloadSelected()
+    } else if (phase === 'request') {
       if (requestAction === 0) this.onRequestRecord()
       else this.onRequestSend()
     } else if (phase === 'categories') {
@@ -282,12 +310,12 @@ export class MusicDownload {
     } else if (!this.data.songs.length && !this.data.catalogConnected) {
       this.refreshCatalog()
     } else {
-      this.downloadSelected(selectedIdx)
+      this.openChoice(selectedIdx)
     }
   }
 
   onTapSong(event) {
-    if (this.page.navigating) return
+    if (this.page.navigating || this.data.choiceVisible) return
     const id = actionValue(event, 'song')
     const selectedIdx = this.data.songs.findIndex(song => song.id === id)
     if (selectedIdx < 0) return
@@ -296,8 +324,38 @@ export class MusicDownload {
       this.openCategory(this.data.categoryIndex, id)
       return
     }
-    this.setData({ selectedIdx, scrollTop: selectedIdx * ROW_HEIGHT })
-    this.downloadSelected(selectedIdx)
+    this.openChoice(selectedIdx)
+  }
+
+  openChoice(index) {
+    const song = this.data.songs[index]
+    if (!song) return
+    const choiceDownloaded = downloadedVersions(song)
+    this.setData({
+      selectedIdx: index,
+      scrollTop: index * ROW_HEIGHT,
+      choiceVisible: true,
+      choiceSongId: song.id,
+      choiceSongName: song.name,
+      choiceDownloaded,
+      choiceIndex: choiceDownloaded.guide && !choiceDownloaded.instrumental ? 1 : 0,
+      choiceHint: CHOICE_HINT,
+      downloadProgress: 0
+    })
+  }
+
+  selectChoice(index) {
+    if (!this.data.choiceVisible || this.downloadController || !AUDIO_OPTIONS[index]) return
+    this.setData({ choiceIndex: index, choiceHint: CHOICE_HINT })
+  }
+
+  back() {
+    if (this.data.choiceVisible) {
+      this.cancelDownload()
+      this.setData({ choiceVisible: false, choiceDownloading: false, downloadProgress: 0 })
+      return
+    }
+    this.page.goBack()
   }
 
   onTapCategory(event) {
@@ -418,63 +476,63 @@ export class MusicDownload {
     controller?.abort()
   }
 
-  async downloadSelected(index = this.data.selectedIdx) {
-    if (this.data.phase !== 'songs' || this.downloadController) return
-    const song = this.data.songs[index]
+  async downloadSelected() {
+    if (!this.data.choiceVisible || this.downloadController) return
+    const { variant, label } = AUDIO_OPTIONS[this.data.choiceIndex]
+    if (this.data.choiceDownloaded[variant]) return
+    const song = this.data.songs.find(item => item.id === this.data.choiceSongId)
     if (!song) return
-    if (song.bundled) {
-      this.setData({ message: '内置歌曲，无需下载' })
-      return
-    }
-    if (song.downloaded) {
-      this.setData({ message: '已下载到本机，可以离线演唱' })
-      return
-    }
 
     const controller = new AbortController()
     this.downloadController = controller
-    this.setData({ catalogLoading: false, downloadProgress: 0, downloadLabel: '0%', message: '正在下载 · ' + song.name })
+    this.setData({ choiceDownloading: true, downloadProgress: 0, choiceHint: '正在准备' + label + '…' })
     try {
-      let lastProgress = ''
-      const result = await downloadSong(song.id, {
+      const result = await downloadSong(song.id, variant, {
         signal: controller.signal,
-        onProgress: ({ bytes, total, variant, index, count }) => {
+        onProgress: ({ bytes, total }) => {
           if (this.downloadController !== controller) return
           const percent = total > 0 ? Math.min(100, Math.floor(100 * bytes / total)) : 0
-          const progress = total > 0 ? percent + '%' : Math.floor(bytes / 1024) + ' KB'
-          if (progress === lastProgress) return
-          lastProgress = progress
-          const stage = count > 1 ? (index === 0 ? '带唱版 ' : '纯音乐版 ') : ''
+          if (percent === this.data.downloadProgress) return
           this.setData({
             downloadProgress: percent,
-            downloadLabel: progress,
-            message: '正在下载 ' + stage + progress + ' · ' + song.name
+            choiceHint: '正在下载 · ' + percent + '%'
           })
         }
       })
       if (this.downloadController !== controller) return
-      const mark = item => item.id === song.id ? { ...item, cached: true, downloaded: result.offline } : item
+      if (!result.offline) {
+        this.setData({ choiceHint: '当前环境不支持离线存储' })
+        return
+      }
+      this.catalogRevision++
+      const choiceDownloaded = result.downloadedVariants
+      const mark = item => item.id === song.id ? {
+        ...item,
+        downloadedVariants: choiceDownloaded,
+        downloaded: choiceDownloaded.guide && choiceDownloaded.instrumental
+      } : item
       this.catalog = (this.catalog || downloadCatalog).map(mark)
       this.setData({
         catalogConnected: true,
+        catalogLoading: false,
         songs: this.data.songs.map(mark),
-        downloadProgress: 0,
-        downloadLabel: this.data.songs.length + ' 首',
-        message: result.offline ? '两个演唱版本已下载 · ' + song.name : '当前环境不支持离线存储 · 可在线播放'
+        choiceDownloaded,
+        choiceHint: label + '已下载'
       })
     } catch (error) {
       if (this.downloadController === controller) {
         if (error.name !== 'AbortError') console.error('download song error', error)
         this.setData({
-          downloadProgress: 0,
-          downloadLabel: this.data.songs.length + ' 首',
-          message: error.name === 'AbortError'
+          choiceHint: error.name === 'AbortError'
             ? '下载已取消'
             : '下载失败 · ' + (error.message || '再确认重试')
         })
       }
     } finally {
-      if (this.downloadController === controller) this.downloadController = null
+      if (this.downloadController === controller) {
+        this.downloadController = null
+        this.setData({ choiceDownloading: false, downloadProgress: 0 })
+      }
     }
   }
 }

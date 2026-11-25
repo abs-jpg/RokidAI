@@ -4416,6 +4416,238 @@
           "endMs": 288577
         }
       ]
+    },
+    {
+      "id": "night-dancer",
+      "name": "NIGHT DANCER",
+      "artist": "imase",
+      "album": "NIGHT DANCER",
+      "category": "日本語",
+      "tag": "练习",
+      "difficulty": 2,
+      "durationMs": 211114,
+      "chartVersion": 1,
+      "scoringVersion": 5,
+      "audioSource": "/source/night-dancer.ogg",
+      "instrumentalSource": "/source/night-dancer-instrumental.ogg",
+      "melodyFile": "melodies/night-dancer.json",
+      "lyrics": [
+        {
+          "text": "どうでもいいような 夜だけど",
+          "startMs": 690,
+          "endMs": 4003
+        },
+        {
+          "text": "響めき 煌めきと君も",
+          "startMs": 4630,
+          "endMs": 7540
+        },
+        {
+          "text": "まだ止まった 刻む針も",
+          "startMs": 24670,
+          "endMs": 27267
+        },
+        {
+          "text": "入り浸った 散らかる部屋も",
+          "startMs": 28860,
+          "endMs": 32641
+        },
+        {
+          "text": "変わらないね 思い出しては",
+          "startMs": 32960,
+          "endMs": 35949
+        },
+        {
+          "text": "二人 歳を重ねてた",
+          "startMs": 37030,
+          "endMs": 39349
+        },
+        {
+          "text": "また止まった 落とす針を",
+          "startMs": 41150,
+          "endMs": 43448
+        },
+        {
+          "text": "よく流した 聞き飽きるほど",
+          "startMs": 45140,
+          "endMs": 48911
+        },
+        {
+          "text": "変わらないね 変わらないで",
+          "startMs": 49300,
+          "endMs": 51699
+        },
+        {
+          "text": "いられたのは 君だけか",
+          "startMs": 53460,
+          "endMs": 56270
+        },
+        {
+          "text": "無駄話で はぐらかして",
+          "startMs": 57470,
+          "endMs": 60447
+        },
+        {
+          "text": "触れた先を ためらうように",
+          "startMs": 61610,
+          "endMs": 64256
+        },
+        {
+          "text": "足踏みして ズレた針を余所に",
+          "startMs": 65680,
+          "endMs": 69817
+        },
+        {
+          "text": "揃い始めてた 息が",
+          "startMs": 70650,
+          "endMs": 73052
+        },
+        {
+          "text": "どうでもいいような 夜だけど",
+          "startMs": 74510,
+          "endMs": 76728
+        },
+        {
+          "text": "響めき 煌めきと君も（踊ろう）",
+          "startMs": 78530,
+          "endMs": 81797
+        },
+        {
+          "text": "どうでもいいような 夜だけど ああ",
+          "startMs": 82810,
+          "endMs": 86134
+        },
+        {
+          "text": "二人刻もう",
+          "startMs": 87170,
+          "endMs": 88051
+        },
+        {
+          "text": "透き通った 白い肌も",
+          "startMs": 106590,
+          "endMs": 110890
+        },
+        {
+          "text": "その笑った 無邪気な顔も",
+          "startMs": 110890,
+          "endMs": 114180
+        },
+        {
+          "text": "変わらないね 変わらないで",
+          "startMs": 115090,
+          "endMs": 117543
+        },
+        {
+          "text": "いられるのは 今だけか",
+          "startMs": 119120,
+          "endMs": 121649
+        },
+        {
+          "text": "見つめるほどに",
+          "startMs": 123730,
+          "endMs": 125124
+        },
+        {
+          "text": "溢れるメモリー",
+          "startMs": 125980,
+          "endMs": 127397
+        },
+        {
+          "text": "浮つく心に コーヒーを",
+          "startMs": 128260,
+          "endMs": 131226
+        },
+        {
+          "text": "乱れた髪に 掠れたメロディー",
+          "startMs": 132140,
+          "endMs": 135329
+        },
+        {
+          "text": "混ざりあってよう もう一度",
+          "startMs": 136410,
+          "endMs": 139387
+        },
+        {
+          "text": "どうでもいいような 夜だけど",
+          "startMs": 140390,
+          "endMs": 142843
+        },
+        {
+          "text": "ときめき 色めきと君も（踊ろう）",
+          "startMs": 144120,
+          "endMs": 147421
+        },
+        {
+          "text": "どうでもいいような 夜だけど ああ",
+          "startMs": 148580,
+          "endMs": 152304
+        },
+        {
+          "text": "二人刻もう",
+          "startMs": 152650,
+          "endMs": 154111
+        },
+        {
+          "text": "夜は長い おぼつかない",
+          "startMs": 156420,
+          "endMs": 160155
+        },
+        {
+          "text": "今にも止まりそうな ミュージック",
+          "startMs": 160510,
+          "endMs": 163856
+        },
+        {
+          "text": "君といたい 溺れてたい",
+          "startMs": 164720,
+          "endMs": 167586
+        },
+        {
+          "text": "明日がこなくたって もういいの",
+          "startMs": 168790,
+          "endMs": 171533
+        },
+        {
+          "text": "どうでもいいような 夜だけど",
+          "startMs": 175170,
+          "endMs": 177121
+        },
+        {
+          "text": "響めき 煌めきと君も（踊ろう）",
+          "startMs": 179150,
+          "endMs": 182561
+        },
+        {
+          "text": "どうでもいいような 夜だけど ああ",
+          "startMs": 183340,
+          "endMs": 186573
+        },
+        {
+          "text": "愛して",
+          "startMs": 190210,
+          "endMs": 191236
+        },
+        {
+          "text": "どうでもいいから 僕だけを",
+          "startMs": 191650,
+          "endMs": 193884
+        },
+        {
+          "text": "ふらつき よろめきながらも（踊ろう）",
+          "startMs": 195500,
+          "endMs": 198888
+        },
+        {
+          "text": "どうでもいいような 夜だけど ああ",
+          "startMs": 199880,
+          "endMs": 203448
+        },
+        {
+          "text": "二人刻もう",
+          "startMs": 204060,
+          "endMs": 206185
+        }
+      ]
     }
   ]
 }

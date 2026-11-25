@@ -16,6 +16,11 @@ function navItems(connected) {
   ]
 }
 
+function availableVersions(song) {
+  return [Boolean(song?.bundled || song?.downloadedVariants?.guide),
+    Boolean(song?.bundled || song?.downloadedVariants?.instrumental)]
+}
+
 export default {
   data: {
     songs,
@@ -26,6 +31,7 @@ export default {
     hintText: '上下选择 · 确认',
     choiceVisible: false,
     choiceIndex: 0,
+    choiceAvailable: [false, false],
     choiceSongId: '',
     choiceSongName: '',
     defaultAudioReady: false,
@@ -51,18 +57,29 @@ export default {
     try {
       const result = await loadSongCatalog()
       if (this.unloaded) return
-      const playable = result.songs.filter(song => song.bundled || song.downloaded)
+      const playable = result.songs.filter(song => availableVersions(song).some(Boolean))
       const songCount = playable.length
       const selectedIdx = songCount
         ? Math.max(0, Math.min(this.data.selectedIdx, songCount - 1))
         : 0
-      this.setData({
+      const patch = {
         songs: playable,
         songCount,
         selectedIdx,
         scrollTop: selectedIdx * ROW_HEIGHT,
         navItems: navItems(result.connected || isServerConnected())
-      })
+      }
+      if (this.data.choiceVisible) {
+        const choiceAvailable = availableVersions(playable.find(song => song.id === this.data.choiceSongId))
+        if (choiceAvailable.some(Boolean)) {
+          patch.choiceAvailable = choiceAvailable
+          if (!choiceAvailable[this.data.choiceIndex]) patch.choiceIndex = choiceAvailable.indexOf(true)
+        } else {
+          patch.choiceVisible = false
+          patch.hintText = '音频还未下载 · 上下选择'
+        }
+      }
+      this.setData(patch)
     } catch (e) {
       console.error('load song catalog error', e)
     }
@@ -99,7 +116,7 @@ export default {
         event.preventDefault()
         const count = this.data.choiceOptions.length
         const offset = code === 'ArrowUp' ? -1 : 1
-        this.setData({ choiceIndex: (this.data.choiceIndex + offset + count) % count })
+        this.selectChoice((this.data.choiceIndex + offset + count) % count)
         return
       }
       if (code === 'Enter') {
@@ -132,16 +149,22 @@ export default {
   },
 
   onTapChoice(event) {
-    this.setData({ choiceIndex: Number(event.currentTarget.dataset.idx) })
+    this.selectChoice(Number(event.currentTarget.dataset.idx))
+  },
+
+  selectChoice(index) {
+    if (this.data.choiceAvailable[index]) this.setData({ choiceIndex: index })
   },
 
   async activate(index) {
     const song = this.data.songs[index]
     if (song) {
+      const choiceAvailable = availableVersions(song)
       this.setData({
         selectedIdx: index,
         choiceVisible: true,
-        choiceIndex: 0,
+        choiceAvailable,
+        choiceIndex: choiceAvailable.indexOf(true),
         choiceSongId: song.id,
         choiceSongName: song.name,
         hintText: '选择版本 · 确认开始'
@@ -160,7 +183,7 @@ export default {
   },
 
   async confirmChoice() {
-    if (this.choosing) return
+    if (this.choosing || !this.data.choiceAvailable[this.data.choiceIndex]) return
     const option = this.data.choiceOptions[this.data.choiceIndex]
     const song = this.data.songs.find(item => item.id === this.data.choiceSongId)
     if (!option || !song) return
@@ -248,26 +271,26 @@ export default {
         </view>
         <view class="choice-options">
           <view
-            class="choice-option choice-option-first {{choiceIndex === 0 ? 'choice-active' : ''}}"
+            class="choice-option choice-option-first {{choiceIndex === 0 ? 'choice-active' : ''}} {{choiceAvailable[0] ? '' : 'choice-disabled'}}"
             bindtap="onTapChoice"
             data-idx="0"
           >
             <view class="choice-radio"><view class="choice-radio-dot" ink:if="{{choiceIndex === 0}}"></view></view>
             <view class="choice-copy">
               <text class="choice-label">带歌词版</text>
-              <text class="choice-desc">{{choiceOptions[0].desc}}</text>
+              <text class="choice-desc">{{choiceAvailable[0] ? choiceOptions[0].desc : '还未下载此音频'}}</text>
             </view>
             <text class="choice-selected" ink:if="{{choiceIndex === 0}}">已选</text>
           </view>
           <view
-            class="choice-option {{choiceIndex === 1 ? 'choice-active' : ''}}"
+            class="choice-option {{choiceIndex === 1 ? 'choice-active' : ''}} {{choiceAvailable[1] ? '' : 'choice-disabled'}}"
             bindtap="onTapChoice"
             data-idx="1"
           >
             <view class="choice-radio"><view class="choice-radio-dot" ink:if="{{choiceIndex === 1}}"></view></view>
             <view class="choice-copy">
               <text class="choice-label">纯音乐版</text>
-              <text class="choice-desc">{{choiceOptions[1].desc}}</text>
+              <text class="choice-desc">{{choiceAvailable[1] ? choiceOptions[1].desc : '还未下载此音频'}}</text>
             </view>
             <text class="choice-selected" ink:if="{{choiceIndex === 1}}">已选</text>
           </view>
@@ -530,6 +553,14 @@ export default {
 .choice-active {
   border-color: var(--green-100);
   background-color: var(--green-12);
+}
+
+.choice-disabled {
+  border-color: var(--green-12);
+}
+
+.choice-disabled .choice-label, .choice-disabled .choice-desc, .choice-disabled .choice-radio {
+  opacity: 0.6;
 }
 
 .choice-radio {
