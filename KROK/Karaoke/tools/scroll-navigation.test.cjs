@@ -7,19 +7,23 @@ const read = path => readFileSync(join(__dirname, '..', path), 'utf8')
 const app = JSON.parse(read('app.json'))
 const homeScript = pageScript('home')
 const downloadScript = pageScript('download')
+const choiceScript = pageScript('song-choice', 'choice')
 const returnSource = withoutImports(read('utils/downloadReturn.js')).replace(/^export /gm, '')
 const previewSource = read('utils/downloadCatalog.js').replace(/^export /gm, '')
 const downloadCatalog = vm.runInNewContext(previewSource + '\ndownloadCatalog')
 const downloadSource = withoutImports(read('utils/musicDownload.js')).replace('export class', 'class')
+const choiceSource = read('utils/songChoice.js').replace(/^export /gm, '')
 const downloadPath = '/pages/download/download'
+const choicePath = '/pages/song-choice/choice'
 assert.ok(app.pages.includes(downloadPath.slice(1)))
+assert.ok(app.pages.includes(choicePath.slice(1)))
 
 function withoutImports(source) {
   return source.replace(/^import .*$/gm, '')
 }
 
-function pageScript(name) {
-  return withoutImports(read('pages/' + name + '/' + name + '.ink').match(/<script setup>([\s\S]*?)<\/script>/)[1])
+function pageScript(name, filename = name) {
+  return withoutImports(read('pages/' + name + '/' + filename + '.ink').match(/<script setup>([\s\S]*?)<\/script>/)[1])
     .replace('export default', 'page =')
 }
 
@@ -34,7 +38,7 @@ function createTestApp(songs, globals = {}) {
   let nextTimer = 0
   const timers = new Map()
   const guards = vm.runInNewContext(returnSource + '\n;({ ' +
-    'isDownloadReturnEcho, rememberDownloadReturn, rememberDownloadConfirm, clearDownloadConfirmEcho, ' +
+    'isDownloadReturnEcho, isRecentReturn, isReturnKey, rememberDownloadReturn, rememberDownloadConfirm, clearDownloadConfirmEcho, ' +
     'setDownloadInputPage, clearDownloadInputPage, forwardDownloadInput, takeDownloadInput })', {
     Date: { now: () => now }
   })
@@ -67,37 +71,87 @@ function createTestApp(songs, globals = {}) {
   })
 
   const stack = []
+  const appInstance = { globalData: {} }
+  const getApp = () => appInstance
+  let programmaticBacks = 0
   const current = () => stack.at(-1)
-  const wx = {
-    navigateTo({ url, success }) {
-      const route = new URL(url, 'https://test.invalid')
-      if (route.pathname === '/pages/record/record') {
-        stack.push({ query: Object.fromEntries(route.searchParams) })
-        success?.()
-        return
-      }
-      assert.equal(route.pathname, downloadPath)
-      current().onHide?.()
-      const page = loadPage(downloadScript, { wx, MusicDownload, ...guards })
-      stack.push(page)
-      page.onLoad(Object.fromEntries(route.searchParams))
-      page.onShow()
-      success?.()
+  function hostBack() {
+    assert.ok(stack.length > 1, '返回不能把首页从页面栈移除')
+    const page = stack.pop()
+    page.onHide?.()
+    page.onUnload?.()
+    current().onShow?.()
+  }
+  const canvas = {
+    beginPath() { this.segments = [] },
+    moveTo(x, y) { this.from = [x, y] },
+    lineTo(x, y) { this.segments.push([...this.from, x, y]); this.from = [x, y] },
+    clearRect() { globals.onChoiceClear?.() },
+    stroke() {
+      if (this.segments.length === 1) globals.onChoiceLine?.(...this.segments[0])
     },
-    navigateBack() {
-      assert.ok(stack.length > 1, '返回不能把首页从页面栈移除')
+    fill() {}, flush() {},
+    arc(...args) { globals.onChoiceArc?.(...args) }
+  }
+  const wx = {
+    createCanvasContext: () => canvas,
+    navigateTo({ url, complete }) {
+      const route = new URL(url, 'https://test.invalid')
+      const query = Object.fromEntries(route.searchParams)
+      current().onHide?.()
+      let page
+      if (route.pathname === choicePath) {
+        page = loadPage(choiceScript, {
+          ...runtime, ...choice, ...guards, wx, getApp,
+          getSongById: globals.getSongById || (() => null),
+          preloadSongAudio: globals.preloadSongAudio
+        })
+      } else if (route.pathname === downloadPath) {
+        page = loadPage(downloadScript, { wx, MusicDownload, ...guards })
+      } else {
+        assert.ok(['/pages/leaderboard/leaderboard', '/pages/battle/battle'].includes(route.pathname))
+        page = { path: route.pathname }
+      }
+      stack.push(page)
+      page.onLoad?.(query)
+      page.onShow?.()
+      complete?.()
+    },
+    redirectTo({ url }) {
+      const route = new URL(url, 'https://test.invalid')
+      assert.ok(['/pages/record/record', '/pages/phrase/phrase'].includes(route.pathname))
       const page = stack.pop()
       page.onHide()
       page.onUnload()
-      current().onShow?.()
+      stack.push({ query: Object.fromEntries(route.searchParams) })
+    },
+    navigateBack({ delta = 1, success } = {}) {
+      assert.equal(delta, 1)
+      programmaticBacks++
+      hostBack()
+      success?.()
     }
   }
   const homeSongs = Array.from({ length: 20 }, (_, i) => ({ id: 'h' + i, bundled: true }))
-  const homeCatalog = [...homeSongs, ...songs]
+  const runtime = {
+    console,
+    performance: { now: () => now },
+    setTimeout(run, ms) { const id = ++nextTimer; timers.set(id, { at: now + ms, run }); return id },
+    clearTimeout(id) { timers.delete(id) },
+    requestAnimationFrame(run) { const id = ++nextTimer; timers.set(id, { at: now + 16, run }); return id },
+    cancelAnimationFrame(id) { timers.delete(id) },
+    AbsoluteOrientationSensor: globals.AbsoluteOrientationSensor,
+    Gyroscope: globals.Gyroscope
+  }
+  const choice = vm.runInNewContext(choiceSource + '\n;({ SongChoice, songChoiceLayout, phraseAimSession })', runtime)
   const home = loadPage(homeScript, {
-    ...guards, console, wx, songs: homeSongs,
+    ...guards, ...runtime, ...choice, wx, getApp, songs: homeSongs,
     isServerConnected: () => false,
-    loadSongCatalog: async () => ({ songs: homeCatalog, connected: false })
+    preloadSongAudio: async () => ({}),
+    loadSongCatalog: async () => ({
+      songs: [...homeSongs, ...songs],
+      connected: globals.homeConnected?.() || false
+    })
   })
   stack.push(home)
   function key(code, { delay = 300, pressed = false, appOnly = false, ...fields } = {}) {
@@ -109,6 +163,7 @@ function createTestApp(songs, globals = {}) {
     }
     if (!appOnly) current()[pressed ? 'onKeyDown' : 'onKeyUp']?.(event)
     if (!event.stopped) guards.forwardDownloadInput(event, pressed)
+    if (!pressed && code === 'Backspace' && !event.defaultPrevented) hostBack()
     return !!event.defaultPrevented
   }
   function openDownload() {
@@ -117,7 +172,10 @@ function createTestApp(songs, globals = {}) {
     assert.equal(current().data.phase, 'categories', '首页确认只打开语言选择')
     return current()
   }
-  return { home, stack, current, key, advance, openDownload, hostBack: wx.navigateBack }
+  return { home, stack, current, key, advance, openDownload, hostBack,
+    get programmaticBacks() { return programmaticBacks },
+    phraseAimSession: choice.phraseAimSession, createCanvas: () => canvas,
+    createChoice: (page, layout) => new choice.SongChoice(page, layout, () => canvas) }
 }
 
 async function checkNavigation() {
@@ -187,19 +245,121 @@ async function checkNavigation() {
   assert.equal(key('Backspace'), true)
   assert.equal(current(), categories)
   assert.equal(categories.data.categoryIndex, 1)
-  assert.equal(key('Backspace'), true)
+  assert.equal(categories.data.phase, 'categories')
+  assert.equal(key('Backspace'), false)
   assert.equal(current(), home)
 }
 
 function checkNativeBack() {
-  const { home, current, key, openDownload, hostBack } = createTestApp([])
+  const flow = createTestApp([])
+  const { home, current, key, openDownload, stack } = flow
   const categories = openDownload()
+  assert.equal(key('Backspace', { pressed: true }), false)
+  assert.equal(key('Backspace'), false, '语种页和联机大厅一样交给宿主返回')
+  assert.equal(current(), home)
+
+  openDownload()
   key('Enter')
   assert.equal(current().data.phase, 'songs')
-  hostBack()
-  assert.equal(current(), categories, '宿主直接返回也应退到语言选择')
-  hostBack()
-  assert.equal(current(), home, '宿主再返回应显示首页')
+  assert.equal(stack.length, 2, '歌曲列表和语种选择使用同一个页面')
+  assert.notEqual(current(), categories)
+  assert.equal(key('Backspace'), true, '歌曲列表像排行榜一样拦截返回键并切换状态')
+  assert.equal(current().data.phase, 'categories')
+  assert.equal(key('Backspace'), false)
+  assert.equal(current(), home)
+  assert.equal(flow.programmaticBacks, 0, '系统返回键不应额外触发程序返回')
+}
+
+async function checkHomeFocusAfterReturning() {
+  const downloaded = []
+  let connected = false
+  const { home, current, hostBack } = createTestApp(downloaded, { homeConnected: () => connected })
+  for (const [index, url] of home.data.navItems.map((item, index) => [index, item.url])) {
+    home.onTapNav({ currentTarget: { dataset: { idx: index } } })
+    if (url === downloadPath) assert.equal(current().data.phase, 'categories')
+    else assert.equal(current().path, url)
+    downloaded.push({ id: 'downloaded-' + index, downloadedVariants: { guide: true } })
+    connected = !connected
+    hostBack()
+    assert.equal(current(), home)
+    assert.equal(home.data.selectedIdx, home.data.songCount + index, '返回时立即选中打开的入口')
+    await new Promise(setImmediate)
+    assert.equal(home.data.navItems[home.data.selectedIdx - home.data.songCount].url, url,
+      '新增曲目或排行榜标签变化后仍选中同一入口')
+  }
+}
+
+async function checkChooserNativeAndLogicalBack() {
+  const flow = createTestApp([
+    { id: 'cached', name: '稻香 %20 & 梦', downloadedVariants: { guide: true } }
+  ])
+  const { home, current, key, advance } = flow
+  await home.refreshCatalog()
+  const index = home.data.songs.findIndex(song => song.id === 'cached')
+  home.activate(index)
+  assert.equal(current().data.choiceSongName, '稻香 %20 & 梦', '歌名不通过 URL 编码传递')
+  assert.equal(key('Backspace', { delay: 40, pressed: true, appOnly: true }), false)
+  assert.notEqual(current(), home, '按下返回键时仍停留在当前页')
+  assert.equal(key('Backspace', { delay: 40 }), false)
+  assert.equal(current(), home, '转场过程中也能返回首页')
+  assert.equal(key('Backspace', { delay: 270, appOnly: true }), true, '吞掉迟到的宿主返回')
+  assert.equal(home.data.songs[home.data.selectedIdx].id, 'cached')
+
+  advance(300)
+  home.activate(index)
+  assert.equal(key('GlobalHook'), false, '原始镜腿按键交给宿主识别')
+  key('GlobalHook', { delay: 150 })
+  assert.equal(key('Backspace', { delay: 100 }), false)
+  advance(500)
+  assert.equal(current(), home, '宿主弹出准星页后，取消待执行的双击返回')
+  assert.equal(flow.programmaticBacks, 0, '收到系统返回键时不主动调用页面返回')
+
+  home.activate(index)
+  assert.equal(key('Unidentified', { key: 'BrowserBack', delay: 10 }), false)
+  advance(450)
+  assert.equal(current(), home, '只有备用返回键时也可以回到首页')
+}
+
+async function checkBackDuringAudioPreload() {
+  let preloaded
+  const { home, current, key, advance } = createTestApp([], {
+    getSongById: id => ({ id, bundled: true }),
+    preloadSongAudio: () => new Promise(resolve => { preloaded = resolve })
+  })
+  home.activate(0)
+  advance(850)
+  const chooser = current()
+  key('Enter')
+  assert.ok(preloaded, '确认后等待伴奏预热')
+  key('GlobalHook')
+  key('GlobalHook', { delay: 150 })
+  preloaded()
+  await new Promise(setImmediate)
+  assert.equal(current(), chooser, '双击待处理时即使伴奏就绪也不进入演唱页')
+  advance(450)
+  assert.equal(current(), home)
+}
+
+async function checkChooserTitleOverflow() {
+  const longTitle = 'Way Back Home (feat. Conor Maynard) [Sam Feldt Edit]'
+  const { home, current, key } = createTestApp([
+    { id: 'short-title', name: '稻香', downloadedVariants: { guide: true } },
+    { id: 'long-title', name: longTitle, downloadedVariants: { guide: true } }
+  ])
+  await home.refreshCatalog()
+
+  home.activate(home.data.songs.findIndex(song => song.id === 'short-title'))
+  assert.equal(current().data.choiceTitleScrollStyle, '', '放得下的标题保持静止')
+  key('Backspace')
+
+  home.activate(home.data.songs.findIndex(song => song.id === 'long-title'))
+  const { choiceSongName, choiceTitleWidth, choiceTitleScrollStyle, choiceWidth, choiceHeight } = current().data
+  assert.equal(choiceSongName, longTitle, '保留整首歌名')
+  const [, textWidth, distance] = choiceTitleScrollStyle.match(/width: (\d+)px; --choice-title-end: -(\d+)px/)
+  assert.ok(Number(distance) > 0, '超出标题区域的名字需要滚动')
+  assert.equal(Number(textWidth) - Number(distance), choiceTitleWidth, '末尾停留时完整显示歌名最后一段')
+  assert.equal(choiceWidth, 448)
+  assert.equal(choiceHeight, 328)
 }
 
 async function checkTempleFallback() {
@@ -222,23 +382,31 @@ async function checkTempleFallback() {
   key('GlobalHook')
   key('Enter', { delay: 90 })
   key('GlobalHook', { delay: 90 })
-  advance(200)
+  advance(450)
   assert.equal(current(), categories, '双击只退到语种选择')
+  assert.equal(categories.data.phase, 'categories')
   assert.equal(key('Backspace', { delay: 120 }), true)
   assert.equal(current(), categories, '双击补发的返回键不能再退一层')
   assert.deepEqual(selected, [], '双击不能提交下载')
   key('GlobalHook')
   key('GlobalHook', { delay: 180 })
-  advance(200)
+  assert.equal(key('Backspace', { delay: 50, pressed: true }), false)
+  assert.equal(current(), categories)
+  assert.equal(key('Backspace', { delay: 50, appOnly: true }), false, '宿主产生返回键后直接由宿主处理')
   assert.equal(current(), home)
+  advance(150)
   assert.equal(key('Backspace', { delay: 100 }), true, '返回首页后仍会拦住双击补发的返回键')
   key('Enter', { delay: 500 })
-  assert.equal(home.data.choiceVisible, true, '双击结束后，首页可以正常确认')
+  assert.equal(current().data.phase, 'categories', '返回后保留音乐下载选中，确认可重新进入')
+  key('GlobalHook')
+  key('GlobalHook', { delay: 180 })
+  advance(450)
+  assert.equal(current(), home, '只有镜腿触摸事件时也能从语种页返回首页')
 }
 
 async function checkDownloadCancellation() {
   let pending
-  const { current, key, openDownload, hostBack } = createTestApp([{ id: 'first', category: '中文' }], {
+  const { current, key, openDownload } = createTestApp([{ id: 'first', category: '中文' }], {
     downloadSong(id, variant, options) {
       return new Promise(resolve => { pending = { id, variant, ...options, resolve } })
     }
@@ -254,17 +422,18 @@ async function checkDownloadCancellation() {
   assert.equal(pending.variant, 'guide')
   pending.onProgress({ bytes: 1, total: 2 })
   assert.equal(list.data.downloadProgress, 50)
-  hostBack()
+  assert.equal(key('Backspace'), true)
   assert.equal(pending.signal.aborted, true)
   pending.resolve({ offline: true, downloadedVariants: { guide: true, instrumental: false } })
   await new Promise(setImmediate)
   assert.equal(current(), categories)
-  assert.equal(list.data.downloadProgress, 50)
+  assert.equal(list.data.downloadProgress, 0)
+  assert.equal(list.data.phase, 'songs')
   key('Backspace')
 }
 
 async function checkPartiallyDownloadedHome() {
-  const { home, current, key, openDownload } = createTestApp([
+  const { home, current, key, openDownload, advance, stack } = createTestApp([
     { id: 'red-high-heels', name: '红色高跟鞋', category: '中文', downloadedVariants: { guide: false, instrumental: true } }
   ])
   const categories = openDownload()
@@ -281,13 +450,192 @@ async function checkPartiallyDownloadedHome() {
   const index = home.data.songs.findIndex(song => song.id === 'red-high-heels')
   assert.ok(index >= 0, '只下载一版的歌曲也应出现在首页')
   home.onTapSong({ currentTarget: { dataset: { idx: index } } })
-  assert.equal(home.data.choiceIndex, 1)
-  assert.equal(home.data.choiceAvailable[0], false)
-  home.onTapChoice({ currentTarget: { dataset: { idx: 0 } } })
+  const chooser = current()
+  assert.notEqual(chooser, home)
+  assert.equal(chooser.data.choiceReady, false)
+  advance(850)
+  assert.equal(chooser.data.choiceFallback, true)
+  assert.equal(chooser.data.choiceIndex, 1)
+  assert.equal(chooser.data.choiceAvailable[0], false)
+  chooser.onTapChoice({ currentTarget: { dataset: { idx: 0 } } })
+  assert.equal(chooser.data.choiceIndex, 1, '点按不可用版本不生效')
   key('ArrowUp')
-  assert.equal(home.data.choiceIndex, 1, '点按和滑动均无法选择未下载的版本')
+  assert.equal(chooser.data.choiceIndex, 2, '备用按键导航会跳过未下载的版本')
+  key('ArrowUp')
   key('Enter')
   assert.deepEqual(current().query, { songId: 'red-high-heels', mode: 'instrumental' })
+  assert.equal(stack.length, 2, '从演唱页返回时直接进入首页')
+}
+
+async function checkHeadAiming() {
+  let sensor
+  let largestArc = 0
+  let arcProgress = 0
+  let renderedReticle
+  let bar
+  class OrientationSensor {
+    constructor() { sensor = this; this.listeners = new Map() }
+    start() { this.running = true }
+    stop() { this.running = false }
+    addEventListener(type, listener) { this.listeners.set(type, listener) }
+    removeEventListener(type) { this.listeners.delete(type) }
+    read(quaternion) {
+      this.quaternion = quaternion
+      this.hasReading = true
+      this.listeners.get('reading')?.()
+    }
+  }
+  const { home, key, current, advance, phraseAimSession, createCanvas } = createTestApp([
+    { id: 'aim-song', name: '测试歌曲', downloadedVariants: { guide: false, instrumental: true } }
+  ], {
+    AbsoluteOrientationSensor: OrientationSensor,
+    onChoiceClear() {
+      bar = null
+      arcProgress = 0
+    },
+    onChoiceLine(x1, y1, x2, y2) { bar = { x1, y1, x2, y2 } },
+    onChoiceArc(x, y, radius, start, end) {
+      if (radius === 12 && start === -Math.PI / 2) {
+        largestArc = Math.max(largestArc, end - start)
+        arcProgress = (end - start) / (2 * Math.PI)
+      }
+      if (radius === 2) renderedReticle = { x, y }
+    }
+  })
+  await home.refreshCatalog()
+  const selectSong = () => {
+    home.activate(home.data.songs.findIndex(song => song.id === 'aim-song'))
+    return current()
+  }
+  let chooser = selectSong()
+  assert.equal(chooser.data.choiceWidth, 448)
+  assert.equal(chooser.data.choiceHeight, 328)
+  advance(780)
+  assert.equal(chooser.data.choiceReady, false)
+  advance(40)
+  assert.equal(chooser.data.choiceReady, true)
+  assert.equal(chooser.data.choiceFallback, false)
+  sensor.read([0, 0, 0, 1])
+  const [guide, instrumental, phrase] = chooser.data.choiceBoxes
+  assert.equal(guide.y, instrumental.y)
+  assert.ok(phrase.y > guide.y)
+
+  function aim(box, duration) {
+    const { choiceWidth: width, choiceHeight: height } = chooser.data
+    const yaw = box ? (box.x + box.width / 2 - width / 2) * 0.65 / width : 0
+    const pitch = box ? (height / 2 - box.y - box.height / 2) * 0.50 / height : 0
+    const a = Math.sin(pitch / 2), b = -Math.sin(yaw / 2)
+    const c = Math.cos(pitch / 2), d = Math.cos(yaw / 2)
+    for (let time = 0; time < duration && sensor.running; time += 32) {
+      sensor.read([a * d, b * c, -b * a, c * d])
+      advance(32)
+    }
+  }
+  function centeredBarWidth(box) {
+    assert.ok(bar, '停留瞄准时绘制按钮进度')
+    assert.ok(Math.abs((bar.x1 + bar.x2) / 2 - (box.x + box.width / 2)) < 1e-6, '进度以按钮中心对称展开')
+    assert.equal(bar.y1, bar.y2)
+    assert.ok(bar.y1 > box.y + box.height * 0.8 && bar.y1 < box.y + box.height, '进度位于按钮底部内侧')
+    return bar.x2 - bar.x1
+  }
+  aim(guide, 1200)
+  assert.equal(chooser.data.choiceIndex, -1, '未下载版本无法瞄准确认')
+  assert.equal(largestArc, 0)
+  assert.equal(bar, null, '不可选的按钮不绘制进度')
+  aim(instrumental, 540)
+  assert.equal(current(), chooser, '只停留半圈不会进入演唱')
+  const firstWidth = centeredBarWidth(instrumental)
+  const firstProgress = arcProgress
+  aim(instrumental, 160)
+  const nextWidth = centeredBarWidth(instrumental)
+  assert.ok(nextWidth > firstWidth)
+  assert.ok(Math.abs(nextWidth / firstWidth - arcProgress / firstProgress) < 1e-6, '按钮横条和圆环以相同比例增长')
+  aim(null, 210)
+  assert.equal(chooser.data.choiceIndex, -1)
+  assert.equal(bar, null, '视线移开时清除按钮进度')
+  aim(instrumental, 590)
+  assert.equal(current(), chooser, '离开按钮后应重新计算停留时间')
+  advance(500)
+  assert.equal(chooser.data.choiceIndex, -1, '传感器断流后取消等待')
+  assert.equal(current(), chooser)
+  key('GlobalHook', { pressed: true, appOnly: true })
+  key('GlobalHook', { delay: 100 })
+  assert.equal(current(), chooser, '按下和抬起属于一次点按')
+  key('GlobalHook', { delay: 100, pressed: true, appOnly: true })
+  advance(450)
+  assert.equal(current(), home, '双击镜腿回到选歌')
+  assert.equal(sensor.running, false, '离开选择时停止姿态采样')
+
+  chooser = selectSong()
+  advance(850)
+  sensor.read([0, 0, 0, 1])
+  aim(phrase, 1240)
+  assert.deepEqual(current().query, { songId: 'aim-song', guide: '0', instrumental: '1' })
+  assert.ok(largestArc >= Math.PI * 2 - 1e-6, '确认前进度沿圆周填满')
+  assert.equal(sensor.running, true, '进入练句继续使用同一传感器')
+  const { aim: practice } = phraseAimSession.current
+  const previousX = practice.x
+  const previousY = practice.y
+  assert.ok(Math.abs(previousY - phrase.y - phrase.height / 2) < 1, '准星留在已确认按钮的位置')
+  const sameSensor = sensor
+  const lastPose = sensor.quaternion
+  const width = 480
+  const height = 352
+  let confirmations = 0
+  const practicePage = {
+    data: { choiceAvailable: [true] }, showChoiceControls() {}, setChoiceFocus() {},
+    confirmChoice() { confirmations++ }
+  }
+  const practiceBox = { x: 0, y: 0, width, height }
+  practice.bindPage(practicePage, { width, height, boxes: [practiceBox] }, createCanvas)
+  advance(16)
+  assert.equal(sensor, sameSensor, '转移画布不重启姿态会话')
+  assert.equal(practice.x, previousX)
+  assert.equal(practice.y, previousY, '第一帧沿用原来的屏幕坐标，即使接收画布尺寸不同')
+  for (let index = 0; index < 35; index++) {
+    sensor.read(lastPose)
+    advance(32)
+  }
+  assert.ok(Math.abs(practice.y - previousY) < 1, '相同头部姿态继续指向原位置')
+  assert.equal(confirmations, 0, '跨页停留没有自动确认')
+  assert.equal(bar, null, '切到练句后不会沿用上一页的进度')
+  aim(instrumental, 630)
+  assert.ok(Math.abs(practice.y - previousY) > 30, '接收页面能够继续跟随头部姿态')
+  assert.equal(confirmations, 0, '移动到新位置后需重新停留一圈')
+  assert.ok(centeredBarWidth(practiceBox) > 0)
+  aim(instrumental, 580)
+  assert.equal(confirmations, 1)
+
+  aim({ x: 355, y: 11, width: 80, height: 35 }, 480)
+  const pickerEntry = { x: practice.x, y: practice.y }
+  assert.ok(pickerEntry.x > 390 && pickerEntry.y < 30, '练唱的选句按钮位于右上角')
+  const pickerBox = { x: 80, y: 200, width: 100, height: 70 }
+  const pickerPage = { data: { choiceAvailable: [true] }, showChoiceControls() {}, setChoiceFocus() {} }
+  practice.bindPage(pickerPage, { width: 416, height: 304, boxes: [pickerBox] }, createCanvas)
+  practice.unbindPage(practicePage)
+  advance(16)
+  assert.deepEqual(renderedReticle, pickerEntry, '第一帧准星画在同一个右上角坐标')
+
+  aim({ x: 105, y: 225, width: 50, height: 30 }, 480)
+  assert.ok(centeredBarWidth(pickerBox) > 0, '选句页使用相同的停留进度')
+  const pickerExit = { x: practice.x, y: practice.y }
+  practice.unbindPage(pickerPage)
+  sensor.read([0, 0, 0, 1])
+  practice.bindPage(practicePage, { width, height, boxes: [] }, createCanvas)
+  advance(16)
+  assert.deepEqual(renderedReticle, pickerExit, '返回时第一帧仍绘制在选句页最后的位置')
+  advance(16)
+  assert.ok(Math.abs(renderedReticle.x - pickerExit.x) <= 18 && Math.abs(renderedReticle.y - pickerExit.y) <= 18,
+    '切换发生在转头期间时，后续帧平滑追上最新姿态')
+  practice.stop()
+  assert.equal(sameSensor.running, false, '结束练句流程后释放同一个传感器')
+
+  chooser = selectSong()
+  advance(850)
+  sensor.read([0, 0, 0, 1])
+  aim(instrumental, 1250)
+  assert.equal(sensor.running, false, '开始伴奏后停止使用传感器')
+  assert.deepEqual(current().query, { songId: 'aim-song', mode: 'instrumental' })
 }
 
 async function checkUnavailableCatalog() {
@@ -317,6 +665,88 @@ async function checkUnavailableCatalog() {
   key('Enter')
   await new Promise(setImmediate)
   assert.equal(japanese.data.songs[0].id, 'ja-song', '空歌单连接失败时可单击重试')
+}
+
+function checkGyroAimingHandoff() {
+  let sensor
+  class Gyroscope extends EventTarget {
+    constructor() { super(); sensor = this }
+    start() {}
+    stop() {}
+    read(y) {
+      Object.assign(this, { x: 0, y, z: 0, hasReading: true })
+      this.dispatchEvent(new Event('reading'))
+    }
+  }
+  const { advance, createCanvas, createChoice } = createTestApp([], { Gyroscope })
+  const page = { data: { choiceAvailable: [] }, showChoiceControls() {}, setChoiceFocus() {} }
+  const layout = { width: 448, height: 328, boxes: [] }
+  const first = createChoice(page, layout)
+  first.start({ transition: false })
+  for (let index = 0; index < 18; index++) {
+    sensor.read(-0.55)
+    advance(16)
+  }
+  const { x, yaw } = first
+  const sameSensor = sensor
+  assert.ok(x > layout.width * 0.6)
+  first.unbindPage(page)
+  advance(600)
+
+  first.bindPage({ ...page }, layout, createCanvas)
+  advance(16)
+  assert.equal(sensor, sameSensor)
+  assert.equal(first.x, x)
+  sensor.read(-0.55)
+  assert.equal(first.yaw, yaw, '不会把陀螺仪停止更新的时间算进积分')
+  for (let index = 0; index < 10; index++) {
+    advance(16)
+    sensor.read(-0.55)
+  }
+  assert.ok(first.x > x + 20, '接续陀螺仪角度后准星继续响应转头')
+  first.stop()
+}
+
+function checkPageSensorAimingHandoff() {
+  class Orientation extends EventTarget {
+    read(yaw) {
+      this.quaternion = [0, Math.sin(yaw / 2), 0, Math.cos(yaw / 2)]
+      this.hasReading = true
+      this.dispatchEvent(new Event('reading'))
+    }
+  }
+  const createPage = () => ({
+    data: { choiceAvailable: [] }, showChoiceControls() {}, setChoiceFocus() {},
+    enableWorldAwareness() { this.orientationSensor = new Orientation() },
+    disableWorldAwareness() { this.disabled = true }
+  })
+  const { advance, createCanvas, createChoice } = createTestApp([])
+  const layout = { width: 448, height: 328, boxes: [] }
+  const first = createPage()
+  const aim = createChoice(first, layout)
+  aim.start({ transition: false })
+  first.orientationSensor.read(0)
+  for (let index = 0; index < 18; index++) {
+    advance(16)
+    first.orientationSensor.read(-0.2)
+  }
+  const x = aim.x
+  assert.ok(x > 350)
+
+  const second = createPage()
+  aim.bindPage(second, layout, createCanvas)
+  assert.ok(first.disabled, '宿主只支持页面传感器时释放上一页实例')
+  for (let index = 0; index < 11; index++) {
+    second.orientationSensor.read(1.5)
+    advance(16)
+  }
+  assert.equal(aim.x, x, '新传感器基准不同也继续显示在原处')
+  for (let index = 0; index < 11; index++) {
+    second.orientationSensor.read(1.6)
+    advance(16)
+  }
+  assert.ok(aim.x < x - 50, '在当前屏幕坐标基础上应用后续转头')
+  aim.stop()
 }
 
 async function checkSongRequests() {
@@ -361,12 +791,19 @@ async function checkSongRequests() {
 async function main() {
   await checkNavigation()
   checkNativeBack()
+  await checkHomeFocusAfterReturning()
+  await checkChooserNativeAndLogicalBack()
+  await checkBackDuringAudioPreload()
+  await checkChooserTitleOverflow()
   await checkTempleFallback()
   await checkDownloadCancellation()
   await checkPartiallyDownloadedHome()
+  await checkHeadAiming()
+  checkGyroAimingHandoff()
+  checkPageSensorAimingHandoff()
   await checkUnavailableCatalog()
   await checkSongRequests()
-  console.log('PASS  音乐下载两层返回、滑动选歌、下载和留言')
+  console.log('PASS  穿越转场、跨页准星续接、头动停留确认、镜腿双击返回、音乐下载和留言')
 }
 
 main().catch(error => {

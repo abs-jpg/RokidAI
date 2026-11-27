@@ -855,6 +855,7 @@ const playerRooms = new Map()
 const MAX_ROOMS = 100
 const MAX_WS_BUFFERED_BYTES = 64 * 1024
 const WS_HEARTBEAT_TIMEOUT_MS = 35000
+const BATTLE_CHEER_INTERVAL_MS = 600
 const wsHeartbeat = setInterval(() => {
   const now = Date.now()
   for (const ws of playerSockets.values()) {
@@ -866,7 +867,7 @@ wsHeartbeat.unref()
 function wsSend(ws, message) {
   if (!ws || ws.readyState !== 1) return
   if (ws.bufferedAmount > MAX_WS_BUFFERED_BYTES) {
-    if (message.type !== 'opponent.progress' && message.type !== 'lobby') ws.terminate()
+    if (message.type !== 'opponent.progress' && message.type !== 'battle.cheer' && message.type !== 'lobby') ws.terminate()
     return
   }
   try {
@@ -1051,6 +1052,8 @@ function finishBattle(room) {
   clearTimeout(room.timer)
   room.status = 'finished'
   const [a, b] = players
+  a.ws.battleResult = { roomId: room.id, roundId: room.roundId, opponent: b.ws, lastCheerAt: 0 }
+  b.ws.battleResult = { roomId: room.id, roundId: room.roundId, opponent: a.ws, lastCheerAt: 0 }
   const winner = a.score === b.score ? 'draw' : (a.score > b.score ? a.id : b.id)
   const resultPlayers = players.map(player => ({
     id: player.id,
@@ -1075,6 +1078,25 @@ function finishBattle(room) {
     rooms.delete(room.id)
     broadcastLobby()
   }, 15000)
+}
+
+function clearBattleResult(ws) {
+  const result = ws.battleResult
+  ws.battleResult = null
+  if (result?.opponent.battleResult?.opponent === ws) result.opponent.battleResult = null
+}
+
+function handleResultMessage(ws, message) {
+  const result = ws.battleResult
+  if (!result || result.roomId !== message.roomId || result.roundId !== message.roundId) return
+  if (message.type === 'battle.result.leave') {
+    clearBattleResult(ws)
+    return
+  }
+  const now = Date.now()
+  if (now - result.lastCheerAt < BATTLE_CHEER_INTERVAL_MS) return
+  result.lastCheerAt = now
+  wsSend(result.opponent, { type: 'battle.cheer', roomId: result.roomId, roundId: result.roundId })
 }
 
 server.on('upgrade', (req, socket, head) => {
@@ -1151,6 +1173,7 @@ function attachPlayer(ws, id) {
   })
 
   ws.on('close', () => {
+    clearBattleResult(ws)
     if (playerSockets.get(player.id) !== ws) return
     playerSockets.delete(player.id)
     leaveRoom(player.id, '对手已掉线')
@@ -1159,6 +1182,10 @@ function attachPlayer(ws, id) {
 
 function handleBattleMessage(player, message) {
   const ws = player.ws
+    if (message.type === 'battle.cheer' || message.type === 'battle.result.leave') {
+      handleResultMessage(ws, message)
+      return
+    }
     if (message.type === 'ping') {
       wsSend(ws, { type: 'pong', t0: Number(message.t0) || 0, t1: Date.now() })
       return
@@ -1168,6 +1195,7 @@ function handleBattleMessage(player, message) {
       return
     }
     if (message.type === 'room.create') {
+      clearBattleResult(ws)
       createRoom(player)
       return
     }
@@ -1179,6 +1207,7 @@ function handleBattleMessage(player, message) {
       if (target.status !== 'waiting' || target.players.size >= 2) {
         return sendRoomError(player, 'ROOM_FULL', '房间已满或已开始')
       }
+      clearBattleResult(ws)
       target.players.set(player.id, {
         id: player.id,
         name: player.name,

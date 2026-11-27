@@ -182,16 +182,19 @@ async function checkSpeech() {
   battle.isBattle = true
   battle.selfId = 'a'
   battle.visible = true
+  battle.sendRound = () => true
   battle.data.phase = 'battleWaiting'
   battle.setData = (patch, callback) => { Object.assign(battle.data, patch); callback?.() }
   const result = { type: 'battle.result', winner: 'b', players: [{ id: 'a', score: 78 }, { id: 'b', score: 90, name: '对手' }] }
   battle.handleBattleMessage(result)
   battle.handleBattleMessage(result)
   assert.equal(battle.data.phase, 'battleDone')
-  assert.equal(battle.data.battleResultText, '我 78 · 对手 90')
+  assert.equal(battle.data.battleSelfScore, 78)
+  assert.equal(battle.data.battleOpponentScore, 90)
   assert.equal(battle.data.battleResultOutcome, 'loss')
   assert.equal(battle.data.battleResultTitle, '失败')
-  assert.equal(battle.data.hintText, '点按镜腿 · 确认离开')
+  assert.equal(battle.battleCheerSide, 'A', '喝彩归属由入场顺序决定')
+  assert.equal(battle.data.hintText, '单击镜腿喝彩 · 双击返回')
   battle.data.phase = 'battleWaiting'
   battle.handleBattleMessage({
     type: 'battle.result',
@@ -201,11 +204,17 @@ async function checkSpeech() {
   assert.equal(battle.data.phase, 'battleDone')
   assert.equal(battle.data.battleResultOutcome, 'win')
   assert.equal(battle.data.battleResultTitle, '胜利')
+  battle.data.phase = 'battleWaiting'
+  battle.selfId = 'b'
+  battle.handleBattleMessage({ type: 'battle.result', players: [{ id: 'a', score: 90 }, { id: 'b', score: 90 }] })
+  assert.equal(battle.data.battleResultOutcome, 'draw')
+  assert.equal(battle.data.battleResultTitle, '平局')
+  assert.equal(battle.battleCheerSide, 'B')
   assert.equal(controllers.length, 2, '只有单人练习会自动播报')
   assert.equal(played.length, 1)
   battle.onUnload()
   assert.equal(destroyed, 1)
-  console.log('PASS  单人逐句纠正、音准建议与播报，联机仅显示分数')
+  console.log('PASS  单人逐句纠正、音准建议与播报，联机胜负与平局结算')
 }
 
 checkSpeech().catch(error => { console.error(error); process.exitCode = 1 })

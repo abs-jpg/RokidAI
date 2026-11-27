@@ -21,15 +21,14 @@ const GUIDE_HEIGHT = 22
 const GUIDE_PADDING = 2
 const PRACTICE_READY_HINT = '确认开始 · 返回'
 const CARD_PITCH_HINT = '双击展开全屏可显示音准 · 返回'
-const BATTLE_MIN_SINGING_HZ = 55
-const SOLO_MIN_SINGING_HZ = 40
-const SOLO_MAX_SINGING_HZ = 1200
+const MIN_SINGING_HZ = 40
+const MAX_SINGING_HZ = 1200
 const LOCAL_DOT_DELAY_MS = 24
 const LOCAL_PITCH_GAP_MS = 65
 const PERFECT_PITCH_TOLERANCE = 2
 const OCTAVE_CONFIRM_MS = 120
 const SEMITONES_PER_OCTAVE = 12
-const SOLO_OCTAVE_SWITCH_DISTANCE = SEMITONES_PER_OCTAVE / 2 + 1
+const OCTAVE_SWITCH_DISTANCE = SEMITONES_PER_OCTAVE / 2 + 1
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 // 真机采音链路固定延迟估计：麦克风采集缓冲 + 分析窗一半 + 播放输出延迟。
 // 如果真机测试发现曲线整体提前/滞后，只调整 INPUT_LATENCY_MS 即可。
@@ -42,6 +41,11 @@ const BATTLE_DOT_DELAY_MS = 160
 const BATTLE_PITCH_STALE_MS = BATTLE_PITCH_GAP_MS + BATTLE_DOT_DELAY_MS
 const BATTLE_PITCH_WIDTH = 200
 const BATTLE_PITCH_HEIGHT = 130
+const BATTLE_TAP_WINDOW_MS = 350
+const BATTLE_TAP_BOUNCE_MS = 60
+const BATTLE_TAP_ECHO_MS = 150
+const BATTLE_TAP_RETURN_DELAY_MS = 190
+const BATTLE_FIREWORKS_MS = 1350
 const LYRIC_SIDE_MARGIN = 8
 const BATTLE_LYRIC_SIDE_PADDING = 12
 const ASR_VIEWPORT_WIDTH = 240
@@ -182,9 +186,10 @@ export default {
     battleSelfNote: '--',
     battleOpponentNote: '--',
     battleOpponentName: '对手',
-    battleResultText: '',
     battleResultOutcome: '',
     battleResultTitle: '对战结束',
+    battleFireworksA: [],
+    battleFireworksB: [],
     statusText: '正在加载伴奏',
     hintText: '返回'
   },
@@ -222,6 +227,10 @@ export default {
   handleBattleMessage(message) {
     if (!this.isBattle) return
     if (message.roomId && (message.roomId !== this.roomId || message.roundId !== this.roundId)) return
+    if (message.type === 'battle.cheer') {
+      this.showBattleFireworks(this.battleCheerSide === 'A' ? 'B' : 'A')
+      return
+    }
     if (message.type === 'socket.close' || message.type === 'socket.error') {
       this.abortBattle('联机已断开', false)
       return
@@ -274,15 +283,15 @@ export default {
       const battleResultTitle = battleResultOutcome === 'win'
         ? '胜利'
         : (battleResultOutcome === 'loss' ? '失败' : '平局')
+      this.battleCheerSide = players[0] === mine ? 'A' : 'B'
       this.releaseAudio()
       this.setData({
         phase: 'battleDone',
-        battleResultText: '我 ' + mine.score + ' · 对手 ' + other.score,
         battleResultOutcome,
         battleResultTitle,
         battleSelfScore: mine.score,
         battleOpponentScore: other.score,
-        hintText: '点按镜腿 · 确认离开'
+        hintText: '单击镜腿喝彩 · 双击返回'
       })
       return
     }
@@ -370,6 +379,7 @@ export default {
   onHide() {
     this.visible = false
     if (this.isBattle && this.data.phase !== 'battleDone') this.abortBattle('对战已退出')
+    this.releaseBattleResult()
     this.releaseAudio()
   },
 
@@ -381,18 +391,45 @@ export default {
       this.unsubscribeBattle = null
     }
     this.visible = false
+    this.releaseBattleResult()
     this.releaseAudio()
     this.canvas = null
   },
 
+  onKeyDown(event) {
+    if (this.data.phase !== 'battleDone' || (event.code !== 'GlobalHook' && event.key !== 'GlobalHook')) return
+    event.preventDefault()
+    event.stopPropagation?.()
+    if (event.repeat) return
+    this.battleHookAt = performance.now()
+    this.battleHookDownAt = this.battleHookAt
+    this.onBattleResultTap(true)
+  },
+
   onKeyUp(event) {
+    if (this.data.phase === 'battleDone' && (event.code === 'GlobalHook' || event.key === 'GlobalHook')) {
+      event.preventDefault()
+      event.stopPropagation?.()
+      if (event.repeat) return
+      const now = performance.now()
+      const paired = now - (this.battleHookDownAt ?? -Infinity) <= BATTLE_TAP_WINDOW_MS
+      this.battleHookDownAt = null
+      this.battleHookAt = now
+      if (!paired) this.onBattleResultTap(true)
+      return
+    }
     if (event.code === 'Backspace' || event.key === 'Backspace' || event.code === 'Escape') {
       event.preventDefault()
+      if (this.data.phase === 'battleDone') event.stopPropagation?.()
       this.leavePage()
       return
     }
     if (event.code === 'Enter') {
       event.preventDefault()
+      if (this.data.phase === 'battleDone') {
+        event.stopPropagation?.()
+        if (event.repeat || performance.now() - (this.battleHookAt ?? -Infinity) < BATTLE_TAP_ECHO_MS) return
+      }
       this.onConfirm()
     }
   },
@@ -400,6 +437,7 @@ export default {
   leavePage() {
     if (this.leaving) return
     this.leaving = true
+    this.clearBattleResultTap()
     if (this.isBattle && this.data.phase !== 'battleDone') {
       this.abortBattle('已退出本场对战')
     }
@@ -426,9 +464,61 @@ export default {
         this.goToResult()
         break
       case 'battleDone':
-        this.leavePage()
+        this.onBattleResultTap()
         break
     }
+  },
+
+  clearBattleResultTap() {
+    if (this.battleTapTimer != null) clearTimeout(this.battleTapTimer)
+    if (this.battleReturnTimer != null) clearTimeout(this.battleReturnTimer)
+    this.battleTapTimer = null
+    this.battleReturnTimer = null
+  },
+
+  onBattleResultTap(templeTouch = false) {
+    if (this.leaving || this.battleResultClosed || this.battleReturnTimer != null) return
+    const now = performance.now()
+    if (templeTouch && now - (this.lastBattleTapAt ?? -Infinity) < BATTLE_TAP_BOUNCE_MS) return
+    this.lastBattleTapAt = now
+    if (this.battleTapTimer != null) {
+      this.clearBattleResultTap()
+      if (templeTouch) {
+        // 给宿主补发触碰松开和确认键留出时间，避免串到大厅。
+        this.battleReturnTimer = setTimeout(() => this.leavePage(), BATTLE_TAP_RETURN_DELAY_MS)
+      } else {
+        this.leavePage()
+      }
+      return
+    }
+    this.battleTapTimer = setTimeout(() => {
+      this.battleTapTimer = null
+      if (this.showBattleFireworks(this.battleCheerSide)) this.sendRound('battle.cheer')
+    }, BATTLE_TAP_WINDOW_MS)
+  },
+
+  showBattleFireworks(side) {
+    if (!this.battleCheerSide || this.leaving || this.battleResultClosed || this.data.phase !== 'battleDone' ||
+        this.data.battleResultOutcome === 'cancelled') return false
+    const key = side === 'A' ? 'battleFireworksA' : 'battleFireworksB'
+    const timers = this.battleFireworksTimers ??= {}
+    if (timers[side] != null) clearTimeout(timers[side])
+    this.battleFireworksId = (this.battleFireworksId || 0) + 1
+    this.setData({ [key]: [{ id: this.battleFireworksId }] })
+    timers[side] = setTimeout(() => {
+      delete timers[side]
+      this.setData({ [key]: [] })
+    }, BATTLE_FIREWORKS_MS)
+    return true
+  },
+
+  releaseBattleResult() {
+    if (!this.isBattle || this.data.phase !== 'battleDone' || this.battleResultClosed) return
+    this.battleResultClosed = true
+    this.clearBattleResultTap()
+    for (const timer of Object.values(this.battleFireworksTimers || {})) clearTimeout(timer)
+    this.battleFireworksTimers = null
+    if (this.data.battleResultOutcome !== 'cancelled') this.sendRound('battle.result.leave')
   },
 
   prepareAudio() {
@@ -614,9 +704,7 @@ export default {
       if (this.player !== player || this.audioContext !== context) return
       if (context.state === 'suspended' || context.state === 'closed') throw new Error('音频分析未启动')
 
-      this.detectPitch = this.isBattle
-        ? createPitchDetector(analyser, BATTLE_MIN_SINGING_HZ)
-        : createPitchDetector(analyser, SOLO_MIN_SINGING_HZ, SOLO_MAX_SINGING_HZ)
+      this.detectPitch = createPitchDetector(analyser, MIN_SINGING_HZ, MAX_SINGING_HZ)
       this.detectVoice = createVoiceActivityDetector(analyser)
       const analysisWindowMs = 1000 * analyser.fftSize / (2 * context.sampleRate)
       const outputLatencyMs = Number.isFinite(context.baseLatency) ? context.baseLatency * 1000 : 0
@@ -908,7 +996,7 @@ export default {
       battleResultOutcome: 'cancelled',
       battleResultTitle: '对战结束',
       statusText: reason,
-      hintText: '点按镜腿 · 确认离开'
+      hintText: '双击镜腿返回'
     })
     if (notify) this.sendRound('battle.cancel')
   },
@@ -1033,28 +1121,22 @@ export default {
     const previous = points[points.length - 1]
     if (previous && timeMs <= previous.timeMs) return
     const voiced = Number.isFinite(midi)
-    const ref = voiced ? getRefNoteAt(this.song.refNotes, timeMs) : null
-    const difference = ref ? ref.midi - midi : NaN
-    const nearestOctave = Math.round(difference / SEMITONES_PER_OCTAVE) * SEMITONES_PER_OCTAVE
     let wantedShift = null
-    let soloDisplayShift
-    if (this.isBattle) {
-      if (Math.abs(difference) <= 5) wantedShift = 0
-      else if (Math.abs(nearestOctave) === SEMITONES_PER_OCTAVE &&
-          Math.abs(difference - nearestOctave) <= 3) wantedShift = nearestOctave
-    } else if (voiced) {
-      soloDisplayShift = previous?.midi != null ? previous.shift : trace.shift
-      const displayedMidi = midi + soloDisplayShift
+    let displayShift = trace.shift
+    if (voiced) {
+      if (previous?.midi != null) displayShift = previous.shift
+      const displayedMidi = midi + displayShift
       const atEdge = displayedMidi <= this.minMidi || displayedMidi >= this.maxMidi
+      const ref = getRefNoteAt(this.song.refNotes, timeMs)
       if (ref) {
         // 八度交界处保留一个半音的回差，防止圆点来回跳动。
-        if (atEdge || Math.abs(ref.midi - displayedMidi) > SOLO_OCTAVE_SWITCH_DISTANCE) {
-          soloDisplayShift = nearestOctave
+        if (atEdge || Math.abs(ref.midi - displayedMidi) > OCTAVE_SWITCH_DISTANCE) {
+          displayShift = Math.round((ref.midi - midi) / SEMITONES_PER_OCTAVE) * SEMITONES_PER_OCTAVE
         }
-        wantedShift = soloDisplayShift
+        wantedShift = displayShift
       } else if (atEdge) {
         const centerMidi = (this.minMidi + this.maxMidi) / 2
-        soloDisplayShift = Math.round((centerMidi - midi) / SEMITONES_PER_OCTAVE) * SEMITONES_PER_OCTAVE
+        displayShift = Math.round((centerMidi - midi) / SEMITONES_PER_OCTAVE) * SEMITONES_PER_OCTAVE
       }
     }
 
@@ -1067,9 +1149,7 @@ export default {
       trace.candidate = null
     }
 
-    // 单人圆点即时对齐，提示文字等音区稳定后再更新。
-    const displayShift = soloDisplayShift ??
-      (Math.abs(difference) < Math.abs(difference - trace.shift) ? 0 : trace.shift)
+    // 圆点即时对齐，八度提示等音区稳定后再更新。
     points.push({ timeMs, midi: voiced ? midi + displayShift : null, shift: displayShift })
     while (points[0].timeMs < timeMs - PAST_MS - trace.gapMs) points.shift()
     this.pitchFrameDirty = true
@@ -1243,16 +1323,14 @@ export default {
       if (offPitch) ctx.stroke()
       else ctx.fill()
 
-      if (!this.isBattle) {
-        const perfect = pitchError <= PERFECT_PITCH_TOLERANCE
-        const fitsAbove = dotY >= 21
-        ctx.font = 'bold 12px sans-serif'
-        ctx.textAlign = fitsAbove ? 'center' : 'left'
-        ctx.textBaseline = 'bottom'
-        ctx.fillStyle = perfect ? '#4cc773' : 'rgba(76,199,115,0.72)'
-        // 圆点靠近画布上沿时，文字向右错开以免遮挡圆点。
-        ctx.fillText(perfect ? 'Perfect' : 'Good', fitsAbove ? dotX : dotX + 9, Math.max(13, dotY - 8))
-      }
+      const perfect = pitchError <= PERFECT_PITCH_TOLERANCE
+      const fitsAbove = dotY >= 21
+      ctx.font = 'bold 12px sans-serif'
+      ctx.textAlign = fitsAbove ? 'center' : 'left'
+      ctx.textBaseline = 'bottom'
+      ctx.fillStyle = perfect ? '#4cc773' : 'rgba(76,199,115,0.72)'
+      // 圆点靠近画布上沿时，文字向右错开以免遮挡圆点。
+      ctx.fillText(perfect ? 'Perfect' : 'Good', fitsAbove ? dotX : dotX + 9, Math.max(13, dotY - 8))
     }
     ctx.flush()
   },
@@ -1509,33 +1587,39 @@ export default {
     <view class="battle-field" ink:if="{{isBattle}}" bindtap="onConfirm">
       <view class="battle-result" ink:if="{{phase === 'battleDone'}}">
         <text class="battle-result-eyebrow">本局结算</text>
-        <view class="battle-result-badge {{battleResultOutcome}}">
-          <text class="battle-result-title">{{battleResultTitle}}</text>
+        <view class="battle-result-fireworks battle-result-fireworks-a" ink:for="{{battleFireworksA}}" ink:key="id">
+          <view class="battle-firework battle-firework-ring battle-firework-a-outer"></view>
+          <view class="battle-firework battle-firework-ring battle-firework-a-inner"></view>
         </view>
-        <view class="battle-result-scores" ink:if="{{battleResultOutcome === 'win' || battleResultOutcome === 'loss' || battleResultOutcome === 'draw'}}">
-          <view class="battle-result-score-cell {{battleResultOutcome === 'win' ? 'battle-result-score-leading' : ''}}">
-            <text class="battle-result-score-role">你</text>
+        <view class="battle-result-fireworks battle-result-fireworks-b" ink:for="{{battleFireworksB}}" ink:key="id">
+          <view class="battle-firework battle-firework-star battle-firework-b-outer"></view>
+          <view class="battle-firework battle-firework-star battle-firework-b-inner"></view>
+        </view>
+        <view class="battle-result-scores" ink:if="{{battleResultOutcome !== 'cancelled'}}">
+          <view class="battle-result-score-cell battle-result-score-self {{battleResultOutcome === 'win' ? 'battle-result-score-leading' : (battleResultOutcome === 'loss' ? 'battle-result-score-trailing' : '')}}">
             <text class="battle-result-score-value">{{battleSelfScore}}</text>
+            <text class="battle-result-score-role">你</text>
           </view>
           <view class="battle-result-score-separator"></view>
-          <view class="battle-result-score-cell {{battleResultOutcome === 'loss' ? 'battle-result-score-leading' : ''}}">
-            <text class="battle-result-score-role">对手</text>
+          <view class="battle-result-score-cell battle-result-score-opponent {{battleResultOutcome === 'loss' ? 'battle-result-score-leading' : (battleResultOutcome === 'win' ? 'battle-result-score-trailing' : '')}}">
             <text class="battle-result-score-value">{{battleOpponentScore}}</text>
+            <text class="battle-result-score-role">对手</text>
           </view>
         </view>
+        <text class="battle-result-title {{battleResultOutcome}}">{{battleResultTitle}}</text>
         <text class="battle-result-reason" ink:if="{{battleResultOutcome === 'cancelled'}}">{{statusText}}</text>
       </view>
-      <view class="battle-panels" ink:elif="{{phase === 'recording' && !cueText}}">
+      <view class="battle-panels" ink:elif="{{(phase === 'recording' && !cueText) || phase === 'battleWaiting'}}">
         <view class="battle-side battle-self">
           <view class="battle-player">
             <text class="battle-role">我</text>
             <text class="battle-score-label">得分</text>
             <text class="battle-score">{{battleSelfScore}}</text>
           </view>
-          <view class="battle-pitch-box">
+          <view class="battle-pitch-box" ink:if="{{phase === 'recording'}}">
             <canvas id="battleSelfCanvas" class="battle-pitch-canvas" width="200" height="130"></canvas>
           </view>
-          <view class="battle-pitch-caption">
+          <view class="battle-pitch-caption" ink:if="{{phase === 'recording'}}">
             <text class="battle-pitch-label">参考 {{guideNote || '--'}}</text>
             <text class="battle-pitch-value">{{battleSelfNote !== '--' && selfOctaveShift ? (selfOctaveShift > 0 ? '低八度 · ' : '高八度 · ') : '实唱 '}}{{battleSelfNote}}</text>
           </view>
@@ -1546,14 +1630,15 @@ export default {
             <text class="battle-score-label">得分</text>
             <text class="battle-score">{{battleOpponentScore}}</text>
           </view>
-          <view class="battle-pitch-box">
+          <view class="battle-pitch-box" ink:if="{{phase === 'recording'}}">
             <canvas id="battleOpponentCanvas" class="battle-pitch-canvas" width="200" height="130"></canvas>
           </view>
-          <view class="battle-pitch-caption">
+          <view class="battle-pitch-caption" ink:if="{{phase === 'recording'}}">
             <text class="battle-pitch-label">参考 {{guideNote || '--'}}</text>
             <text class="battle-pitch-value">{{battleOpponentNote !== '--' && opponentOctaveShift ? (opponentOctaveShift > 0 ? '低八度 · ' : '高八度 · ') : '实唱 '}}{{battleOpponentNote}}</text>
           </view>
         </view>
+        <text class="battle-waiting-text" ink:if="{{phase === 'battleWaiting'}}">{{statusText}}</text>
       </view>
       <view class="battle-state" ink:else>
         <text class="{{phase === 'countdown' || cueText ? 'countdown' : 'status'}}">{{phase === 'recording' ? cueText : statusText}}</text>
@@ -1641,58 +1726,49 @@ export default {
 }
 
 .battle-result {
+  position: relative;
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 8px 16px 0;
 }
 
 .battle-result-eyebrow {
-  margin-bottom: 8px;
-  color: rgba(76,199,115,0.56);
-  font-size: 10px;
-  letter-spacing: 4px;
-}
-
-.battle-result-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 126px;
-  height: 126px;
-  border: 4px solid #a5adb2;
-  border-radius: 63px;
-  background-color: rgba(255,255,255,0.025);
-}
-
-.battle-result-badge.win {
-  border-color: #ff6573;
-  background-color: rgba(255,101,115,0.06);
-  box-shadow: 0 0 18px rgba(255,101,115,0.18);
-}
-
-.battle-result-badge.draw {
-  border-color: #4cc773;
-  background-color: rgba(76,199,115,0.06);
+  margin-top: 47px;
+  color: rgba(76,199,115,0.65);
+  font-size: 11px;
+  letter-spacing: 3px;
+  animation: battle-result-reveal 400ms ease-out both;
 }
 
 .battle-result-title {
+  position: absolute;
+  top: 218px;
+  left: 0;
+  right: 0;
+  z-index: 2;
   color: #b7bec2;
-  font-size: 38px;
+  font-size: 35px;
+  line-height: 44px;
   font-weight: bold;
-  letter-spacing: 5px;
+  letter-spacing: 6px;
+  text-align: center;
+  animation: battle-result-outcome 420ms ease-out 590ms both;
 }
 
-.battle-result-badge.win .battle-result-title {
+.battle-result-title.win {
   color: #ff6573;
 }
 
-.battle-result-badge.draw .battle-result-title {
+.battle-result-title.draw {
   color: #4cc773;
+}
+
+.battle-result-title.cancelled {
+  top: 119px;
+  font-size: 28px;
+  animation: battle-result-reveal 350ms ease-out both;
 }
 
 .battle-result-scores {
@@ -1701,12 +1777,17 @@ export default {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  position: absolute;
+  top: 132px;
+  left: 84px;
+  z-index: 2;
   width: 280px;
-  height: 50px;
-  margin-top: 8px;
+  height: 69px;
 }
 
 .battle-result-score-cell {
+  --battle-score-scale: 1.14;
+  --battle-final-score-color: #4cc773;
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
@@ -1715,44 +1796,133 @@ export default {
   min-width: 0;
 }
 
+.battle-result-score-self { --battle-score-start-x: 40px; }
+.battle-result-score-opponent { --battle-score-start-x: 123px; }
+
+.battle-result-score-leading {
+  --battle-score-scale: 1.55;
+  --battle-final-score-color: #ff6573;
+}
+
+.battle-result-score-trailing {
+  --battle-score-scale: 0.8;
+  --battle-final-score-color: rgba(76,199,115,0.66);
+}
+
 .battle-result-score-role {
-  color: rgba(76,199,115,0.48);
-  font-size: 10px;
-  line-height: 12px;
+  color: rgba(76,199,115,0.64);
+  font-size: 11px;
+  line-height: 15px;
+  animation: battle-result-reveal 310ms ease-out 435ms both;
 }
 
 .battle-result-score-value {
-  color: rgba(76,199,115,0.82);
-  font-size: 25px;
-  line-height: 29px;
+  color: var(--battle-final-score-color);
+  font-size: 34px;
+  line-height: 50px;
   font-weight: bold;
-}
-
-.battle-result-score-leading .battle-result-score-value {
-  color: #ff6573;
+  animation: battle-score-settle 960ms ease-out both;
 }
 
 .battle-result-score-separator {
   width: 1px;
   height: 30px;
+  margin-bottom: 13px;
   flex-shrink: 0;
-  background-color: rgba(76,199,115,0.20);
+  background-color: rgba(76,199,115,0.32);
+  animation: battle-result-reveal 310ms ease-out 435ms both;
 }
 
 .battle-result-reason {
+  position: absolute;
+  top: 174px;
+  left: 64px;
+  right: 64px;
   max-width: 320px;
-  margin-top: 12px;
   color: rgba(76,199,115,0.64);
   font-size: 12px;
   line-height: 17px;
   text-align: center;
 }
 
+.battle-result-fireworks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.battle-firework {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  color: #4cc773;
+  animation: battle-firework-burst 1060ms ease-out both;
+}
+
+.battle-firework-ring {
+  border-radius: 2px;
+  box-shadow: 0 -24px currentColor, 14px -19px currentColor, 23px -7px currentColor, 23px 7px currentColor,
+    14px 19px currentColor, 0 24px currentColor, -14px 19px currentColor, -23px 7px currentColor,
+    -23px -7px currentColor, -14px -19px currentColor, 0 -12px currentColor, 12px 0 currentColor,
+    0 12px currentColor, -12px 0 currentColor;
+}
+
+.battle-firework-star {
+  box-shadow: 0 -29px currentColor, 0 -20px currentColor, 0 -11px currentColor, 0 11px currentColor,
+    0 20px currentColor, 0 29px currentColor, 11px 0 currentColor, 20px 0 currentColor, 29px 0 currentColor,
+    -11px 0 currentColor, -20px 0 currentColor, -29px 0 currentColor, 14px 14px currentColor,
+    14px -14px currentColor, -14px 14px currentColor, -14px -14px currentColor;
+}
+
+.battle-firework-a-outer { top: 99px; left: 69px; }
+.battle-firework-a-inner { top: 211px; left: 113px; animation-delay: 160ms; }
+.battle-firework-b-outer { top: 108px; right: 71px; }
+.battle-firework-b-inner { top: 210px; right: 115px; animation-delay: 225ms; }
+
+@keyframes battle-score-settle {
+  0% { transform: translate(var(--battle-score-start-x), -44px) scale(1); color: #4cc773; }
+  52% { transform: translate(0, 0) scale(1); color: #4cc773; }
+  78% { transform: scale(var(--battle-score-scale)); color: var(--battle-final-score-color); }
+  100% { transform: scale(var(--battle-score-scale)); color: var(--battle-final-score-color); }
+}
+
+@keyframes battle-result-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes battle-result-outcome {
+  from { opacity: 0; transform: translateY(10px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes battle-firework-burst {
+  0% { opacity: 0; transform: scale(0.12); }
+  15% { opacity: 1; }
+  62% { opacity: 0.8; }
+  100% { opacity: 0; transform: scale(2.15) translateY(8px); }
+}
+
 .battle-panels {
+  position: relative;
   display: flex;
   flex: 1 1 auto;
   flex-direction: row;
   min-height: 0;
+}
+
+.battle-waiting-text {
+  position: absolute;
+  top: 108px;
+  left: 0;
+  right: 0;
+  color: rgba(76,199,115,0.72);
+  font-size: 17px;
+  text-align: center;
 }
 
 .battle-side {

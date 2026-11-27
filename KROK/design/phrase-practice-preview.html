@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>K 歌 · 逐句练唱预览</title>
+  <link rel="stylesheet" href="/phrase-screen.css">
+  <style>
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0;
+      padding: 28px 12px;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(ellipse at 50% 0%, #182d22, #0a100d 66%);
+      color: #e1efe5;
+      font: 14px/1.5 "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+    }
+    main { display: grid; justify-items: center; gap: 17px; width: 100%; }
+    header, .preview-note { text-align: center; }
+    h1 { margin: 0 0 5px; font-size: 25px; }
+    p { margin: 0; }
+    header p, .preview-note { color: #a7bbad; }
+    .preview-shell {
+      max-width: 100%;
+      overflow: auto;
+      border: 1px solid #344b3c;
+      border-radius: 15px;
+      background: #000;
+      box-shadow: 0 22px 54px #0009;
+    }
+    .phrase-screen { line-height: 1.3; touch-action: none; }
+    .phrase-button { font-family: inherit; cursor: crosshair; color: var(--phrase-green); }
+    .phrase-button:focus-visible { outline: 1px solid var(--phrase-green); }
+    .phrase-stage { min-height: 17px; }
+    .preview-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .preview-controls button, .preview-controls label, .preview-home button {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid #3a5143;
+      border-radius: 7px;
+      padding: 8px 13px;
+      background: #15231a;
+      color: #e0efe4;
+      font: inherit;
+      cursor: pointer;
+    }
+    .preview-controls button:hover, .preview-controls label:hover, .preview-home button:hover { background: #243a2c; }
+    .preview-controls input { accent-color: #66dc88; }
+    .preview-home {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      justify-items: center;
+      gap: 12px;
+    }
+    .preview-home strong { font-size: 24px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>K 歌 · 逐句练唱预览</h1>
+      <p>在眼镜画面内移动鼠标模拟转头，停留一圈确认。</p>
+    </header>
+    <div class="preview-shell">
+      <div class="phrase-screen" id="screen" role="region" aria-label="眼镜画面" tabindex="0">
+        <div class="preview-home" id="home" hidden>
+          <strong>稻香</strong>
+          <button id="enter" type="button">进入练这一句</button>
+        </div>
+        <div class="phrase-content" id="practice">
+          <div class="phrase-content" id="main-view">
+            <div class="phrase-heading">
+              <span class="phrase-song" id="song-name"></span><span class="phrase-muted" id="line-meta"></span>
+            </div>
+            <div class="phrase-target"><span class="phrase-lyric" id="lyric"></span></div>
+            <div class="phrase-track">
+              <div class="phrase-stage"><span id="phase" role="status"></span><span id="attempt"></span></div>
+              <div class="phrase-countdown" id="countdown" hidden></div>
+            </div>
+            <div class="phrase-readout">
+              <div class="phrase-metrics">
+                <span class="phrase-metric">歌词匹配 <strong class="phrase-value" id="lyric-score">—</strong></span>
+                <span class="phrase-metric">音准匹配 <strong class="phrase-value" id="pitch-score">—</strong></span>
+                <span class="phrase-pitch-detail" id="pitch-detail"></span>
+              </div>
+              <div class="phrase-asr">
+                <span class="phrase-asr-label">识别</span><span class="phrase-heard" id="heard"></span>
+              </div>
+            </div>
+          </div>
+          <div class="phrase-content" id="picker-view" hidden>
+            <div class="phrase-picker-heading">
+              <span class="phrase-picker-title">按时间选句</span><span class="phrase-muted" id="picker-position"></span>
+            </div>
+          </div>
+          <div class="phrase-footer">停留一圈确认 · 双击镜腿返回</div>
+          <canvas class="phrase-canvas" id="canvas" aria-hidden="true"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="preview-controls" aria-label="浏览器预览控制">
+      <button id="temple" type="button">模拟镜腿（双击）</button>
+      <label><input type="checkbox" id="sound">播放歌曲音频</label>
+    </div>
+    <p class="preview-note">使用《稻香》的真实谱面和伴奏，演唱输入由示例模拟。</p>
+  </main>
+  <script type="module">
+    import { SongChoice } from '/utils/songChoice.js'
+    import { daoXiangSong as song } from '/utils/daoXiangSong.js'
+    import { createPitchDetector, hzToMidi } from '/utils/pitchEngine.js'
+    import { PhrasePractice, practiceLayout } from '/utils/phrasePractice.js'
+    import { createPhrasePlayer } from '/utils/phraseAudio.js'
+
+    const find = id => document.getElementById(id)
+    const screen = find('screen')
+    const canvas = find('canvas')
+    const home = find('home')
+    const practice = find('practice')
+    const mainView = find('main-view')
+    const pickerView = find('picker-view')
+    const sound = find('sound')
+    const layout = practiceLayout()
+    const ctx = canvas.getContext('2d')
+    ctx.flush = () => {}
+    canvas.width = layout.width
+    canvas.height = layout.height
+    const neutral = [0, 0, 0, 1]
+    let pose = neutral
+    let view
+    let gaze
+    let lastTap = -Infinity
+
+    // Model orientation from pointer coordinates so dwell and cancellation use the glasses controller.
+    class PointerOrientation extends EventTarget {
+      start() {
+        this.timer = setInterval(() => {
+          this.quaternion = pose
+          this.hasReading = true
+          this.dispatchEvent(new Event('reading'))
+        }, 1000 / 60)
+      }
+      stop() { clearInterval(this.timer) }
+    }
+    Object.defineProperty(globalThis, 'AbsoluteOrientationSensor', { configurable: true, value: PointerOrientation })
+
+    function makeButton(parent, box, index, extraClass = '') {
+      const button = document.createElement('button')
+      button.type = 'button'
+      button.className = 'phrase-button ' + extraClass
+      button.style.cssText = box.style
+      button.addEventListener('click', event => {
+        if (parent === mainView && index === 1 && view.canStop) {
+          pose = neutral
+          model.stop()
+        } else if (event.detail === 0 || (parent === pickerView && index === 6)) page.confirmChoice(index)
+      })
+      parent.append(button)
+      return button
+    }
+    const mainButtons = ['‹ 上一句', '开始练唱', '下一句 ›', '听示范', '选句']
+      .map((label, index) => {
+        const button = makeButton(mainView, layout.boxes[index], index,
+          index === 1 ? 'phrase-primary' : index > 2 ? 'phrase-utility' : '')
+        button.textContent = label
+        return button
+      })
+    const pickerButtons = layout.pickerBoxes.map((box, index) => {
+      const button = makeButton(pickerView, box, index, index < 5 ? 'phrase-row' : '')
+      if (index < 5) {
+        const time = document.createElement('span')
+        time.className = 'phrase-time'
+        const label = document.createElement('span')
+        label.className = 'phrase-row-text'
+        button.append(time, label)
+      } else button.textContent = ['‹ 上一页', '返回练唱', '下一页 ›'][index - 5]
+      return button
+    })
+    const page = {
+      data: { choiceAvailable: [] },
+      showChoiceControls() {},
+      setChoiceFocus(index) {
+        const buttons = view.picker ? pickerButtons : mainButtons
+        buttons.forEach((button, i) => { button.classList.toggle('phrase-active', i === index) })
+      },
+      confirmChoice(index) {
+        if (view.picker && index === 6) back()
+        else model.activate(index)
+      },
+      drawAimUnderlay(context) { model.drawPitch(context, layout.chart) }
+    }
+
+    function render(next) {
+      const switched = view && next.picker !== view.picker
+      const centerChanged = view && next.canStop !== view.canStop
+      view = next
+      page.data.choiceAvailable = next.choiceAvailable
+      mainView.hidden = next.picker
+      pickerView.hidden = !next.picker
+      find('song-name').textContent = next.songName + ' · 练这一句'
+      find('line-meta').textContent = next.linePosition + '　' + next.lineTime
+      find('lyric').textContent = next.lineText
+      find('phase').textContent = next.statusText
+      const countdown = find('countdown')
+      countdown.textContent = next.countdownDots
+      countdown.hidden = !next.countdownDots
+      find('attempt').textContent = next.lastAttempt
+      find('lyric-score').textContent = next.lyricScore
+      find('pitch-score').textContent = next.pitchScore
+      find('pitch-detail').textContent = next.pitchDetail
+      find('heard').textContent = next.heardText
+      mainButtons[1].textContent = next.centerLabel
+      find('picker-position').textContent = next.pickerPosition
+      if (next.picker) next.pickerRows.forEach((row, index) => {
+        const button = pickerButtons[index]
+        button.hidden = !row.text
+        button.children[0].textContent = row.time
+        button.children[1].textContent = row.text
+        button.classList.toggle('phrase-current', row.current)
+      })
+      const buttons = next.picker ? pickerButtons : mainButtons
+      buttons.forEach((button, index) => {
+        button.classList.toggle('phrase-disabled', !next.choiceAvailable[index])
+        button.setAttribute('aria-disabled', String(!next.choiceAvailable[index]))
+      })
+      if (switched && gaze) {
+        gaze.layout.boxes = next.picker ? layout.pickerBoxes : layout.boxes
+        gaze.requireMove()
+        page.setChoiceFocus(-1)
+      } else if (centerChanged && gaze?.focus === 1) {
+        gaze.requireMove()
+      }
+    }
+
+    const model = new PhrasePractice(song, {
+      update: render,
+      openPlayer(start, _listen, onEnd, onError) {
+        return createPhrasePlayer({ src: song.guideAccompaniment, muted: !sound.checked }, start, onEnd, onError)
+      },
+      openInput(onPartial, line) {
+        const improved = Boolean(model.history.get(model.index))
+        const targetText = line.text
+        const characters = Array.from(targetText)
+        const transcript = improved || characters.length < 3 ? targetText :
+          characters.filter((_, index) => index !== Math.floor(characters.length / 2)).join('')
+        let frequency = 0
+        let revealed = 0
+        const sampleRate = 16000
+        const analyser = {
+          context: { sampleRate }, fftSize: 4096,
+          getFloatTimeDomainData(buffer) {
+            for (let i = 0; i < buffer.length; i++) {
+              buffer[i] = frequency ? 0.17 * Math.sin(i * Math.PI * 2 * frequency / sampleRate) : 0
+            }
+          }
+        }
+        const detectPitch = createPitchDetector(analyser, 40, 1200)
+        return {
+          ready: Promise.resolve(), offsetMs: 0,
+          begin() {},
+          close() {},
+          sample(timeMs) {
+            const time = (timeMs - line.startMs) / (line.endMs - line.startMs)
+            const ref = song.refNotes.find(note => note.startMs <= timeMs && timeMs < note.endMs)
+            const displayed = Math.ceil(time * transcript.length)
+            if (displayed > revealed) {
+              revealed = displayed
+              onPartial(transcript.slice(0, displayed))
+            }
+            const error = improved ? 0.3 : (time < 0.45 ? -1 : 2.4)
+            frequency = ref ? 440 * 2 ** ((ref.midi - 12 + error - 69) / 12) : 0
+            return { voiceActive: true, midi: hzToMidi(detectPitch()) }
+          },
+          async finish() { return { text: transcript, state: 'ok' } }
+        }
+      }
+    })
+
+    function aim(event) {
+      if (!gaze?.basePose) return
+      const bounds = screen.getBoundingClientRect()
+      const yaw = -(event.clientX - bounds.left - layout.width / 2) * 0.65 / layout.width
+      const pitch = (layout.height / 2 - event.clientY + bounds.top) * 0.50 / layout.height
+      pose = [
+        Math.cos(yaw / 2) * Math.sin(pitch / 2), Math.sin(yaw / 2) * Math.cos(pitch / 2),
+        -Math.sin(yaw / 2) * Math.sin(pitch / 2), Math.cos(yaw / 2) * Math.cos(pitch / 2)
+      ]
+    }
+    function enter() {
+      home.hidden = true
+      practice.hidden = false
+      pose = neutral
+      model.emit()
+      gaze = new SongChoice(page, { ...layout }, () => ctx)
+      gaze.start({ transition: false })
+    }
+    function back() {
+      lastTap = -Infinity
+      if (!gaze || model.closePicker()) return
+      model.select(model.index)
+      gaze.stop()
+      gaze = null
+      practice.hidden = true
+      home.hidden = false
+    }
+    screen.addEventListener('pointermove', aim)
+    screen.addEventListener('pointerdown', aim)
+    screen.addEventListener('pointerleave', () => { pose = neutral })
+    window.addEventListener('keydown', event => {
+      if (!gaze || !['Backspace', 'Escape', 'BrowserBack', 'GoBack'].includes(event.key)) return
+      event.preventDefault()
+      if (!event.repeat) back()
+    })
+    find('temple').addEventListener('click', () => {
+      const now = performance.now()
+      if (now - lastTap <= 350) back()
+      else lastTap = now
+    })
+    find('enter').addEventListener('click', enter)
+    window.addEventListener('pagehide', () => { model.cancel(); gaze?.stop() })
+    enter()
+  </script>
+</body>
+</html>

@@ -3,17 +3,14 @@ const { readFileSync } = require('node:fs')
 const { join } = require('node:path')
 const vm = require('node:vm')
 
-const homeSource = readFileSync(join(__dirname, '../pages/home/home.ink'), 'utf8')
-assert.match(homeSource, /value: 'guide', label: '带歌词版'/)
-assert.match(homeSource, /value: 'instrumental', label: '纯音乐版'/)
-assert.doesNotMatch(homeSource, /value: 'silent'|无声版本/)
-assert.match(
-  homeSource,
-  /<view class="main-view" ink:if="\{\{!choiceVisible\}\}">[\s\S]*class="topbar"[\s\S]*class="hintbar"[\s\S]*<\/view>/,
-  '打开版本选择后必须隐藏选歌主页'
-)
-assert.match(homeSource, /data-idx="0"[\s\S]*>带歌词版</, '歌词版按钮必须在首帧静态渲染')
-assert.match(homeSource, /data-idx="1"[\s\S]*>纯音乐版</, '纯音乐版按钮必须在首帧静态渲染')
+const choiceSource = readFileSync(join(__dirname, '../pages/song-choice/choice.ink'), 'utf8')
+assert.match(choiceSource, /value: 'guide', label: '带歌词版'/)
+assert.match(choiceSource, /value: 'instrumental', label: '伴奏版'/)
+assert.match(choiceSource, /value: 'phrase', label: '练这一句'/)
+assert.doesNotMatch(choiceSource, /value: 'silent'|无声版本/)
+assert.match(choiceSource, /data-idx="0"[\s\S]*?>\{\{choiceOptions\[0\]\.label\}\}</, '歌词版按钮应直接渲染')
+assert.match(choiceSource, /data-idx="1"[\s\S]*?>\{\{choiceOptions\[1\]\.label\}\}</, '伴奏版按钮应直接渲染')
+assert.match(choiceSource, /data-idx="2"[\s\S]*?>\{\{choiceOptions\[2\]\.label\}\}</, '练这一句按钮应直接渲染')
 
 const recordSource = readFileSync(join(__dirname, '../pages/record/record.ink'), 'utf8')
   .match(/<script setup>([\s\S]*?)<\/script>/)[1]

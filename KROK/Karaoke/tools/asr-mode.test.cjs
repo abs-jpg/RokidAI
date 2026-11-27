@@ -72,7 +72,14 @@ function createPage(overrides = {}) {
 }
 
 async function main() {
-  const solo = createPage()
+  const pitchRanges = []
+  const detector = {
+    createPitchDetector(_analyser, minHz, maxHz) {
+      pitchRanges.push([minHz, maxHz])
+      return () => 440
+    }
+  }
+  const solo = createPage(detector)
   let soloStarts = 0
   solo.page.startRecognition = () => { soloStarts++ }
   solo.page.playAccompaniment = async () => {}
@@ -143,7 +150,7 @@ async function main() {
   assert.match(solo.page.data.asrDisplayText, /the newest text$/, '混合语言更新时应保留最新词')
   assert.ok(solo.page.data.asrDisplayText.length < 30)
 
-  const battle = createPage()
+  const battle = createPage(detector)
   let battleStarts = 0
   battle.page.isBattle = true
   battle.page.roomId = 'room'
@@ -153,6 +160,7 @@ async function main() {
   battle.page.playAccompaniment = async () => {}
   await battle.page.requestMicrophone()
   assert.equal(battle.page.data.phase, 'battleReady')
+  assert.deepEqual(pitchRanges, [[40, 1200], [40, 1200]], '单人和联机必须使用同一检测音域')
   battle.page.startAtLocal = Date.now()
   battle.page.scheduleBattleStart()
   assert.equal(battleStarts, 1, '联机同步开唱时必须启动 ASR')
@@ -261,28 +269,49 @@ function checkBattlePitchDisplay() {
     now += 120
     page.handleBattleMessage({ type: 'opponent.progress', roomId: 'room', roundId: 'round', score: 30, midi: opponentMidi })
   }
-  receivePitch(820, 47)
-  receivePitch(940, 47)
-  assert.equal(page.data.battleOpponentNote, 'B2')
-  assert.equal(page.data.opponentOctaveShift, 12)
+  receivePitch(820, 35)
+  assert.equal(page.getPitchDotMidi(page.opponentPitch, 820), 59, '首个远端采样就能向上对齐两个八度')
+  receivePitch(940, 35)
+  assert.equal(page.data.battleOpponentNote, 'B1')
+  assert.equal(page.data.opponentOctaveShift, 24)
   assert.equal(page.data.selfOctaveShift, 0, '对手的音区补偿与自己的独立')
   assert.equal(page.data.battleOpponentScore, 30)
   assert.equal(page.getPitchDotMidi(page.opponentPitch, 940), 59, '抬高对手低音之后仍显示偏低')
   midi = 64.4
   elapsed = 1076
   page.samplePitch()
-  const render = trace => {
-    const arcs = []
-    const ctx = { arc: (x, y) => arcs.push({ x, y }), clearRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, fill() {}, flush() {} }
-    page.drawPitch(ctx, 200, 130, 1100, trace)
-    return arcs[0]
+  function mockCanvas() {
+    return {
+      arc(x, y) { this.dot = { x, y } },
+      fillText(text, x, y) { this.feedback = { text, x, y } },
+      clearRect() { this.dot = null; this.feedback = null },
+      beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, fill() {}, flush() {}
+    }
   }
+  page.battleSelfCanvas = mockCanvas()
+  page.battleOpponentCanvas = mockCanvas()
+  page.drawPitchGraphs(1100)
+  const self = page.battleSelfCanvas
+  const opponent = page.battleOpponentCanvas
   const referenceY = 8 + (74 - 60) * 114 / (74 - 53)
-  assert.ok(render(page.selfPitch).y < referenceY)
-  assert.ok(render(page.opponentPitch).y > referenceY)
-  assert.deepEqual(scoreNotes, [64, 64.4, 64.4], '评分链路只接收自己的原始音高')
+  assert.ok(self.dot.y < referenceY)
+  assert.ok(opponent.dot.y > referenceY)
+  assert.deepEqual(self.feedback, { text: 'Good', x: self.dot.x, y: self.dot.y - 8 })
+  assert.deepEqual(opponent.feedback, { text: 'Perfect', x: opponent.dot.x, y: opponent.dot.y - 8 })
+  midi = 38
+  elapsed = 1120
+  now += 120
+  page.samplePitch()
+  page.drawPitchGraphs(1144)
+  assert.equal(page.getPitchDotMidi(page.selfPitch, 1120), 62)
+  assert.equal(self.feedback.text, 'Perfect', '联机己方偏差恰好两个半音也应显示 Perfect')
+  assert.equal(messages.at(-1).midi, 38, '同步给对手的仍是原始音高')
+  assert.deepEqual(scoreNotes, [64, 64.4, 64.4, 38], '评分链路只接收自己的原始音高')
   receivePitch(1200, null)
   assert.equal(page.getPitchDotMidi(page.opponentPitch, 1200), null, '对手停唱后隐藏圆点')
+  page.drawPitchGraphs(1360)
+  assert.equal(opponent.dot, null)
+  assert.equal(opponent.feedback, null, '对手停唱后圆点与反馈应同时消失')
   receivePitch(1320, 47)
   now += 1201
   elapsed = 2100
@@ -291,7 +320,7 @@ function checkBattlePitchDisplay() {
   assert.equal(page.getPitchDotMidi(page.opponentPitch, 1940), null)
   assert.equal(page.data.battleOpponentScore, 30)
   assert.equal(page.data.guideNote, 'C4', '参考音高来自谱面')
-  console.log('PASS  联机双方滚动音高、八度对齐、绿点插值、停唱隐藏与原始音高计分')
+  console.log('PASS  联机双方滚动音高、八度对齐、绿点反馈、停唱隐藏与原始音高计分')
 }
 
 async function checkRecognitionRecovery() {

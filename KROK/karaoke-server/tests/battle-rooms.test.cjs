@@ -289,6 +289,23 @@ async function main() {
       resultA.players.map(player => player.coverage).sort((x, y) => x - y),
       [80, 100]
     )
+    c.send('battle.cheer', round)
+    c.send('ping', { t0: 7001 })
+    await c.waitFor('pong', 5000, message => message.t0 === 7001)
+    assert.equal(a.messages.some(message => message.type === 'battle.cheer'), false)
+    assert.equal(b.messages.some(message => message.type === 'battle.cheer'), false)
+    a.send('battle.cheer', round)
+    assert.equal((await b.waitFor('battle.cheer')).roundId, round.roundId)
+    b.send('battle.cheer', round)
+    assert.equal((await a.waitFor('battle.cheer')).roomId, round.roomId)
+    b.send('battle.result.leave', round)
+    b.send('ping', { t0: 7002 })
+    await b.waitFor('pong', 5000, message => message.t0 === 7002)
+    await waitUntil(Date.now() + 620)
+    a.send('battle.cheer', round)
+    a.send('ping', { t0: 7003 })
+    await a.waitFor('pong', 5000, message => message.t0 === 7003)
+    assert.equal(b.messages.filter(message => message.type === 'battle.cheer').length, 1)
     const dbAfterBattle = new DatabaseSync(path.join(trialDir, 'db.sqlite'))
     try {
       assert.equal(dbAfterBattle.prepare('SELECT COUNT(*) AS count FROM scores').get().count,

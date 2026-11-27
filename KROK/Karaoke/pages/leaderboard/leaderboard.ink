@@ -349,32 +349,32 @@ export default {
     <scroll-view class="category-tabs" ink:if="{{focus === 'categories'}}">
       <view class="category-tabs-inner">
         <view
-          class="category-tab {{categoryIndex === index ? 'category-tab-active' : ''}}"
+          class="category-tab {{categoryIndex === 0 ? 'category-tab-active' : ''}}"
           bindtap="onTapCategory"
           data-idx="0"
         >
-          <text class="category-tab-name {{categoryIndex === 0 ? 'category-tab-name-active' : ''}}">中文</text>
+          <text class="category-tab-name">中文</text>
         </view>
         <view
           class="category-tab {{categoryIndex === 1 ? 'category-tab-active' : ''}}"
           bindtap="onTapCategory"
           data-idx="1"
         >
-          <text class="category-tab-name {{categoryIndex === 1 ? 'category-tab-name-active' : ''}}">英文</text>
+          <text class="category-tab-name">英文</text>
         </view>
         <view
           class="category-tab {{categoryIndex === 2 ? 'category-tab-active' : ''}}"
           bindtap="onTapCategory"
           data-idx="2"
         >
-          <text class="category-tab-name {{categoryIndex === 2 ? 'category-tab-name-active' : ''}}">日语</text>
+          <text class="category-tab-name">日语</text>
         </view>
         <view
           class="category-tab {{categoryIndex === 3 ? 'category-tab-active' : ''}}"
           bindtap="onTapCategory"
           data-idx="3"
         >
-          <text class="category-tab-name {{categoryIndex === 3 ? 'category-tab-name-active' : ''}}">韩语</text>
+          <text class="category-tab-name">韩语</text>
         </view>
       </view>
     </scroll-view>
@@ -503,25 +503,23 @@ export default {
   flex: 1 1 0;
   margin-right: 6px;
   border: 1px solid var(--green-24);
+  border-radius: 4px;
+  background-color: transparent;
+  transition: border-color 140ms ease-out;
 }
 
 .category-tab:last-child {
   margin-right: 0;
 }
 
-.category-tab-active {
+.category-tab-active,
+.category-tab:active {
   border-color: var(--green-100);
-  background-color: var(--green-12);
 }
 
 .category-tab-name {
   font-size: 14px;
   color: var(--green-48);
-}
-
-.category-tab-name-active {
-  color: var(--green-100);
-  font-weight: bold;
 }
 
 .song-tabs {

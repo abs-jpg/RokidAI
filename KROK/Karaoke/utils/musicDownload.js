@@ -1,14 +1,14 @@
 import { downloadSong, getCachedSongCatalog, loadSongCatalog } from './songLibrary.js'
 import { submitSongRequest } from './leaderboard.js'
 import { downloadCatalog } from './downloadCatalog.js'
-import { clearDownloadConfirmEcho, isDownloadReturnEcho, rememberDownloadConfirm, rememberDownloadReturn, takeDownloadInput } from './downloadReturn.js'
+import { clearDownloadConfirmEcho, isDownloadReturnEcho, isRecentReturn, isReturnKey, rememberDownloadConfirm, rememberDownloadReturn, takeDownloadInput } from './downloadReturn.js'
 
 const ROW_HEIGHT = 36
 const NAVIGATION_REPEAT_MS = 250
 const DOUBLE_TAP_MS = 350
 const TAP_BOUNCE_MS = 60
 const SWIPE_SETTLE_MS = 120
-const DOUBLE_TAP_SETTLE_MS = 200
+const HOST_RETURN_MS = 450
 const ADD_MUSIC = 'add-music'
 const MAX_REQUEST_CHARS = 160
 const CATEGORY_HINT = '滑动选语种 · 单击进入 · 双击返回首页'
@@ -48,8 +48,6 @@ function categoryOf(song) {
 function navigationAction(key) {
   switch (key) {
     case 'GlobalHook': return 'temple'
-    case 'Backspace':
-    case 'Escape': return 'back'
     case 'ArrowUp':
     case 'PageUp':
     case 'ArrowLeft': return 'previous'
@@ -92,37 +90,13 @@ export class MusicDownload {
     this.page.setData(patch)
   }
 
-  start(categoryKey, songId) {
-    const categoryIndex = CATEGORIES.findIndex(category => category.key === categoryKey)
-    if (categoryIndex < 0) {
-      this.catalog = this.mergeCachedCatalog(getCachedSongCatalog())
-      this.setData({
-        ...this.categoryPreview(0),
-        phase: 'categories', title: '音乐下载', categories: this.categoryOptions(), hintText: CATEGORY_HINT
-      })
-      this.refreshCatalog()
-      return
-    }
-    const title = CATEGORIES[categoryIndex].label
-    if (categoryKey === ADD_MUSIC) {
-      this.setData({ phase: 'request', title, requestPhase: 'idle', requestAction: 0, requestText: '', requestMessage: '', hintText: REQUEST_HINT })
-      return
-    }
+  start() {
     this.catalog = this.mergeCachedCatalog(getCachedSongCatalog())
-    const songs = this.categorySongs(categoryIndex)
-    const selectedIdx = songs.length ? Math.max(0, songs.findIndex(song => song.id === songId)) : -1
     this.setData({
-      phase: 'songs', title, songs, categoryIndex,
-      selectedIdx,
-      scrollTop: Math.max(0, selectedIdx) * ROW_HEIGHT,
-      downloadProgress: 0,
-      downloadLabel: songs.length + ' 首',
-      catalogConnected: false,
-      catalogLoading: true,
-      message: '正在连接曲库',
-      hintText: SONG_HINT
+      ...this.categoryPreview(0),
+      categories: this.categoryOptions(),
+      hintText: CATEGORY_HINT
     })
-    if (songId && songs[selectedIdx]?.id === songId) this.openChoice(selectedIdx)
     this.refreshCatalog()
   }
 
@@ -152,10 +126,10 @@ export class MusicDownload {
 
   useCatalog(songs, connected) {
     this.catalog = connected ? songs : this.mergeCachedCatalog(songs)
-    if (this.data.phase === 'categories') {
+    if (this.data.phase !== 'songs') {
       this.setData({
-        ...this.categoryPreview(this.data.categoryIndex),
-        categories: this.categoryOptions(), catalogConnected: connected, catalogLoading: false
+        ...(this.data.phase === 'categories' ? this.categoryPreview(this.data.categoryIndex) : {}),
+        catalogConnected: connected, catalogLoading: false
       })
       return
     }
@@ -204,9 +178,26 @@ export class MusicDownload {
   }
 
   openCategory(index, songId) {
-    if (this.data.phase !== 'categories' || !CATEGORIES[index]) return
-    this.setData(this.categoryPreview(index))
-    this.page.openCategory(CATEGORIES[index].key, songId)
+    const category = CATEGORIES[index]
+    if (this.data.phase !== 'categories' || !category) return
+    const preview = this.categoryPreview(index)
+    if (category.key === ADD_MUSIC) {
+      this.setData({
+        ...preview, phase: 'request', title: category.label, requestPhase: 'idle',
+        requestAction: 0, requestText: '', requestMessage: '', hintText: REQUEST_HINT
+      })
+      return
+    }
+
+    const songs = preview.songs
+    const selectedIdx = songs.length ? Math.max(0, songs.findIndex(song => song.id === songId)) : -1
+    this.setData({
+      ...preview, phase: 'songs', title: category.label, selectedIdx,
+      scrollTop: Math.max(0, selectedIdx) * ROW_HEIGHT,
+      downloadProgress: 0, downloadLabel: songs.length + ' 首', hintText: SONG_HINT
+    })
+    if (songId && songs[selectedIdx]?.id === songId) this.openChoice(selectedIdx)
+    if (!this.data.catalogConnected) this.refreshCatalog()
   }
 
   clearTempleTaps() {
@@ -236,29 +227,40 @@ export class MusicDownload {
       return
     }
     this.clearTempleTaps()
-    // 方向键有短暂的补发窗口；真正的返回键仍由 handleInput 立即处理。
-    this.doubleTapTimer = setTimeout(() => {
-      this.clearTempleTaps()
-      rememberDownloadReturn()
-      this.back()
-    }, DOUBLE_TAP_SETTLE_MS)
+    // 优先让宿主派发 Backspace，只有收到两次触摸而没有返回键时才补做返回。
+    this.doubleTapTimer = setTimeout(() => this.back(true), HOST_RETURN_MS)
   }
 
   handleInput(event, pressed) {
-    const action = navigationAction(event.code) || navigationAction(event.key)
-    if (pressed && action !== 'temple') return
-    if (!action || !takeDownloadInput(event)) return
-    if (isDownloadReturnEcho(event) || event.repeat || this.closed || this.page.navigating) return
+    const action = isReturnKey(event) ? 'back' : navigationAction(event.code) || navigationAction(event.key)
+    if (pressed && action !== 'temple' && action !== 'back') return
+    if (!action || this.closed) return
+    if (isDownloadReturnEcho(event) || event.repeat || this.page.navigating) {
+      takeDownloadInput(event)
+      return
+    }
     if (action === 'temple') {
-      this.handleTempleTouch(pressed)
+      if (takeDownloadInput(event, { passthrough: true }) && !isRecentReturn()) this.handleTempleTouch(pressed)
       return
     }
     if (action === 'back') {
-      this.clearTempleTaps()
-      this.back()
+      const touched = this.tapConfirmTimer != null || this.doubleTapTimer != null
+      if (pressed) {
+        if (this.tapConfirmTimer != null) {
+          rememberDownloadConfirm()
+          this.clearTempleTaps()
+        }
+      } else if (this.data.choiceVisible || this.data.phase !== 'categories') {
+        if (!takeDownloadInput(event)) return
+        this.back(touched)
+      } else if (takeDownloadInput(event, { passthrough: true })) {
+        this.clearTempleTaps()
+        if (event.code !== 'Backspace') this.doubleTapTimer = setTimeout(() => this.back(touched), HOST_RETURN_MS)
+      }
       return
     }
 
+    if (!takeDownloadInput(event)) return
     const at = performance.now()
     if (action !== 'confirm') {
       this.lastSwipeAt = at
@@ -349,10 +351,21 @@ export class MusicDownload {
     this.setData({ choiceIndex: index, choiceHint: CHOICE_HINT })
   }
 
-  back() {
+  back(suppressConfirm) {
+    this.clearTempleTaps()
+    rememberDownloadReturn({ suppressConfirm })
     if (this.data.choiceVisible) {
       this.cancelDownload()
       this.setData({ choiceVisible: false, choiceDownloading: false, downloadProgress: 0 })
+      return
+    }
+    if (this.data.phase !== 'categories') {
+      this.cancelRequestRecognition()
+      this.requestId = null
+      this.setData({
+        ...this.categoryPreview(this.data.categoryIndex),
+        phase: 'categories', title: '音乐下载', selectedIdx: -1, hintText: CATEGORY_HINT
+      })
       return
     }
     this.page.goBack()

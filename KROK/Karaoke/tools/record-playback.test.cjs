@@ -10,17 +10,20 @@ const source = readFileSync(join(__dirname, '../pages/record/record.ink'), 'utf8
 
 async function main() {
   let tick
+  let now = 0
+  let nextTimeout = 0
+  const timeouts = new Map()
   let saved = false
   let backCount = 0
   let micConnected = false
   let trackStopped = false
   const cardError = Object.assign(new Error('AudioContext.resume is unavailable while InkView target is _current'), { name: 'InvalidStateError' })
   const page = vm.runInNewContext(source, {
-    performance, console: { error() {} },
+    performance: { now: () => now }, console: { error() {} },
     setInterval(fn) { tick = fn; return 1 },
     clearInterval() {},
-    setTimeout() { return 2 },
-    clearTimeout() {},
+    setTimeout(callback) { const id = ++nextTimeout; timeouts.set(id, callback); return id },
+    clearTimeout(id) { timeouts.delete(id) },
     requestAnimationFrame() { return 3 },
     cancelAnimationFrame() {},
     encodePitchTrack: samples => samples,
@@ -177,8 +180,46 @@ async function main() {
   page.leaving = false
   const resultBackCount = backCount
   page.onConfirm()
+  assert.equal(backCount, resultBackCount, '结算页单击不会返回')
+  now += 120
   page.onConfirm()
-  assert.equal(backCount, resultBackCount + 1, '结算页单次确认只能返回一次')
+  assert.equal(backCount, resultBackCount + 1, '双击返回')
+  assert.equal(timeouts.size, 0, '双击取消尚未触发的喝彩')
+
+  const resultMessages = []
+  page.leaving = false
+  page.selfId = 'a'
+  page.data.phase = 'battleWaiting'
+  page.sendRound = type => resultMessages.push(type)
+  page.handleBattleMessage({ type: 'battle.result', players: [{ id: 'a', score: 92 }, { id: 'b', score: 87 }] })
+  const input = code => ({ code, preventDefault() {}, stopPropagation() {} })
+  now += 500
+  page.onKeyDown(input('GlobalHook'))
+  now += 70
+  page.onKeyUp(input('GlobalHook'))
+  now += 70
+  page.onKeyUp(input('Enter'))
+  assert.equal(backCount, resultBackCount + 1, '同一次触碰的松开和确认回声不能产生双击')
+  assert.equal(timeouts.size, 1)
+  const tapTimer = page.battleTapTimer
+  const tap = timeouts.get(tapTimer)
+  timeouts.delete(tapTimer)
+  tap()
+  assert.deepEqual(resultMessages, ['battle.cheer'])
+  assert.equal(page.data.battleFireworksA[0].id, 1)
+  const fireworksA = page.battleFireworksTimers.A
+  page.handleBattleMessage({ type: 'battle.cheer' })
+  assert.equal(page.data.battleFireworksB[0].id, 2, '对手喝彩应点亮独立的 B 烟花')
+  assert.equal(page.data.battleFireworksA[0].id, 1, '加入 B 烟花不能重新播放 A 烟花')
+  assert.equal(page.battleFireworksTimers.A, fireworksA)
+  const expireA = timeouts.get(fireworksA)
+  timeouts.delete(fireworksA)
+  expireA()
+  assert.equal(page.data.battleFireworksA.length, 0)
+  assert.equal(page.data.battleFireworksB[0].id, 2, 'A 结束后 B 烟花仍应继续播放')
+  page.onHide()
+  assert.deepEqual(resultMessages, ['battle.cheer', 'battle.result.leave'])
+  assert.equal(timeouts.size, 0, '离开结算后清除待处理的动画和手势')
   console.log('PASS  伴奏播放、浏览器异步拒绝、全屏恢复和对战断线退出')
 
   const pitchSource = readFileSync(join(__dirname, '../utils/pitchEngine.js'), 'utf8')

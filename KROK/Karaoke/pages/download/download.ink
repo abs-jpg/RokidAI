@@ -1,7 +1,7 @@
 <script setup>
 import wx from 'wx'
 import { MusicDownload } from '../../utils/musicDownload.js'
-import { clearDownloadInputPage, setDownloadInputPage } from '../../utils/downloadReturn.js'
+import { clearDownloadInputPage, rememberDownloadReturn, setDownloadInputPage } from '../../utils/downloadReturn.js'
 
 export default {
   data: {
@@ -20,16 +20,13 @@ export default {
     requestPhase: 'idle'
   },
 
-  onLoad(query) {
+  onLoad() {
     this.download = new MusicDownload(this)
-    this.download.start(query?.category, query?.song)
+    this.download.start()
   },
 
   onShow() {
-    const returning = this.navigating
-    this.navigating = false
     setDownloadInputPage(this.download)
-    if (returning) this.download.refreshCatalog()
   },
 
   onHide() {
@@ -38,6 +35,7 @@ export default {
   },
 
   onUnload() {
+    rememberDownloadReturn({ suppressConfirm: false })
     clearDownloadInputPage(this.download)
     this.download?.dispose()
   },
@@ -50,20 +48,14 @@ export default {
     this.download?.handleInput(event, false)
   },
 
-  openCategory(key, songId) {
-    if (this.navigating) return
-    this.navigating = true
-    const song = songId ? '&song=' + encodeURIComponent(songId) : ''
-    wx.navigateTo({
-      url: '/pages/download/download?category=' + encodeURIComponent(key) + song,
-      fail: () => { this.navigating = false }
-    })
-  },
-
   goBack() {
     if (this.navigating) return
     this.navigating = true
-    wx.navigateBack({ fail: () => { this.navigating = false } })
+    wx.navigateBack({
+      delta: 1,
+      success: () => rememberDownloadReturn({ suppressConfirm: false }),
+      fail: () => { this.navigating = false }
+    })
   },
 
   onTapDownloadCategory(event) {
@@ -384,6 +376,9 @@ export default {
   box-sizing: border-box;
   margin: 0 2px;
   border: 1px solid var(--green-24);
+  border-radius: 4px;
+  background-color: transparent;
+  transition: border-color 140ms ease-out;
 }
 
 .download-category-tab-label {
@@ -391,14 +386,9 @@ export default {
   color: var(--green-72);
 }
 
-.download-tab-active {
-  background-color: var(--green-12);
-  border-bottom-color: var(--green-100);
-}
-
-.download-tab-active .download-category-tab-label {
-  color: var(--green-100);
-  font-weight: bold;
+.download-tab-active,
+.download-category-tab:active {
+  border-color: var(--green-100);
 }
 
 .download-request-entry {

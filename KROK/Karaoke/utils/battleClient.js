@@ -149,7 +149,7 @@ export function sendBattle(type, payload = {}) {
   if (!socket || socket.readyState !== 1) return false
   if (socket.bufferedAmount > MAX_BUFFERED_BYTES) {
     // 下一次进度包会包含最新状态；关键消息无法发送时立即结束本轮。
-    if (type !== 'battle.progress' && type !== 'ping') disconnect(socket, 'send buffer full')
+    if (!['battle.progress', 'battle.cheer', 'battle.result.leave', 'ping'].includes(type)) disconnect(socket, 'send buffer full')
     return false
   }
   try {

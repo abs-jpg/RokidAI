@@ -2,6 +2,15 @@ let backEchoUntil = 0
 let confirmEchoUntil = 0
 let downloadPage
 const handledEvents = new WeakSet()
+const RETURN_KEYS = new Set(['Backspace', 'Escape', 'BrowserBack', 'GoBack', 'Back'])
+
+export function isReturnKey(event) {
+  return RETURN_KEYS.has(event.code) || RETURN_KEYS.has(event.key)
+}
+
+export function isRecentReturn() {
+  return Date.now() < backEchoUntil
+}
 
 export function setDownloadInputPage(page) {
   downloadPage = page
@@ -13,7 +22,7 @@ export function clearDownloadInputPage(page) {
 
 export function forwardDownloadInput(event, pressed) {
   if (handledEvents.has(event)) return true
-  if (!pressed && isDownloadReturnEcho(event)) return takeDownloadInput(event)
+  if ((!pressed || isReturnKey(event)) && isDownloadReturnEcho(event)) return takeDownloadInput(event)
   if (downloadPage) {
     downloadPage.handleInput(event, pressed)
     return true
@@ -21,18 +30,20 @@ export function forwardDownloadInput(event, pressed) {
   return false
 }
 
-export function takeDownloadInput(event) {
+export function takeDownloadInput(event, { passthrough = false } = {}) {
   if (handledEvents.has(event)) return false
   handledEvents.add(event)
-  event.preventDefault()
-  event.stopPropagation?.()
+  if (!passthrough) {
+    event.preventDefault()
+    event.stopPropagation?.()
+  }
   return true
 }
 
-export function rememberDownloadReturn() {
-  // 两次 GlobalHook 已触发返回时，拦截宿主稍后补发的返回键。
+export function rememberDownloadReturn({ suppressConfirm = true } = {}) {
+  // 返回已处理，拦截宿主稍后补发的返回键。
   backEchoUntil = Date.now() + 300
-  rememberDownloadConfirm()
+  if (suppressConfirm) rememberDownloadConfirm()
 }
 
 export function rememberDownloadConfirm() {
@@ -45,8 +56,6 @@ export function clearDownloadConfirmEcho() {
 
 export function isDownloadReturnEcho(event) {
   const now = Date.now()
-  return [event.code, event.key].some(key =>
-    (now < backEchoUntil && ['Backspace', 'Escape'].includes(key)) ||
-    (now < confirmEchoUntil && ['Enter', 'NumpadEnter', 'Space', ' '].includes(key))
-  )
+  return (isRecentReturn() && isReturnKey(event)) ||
+    (now < confirmEchoUntil && [event.code, event.key].some(key => ['Enter', 'NumpadEnter', 'Space', ' '].includes(key)))
 }

@@ -17,6 +17,8 @@ function preloadDefaultAudio() {
 }
 
 export default {
+  globalData: {},
+
   onLaunch() {
     preloadDefaultAudio()
   },
