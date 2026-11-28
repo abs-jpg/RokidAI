@@ -4,6 +4,7 @@ import { songs } from '../../utils/songData.js'
 import { isServerConnected } from '../../utils/leaderboard.js'
 import { loadSongCatalog, preloadSongAudio } from '../../utils/songLibrary.js'
 import { isDownloadReturnEcho, isReturnKey, takeDownloadInput } from '../../utils/downloadReturn.js'
+import { HomeVoiceSelection } from '../../utils/homeVoiceSelection.js'
 
 const ROW_HEIGHT = 58
 
@@ -27,7 +28,8 @@ export default {
     scrollTop: 0,
     songCount: songs.length,
     navItems: navItems(isServerConnected()),
-    hintText: '上下选择 · 确认'
+    hintText: '上下选择 · 确认',
+    voiceHint: ''
   },
 
   onLoad() {
@@ -35,11 +37,29 @@ export default {
   },
 
   onShow() {
-    this.refreshCatalog()
+    this.voiceHomeVisible = true
+    const refresh = this.refreshCatalog()
+    this.voiceCatalogRefresh = refresh
+    refresh.finally(() => {
+      if (this.voiceCatalogRefresh === refresh) this.voiceCatalogRefresh = null
+    })
+  },
+
+  onHide() {
+    this.voiceHomeVisible = false
+    this.voiceSelection?.cancel()
   },
 
   onUnload() {
     this.unloaded = true
+    this.voiceSelection?.cancel()
+  },
+
+  onVoiceWakeup(event) {
+    if (!this.voiceHomeVisible || this.unloaded || this.navigating) return
+    event.preventDefault()
+    if (!this.voiceSelection) this.voiceSelection = new HomeVoiceSelection(this)
+    this.voiceSelection.start()
   },
 
   async refreshCatalog() {
@@ -186,7 +206,7 @@ export default {
     </view>
 
     <view class="hintbar">
-      <text class="hint-text">{{hintText}}</text>
+      <text class="hint-text">{{voiceHint || hintText}}</text>
     </view>
     </view>
   </view>

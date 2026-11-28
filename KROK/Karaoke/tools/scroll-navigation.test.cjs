@@ -13,6 +13,9 @@ const previewSource = read('utils/downloadCatalog.js').replace(/^export /gm, '')
 const downloadCatalog = vm.runInNewContext(previewSource + '\ndownloadCatalog')
 const downloadSource = withoutImports(read('utils/musicDownload.js')).replace('export class', 'class')
 const choiceSource = read('utils/songChoice.js').replace(/^export /gm, '')
+const voiceSource = withoutImports(read('utils/homeVoiceSelection.js')).replace(/^export /gm, '')
+const voiceCaptureSource = withoutImports(read('utils/voiceCommandCapture.js')).replace(/^export /gm, '')
+const phraseAudioSource = withoutImports(read('utils/phraseAudio.js')).replace(/^export /gm, '')
 const downloadPath = '/pages/download/download'
 const choicePath = '/pages/song-choice/choice'
 assert.ok(app.pages.includes(downloadPath.slice(1)))
@@ -144,14 +147,23 @@ function createTestApp(songs, globals = {}) {
     Gyroscope: globals.Gyroscope
   }
   const choice = vm.runInNewContext(choiceSource + '\n;({ SongChoice, songChoiceLayout, phraseAimSession })', runtime)
+  const voiceRuntime = {
+    ...runtime, SpeechRecognition: globals.SpeechRecognition, SpeechRecognitionSession: globals.SpeechRecognitionSession,
+    MediaRecorder: globals.MediaRecorder, navigator: globals.navigator
+  }
+  const getRecognitionFormat = vm.runInNewContext(phraseAudioSource + '\ngetRecognitionFormat', voiceRuntime)
+  const capture = vm.runInNewContext(voiceCaptureSource + '\n;({ captureVoiceCommand, supportsVoiceCommandCapture })', {
+    ...voiceRuntime, getRecognitionFormat
+  })
+  const HomeVoiceSelection = vm.runInNewContext(voiceSource + '\nHomeVoiceSelection', { ...voiceRuntime, ...capture })
   const home = loadPage(homeScript, {
-    ...guards, ...runtime, ...choice, wx, getApp, songs: homeSongs,
+    ...guards, ...runtime, ...choice, wx, getApp, songs: homeSongs, HomeVoiceSelection,
     isServerConnected: () => false,
     preloadSongAudio: async () => ({}),
-    loadSongCatalog: async () => ({
+    loadSongCatalog: globals.loadHomeCatalog || (async () => ({
       songs: [...homeSongs, ...songs],
       connected: globals.homeConnected?.() || false
-    })
+    }))
   })
   stack.push(home)
   function key(code, { delay = 300, pressed = false, appOnly = false, ...fields } = {}) {
@@ -287,6 +299,229 @@ async function checkHomeFocusAfterReturning() {
     assert.equal(home.data.navItems[home.data.selectedIdx - home.data.songCount].url, url,
       '新增曲目或排行榜标签变化后仍选中同一入口')
   }
+}
+
+function mockVoiceInput() {
+  const sessions = []
+  class SpeechRecognition {
+    constructor() { sessions.push(this) }
+    start() { this.started = true }
+    abort() {
+      this.aborted = true
+      this.onend?.()
+    }
+    say(transcript, isFinal = true) {
+      const result = Object.assign([{ transcript }], { isFinal })
+      this.onresult({ results: [result], resultIndex: 0 })
+    }
+  }
+  const wake = (home, keyword) => {
+    const event = { keyword, preventDefault() { this.prevented = true } }
+    home.onVoiceWakeup(event)
+    return event.prevented === true
+  }
+  return { SpeechRecognition, sessions, wake }
+}
+
+async function checkHomeVoiceSelection() {
+  const voice = mockVoiceInput()
+  const { home, current, key, advance } = createTestApp([
+    { id: 'way-back-home', name: 'Way Back Home (feat. Conor Maynard)', downloadedVariants: { instrumental: true } },
+    { id: 'cover-1', name: '同名歌曲', artist: '歌手甲', downloadedVariants: { guide: true } },
+    { id: 'cover-2', name: '同名歌曲', artist: '歌手乙', downloadedVariants: { guide: true } },
+    { id: 'remote', name: '在线歌曲' }
+  ], voice)
+  home.onShow()
+  await new Promise(setImmediate)
+
+  assert.equal(voice.wake(home, '乐奇'), true)
+  const first = voice.sessions[0]
+  assert.equal(first.started, true)
+  assert.equal(voice.wake(home, 'clickAiAssist'), true)
+  assert.equal(voice.sessions.length, 1, '重复唤醒不重复打开麦克风')
+  first.say('Way Back Home', false)
+  assert.equal(current(), home, '临时识别结果不打开页面')
+  first.say('我要唱 Way Back Home！')
+  assert.equal(current().data.choiceSongName, 'Way Back Home (feat. Conor Maynard)')
+  assert.equal(first.aborted, true, '进入选歌页前已释放语音识别')
+  assert.equal(voice.wake(home, '乐奇'), false, '首页隐藏时不接管系统唤醒')
+  key('Backspace')
+  assert.equal(current(), home, '语音选歌仍使用原有返回方式')
+
+  for (const [open, enter, path] of [
+    ['打开排行榜', '进入排行榜', '/pages/leaderboard/leaderboard'],
+    ['打开多人联机', '进入多人联机', '/pages/battle/battle'],
+    ['打开音乐下载', '进入音乐下载', downloadPath]
+  ]) {
+    for (const text of [open, enter]) {
+      assert.equal(voice.wake(home, 'clickAiAssist'), true)
+      voice.sessions.at(-1).say(text)
+      if (path === downloadPath) assert.equal(current().data.phase, 'categories')
+      else assert.equal(current().path, path)
+      key('Backspace')
+      assert.equal(current(), home)
+    }
+  }
+
+  voice.wake(home, '乐奇')
+  voice.sessions.at(-1).say('在线歌曲')
+  await new Promise(setImmediate)
+  assert.equal(current(), home)
+  assert.match(home.data.voiceHint, /没找到已下载歌曲/)
+
+  voice.wake(home, '乐奇')
+  voice.sessions.at(-1).say('同名歌曲')
+  assert.equal(current(), home)
+  assert.match(home.data.voiceHint, /请说歌手和歌名/)
+  voice.wake(home, '乐奇')
+  voice.sessions.at(-1).say('歌手乙的同名歌曲')
+  assert.equal(current().data.choiceSongName, '同名歌曲')
+  assert.equal(current().songId, 'cover-2')
+  key('Backspace')
+
+  voice.wake(home, '乐奇')
+  const timeout = voice.sessions.at(-1)
+  advance(9000)
+  assert.equal(timeout.aborted, true)
+  assert.match(home.data.voiceHint, /没听清/)
+  advance(4500)
+  assert.equal(home.data.voiceHint, '', '短暂提示后恢复原有操作提示')
+  voice.wake(home, 'clickAiAssist')
+  voice.sessions.at(-1).onerror({ error: 'not-allowed' })
+  assert.match(home.data.voiceHint, /请允许麦克风/)
+}
+
+async function checkHomeVoiceCatalogRace() {
+  const voice = mockVoiceInput()
+  let resolveCatalog
+  const loaded = { id: 'new-song', name: '新下载歌曲', downloadedVariants: { guide: true } }
+  const { home, current, key } = createTestApp([], {
+    ...voice,
+    loadHomeCatalog: () => new Promise(resolve => { resolveCatalog = resolve })
+  })
+  home.onShow()
+  voice.wake(home, '乐奇')
+  voice.sessions.at(-1).say('新下载歌曲')
+  assert.equal(current(), home)
+  assert.match(home.data.voiceHint, /正在查找/)
+  resolveCatalog({ songs: [loaded], connected: true })
+  await new Promise(setImmediate)
+  assert.equal(current().songId, 'new-song', '启动时的语音请求可以等待本机曲库')
+  key('Backspace')
+
+  voice.wake(home, '乐奇')
+  const session = voice.sessions.at(-1)
+  session.say('另一首歌')
+  key('Enter', { delay: 500 })
+  const manualPage = current()
+  assert.equal(manualPage.songId, 'new-song', '语音查找时镜腿仍能照常选歌')
+  resolveCatalog({ songs: [loaded, { ...loaded, id: 'another', name: '另一首歌' }], connected: true })
+  session.say('打开排行榜')
+  await new Promise(setImmediate)
+  assert.equal(current(), manualPage, '旧的语音请求不会干扰已经打开的页面')
+}
+
+async function checkVoiceCaptureAndRecovery() {
+  const { wake } = mockVoiceInput()
+  let micAttempts = 0
+  let recorder
+  let networkError = false
+  let trackStopped = false
+  let pendingMic
+  let delayMic = false
+  const chunks = []
+  const { home, current, key, advance } = createTestApp([
+    { id: 'voice-song', name: '稻香', downloadedVariants: { guide: true } }
+  ], {
+    SpeechRecognition: class {
+      constructor() { assert.fail('支持录音的设备优先走分片识别') }
+    },
+    navigator: { mediaDevices: {
+      async getUserMedia() {
+        if (++micAttempts === 1) throw Object.assign(new Error('host mic still busy'), { name: 'NotReadableError' })
+        trackStopped = false
+        if (delayMic) return new Promise(resolve => { pendingMic = resolve })
+        return { getTracks: () => [{ stop() { trackStopped = true } }] }
+      }
+    } },
+    MediaRecorder: class {
+      static isTypeSupported(type) { return type === 'audio/wav' }
+      constructor(_stream, options) {
+        assert.equal(options.mimeType, 'audio/wav')
+        assert.equal(options.vad.enabled, true)
+        recorder = this
+      }
+      start() { this.state = 'recording' }
+      emit(id, voiceActive) { this.ondataavailable?.({ data: { id, size: 3 }, voiceActive }) }
+      stop() {
+        this.state = 'inactive'
+        this.emit('tail')
+        this.onstop?.()
+      }
+    },
+    SpeechRecognitionSession: class {
+      static async getCapabilities() {
+        return { audioFormats: [{ mimeType: 'audio/ogg;codecs=opus' }, { mimeType: 'audio/wav' }] }
+      }
+      constructor(options) {
+        assert.equal(options.lang, 'zh-CN')
+        assert.equal(options.audio.mimeType, 'audio/wav')
+        this.audio = { getWriter: () => ({
+          write: async chunk => chunks.push(chunk.id),
+          close: async () => {
+            if (networkError) {
+              this.onerror({ error: 'network' })
+              return
+            }
+            this.onresult({ results: [{ isFinal: true, 0: { transcript: '稻香' } }] })
+            this.onend()
+          },
+          abort: async () => {}
+        }) }
+      }
+    }
+  })
+  home.onShow()
+  wake(home, '乐奇')
+  assert.match(home.data.voiceHint, /正在开启麦克风/)
+  await new Promise(setImmediate)
+  assert.equal(micAttempts, 1)
+  assert.match(home.data.voiceHint, /正在开启麦克风/, '麦克风被占用时先等释放')
+  advance(350)
+  await new Promise(setImmediate)
+  assert.equal(micAttempts, 2)
+  assert.match(home.data.voiceHint, /正在聆听/, '录音成功启动后才提示用户说话')
+  recorder.emit('before-speech', false)
+  assert.equal(recorder.state, 'recording', '开始时的静音不能让录音提前结束')
+  recorder.emit('speech', true)
+  recorder.emit('after-speech', false)
+  assert.equal(trackStopped, true, '进入识别阶段即释放麦克风')
+  await new Promise(setImmediate)
+  assert.deepEqual(chunks, ['before-speech', 'speech', 'after-speech', 'tail'], '停止录音后仍发送最后一个分片')
+  assert.equal(current().songId, 'voice-song')
+  key('Backspace')
+
+  networkError = true
+  wake(home, 'clickAiAssist')
+  await new Promise(setImmediate)
+  recorder.emit('speech-without-vad')
+  advance(6000)
+  await new Promise(setImmediate)
+  assert.match(home.data.voiceHint, /语音服务连接失败/)
+  assert.equal(trackStopped, true)
+  assert.equal(current(), home)
+
+  delayMic = true
+  wake(home, '乐奇')
+  await new Promise(setImmediate)
+  key('Enter', { delay: 500 })
+  const chooser = current()
+  assert.equal(chooser.songId, 'voice-song')
+  let lateTrackStopped = false
+  pendingMic({ getTracks: () => [{ stop() { lateTrackStopped = true } }] })
+  await new Promise(setImmediate)
+  assert.equal(lateTrackStopped, true, '页面离开后归还迟到的麦克风权限请求')
+  assert.equal(current(), chooser)
 }
 
 async function checkChooserNativeAndLogicalBack() {
@@ -792,6 +1027,9 @@ async function main() {
   await checkNavigation()
   checkNativeBack()
   await checkHomeFocusAfterReturning()
+  await checkHomeVoiceSelection()
+  await checkHomeVoiceCatalogRace()
+  await checkVoiceCaptureAndRecovery()
   await checkChooserNativeAndLogicalBack()
   await checkBackDuringAudioPreload()
   await checkChooserTitleOverflow()

@@ -179,7 +179,7 @@ function readCapabilities() {
   return asrCapabilities
 }
 
-async function getRecognitionFormat() {
+export async function getRecognitionFormat() {
   if (typeof SpeechRecognitionSession !== 'function' || typeof MediaRecorder !== 'function') return null
   const capabilities = await readCapabilities()
   const supported = capabilities.audioFormats.map(format => format.mimeType.toLowerCase())
